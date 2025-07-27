@@ -48,19 +48,22 @@ jobs:
     - name: Test User Registration Endpoints
       working-directory: ./GALAX_App_files
       run: |
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "register"
+        mkdir -p test-results
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/registration-junit.xml -t "register"
         
     - name: Test Registration Validation
       working-directory: ./GALAX_App_files
       run: |
+        mkdir -p test-results
         # Test registration validation rules - run all registration tests
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "should.*register"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/registration-validation-junit.xml -t "should.*register"
         
     - name: Test Email Verification Flow
       working-directory: ./GALAX_App_files
       run: |
+        mkdir -p test-results
         # Test email verification after registration
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "verify.*email"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/email-verification-junit.xml -t "verify.*email"
         
     - name: Upload registration test results
       uses: actions/upload-artifact@v4
@@ -71,6 +74,7 @@ jobs:
           ./GALAX_App_files/test-results/
           ./GALAX_App_files/coverage/
         retention-days: 5
+        if-no-files-found: ignore
 
   # Login Validation
   login-validation-check:
@@ -101,19 +105,22 @@ jobs:
     - name: Test Login Endpoints
       working-directory: ./GALAX_App_files
       run: |
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "should.*login"
+        mkdir -p test-results
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/login-junit.xml -t "should.*login"
         
     - name: Test Multiple Login Methods
       working-directory: ./GALAX_App_files
       run: |
+        mkdir -p test-results
         # Test email, phone, and wallet-based login
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "login.*credentials|invalid.*credentials"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/multi-login-junit.xml -t "login.*credentials|invalid.*credentials"
         
     - name: Test Authentication Security
       working-directory: ./GALAX_App_files
       run: |
+        mkdir -p test-results
         # Test rate limiting, account lockout, and security features - run all login tests for now
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "login"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/auth-security-junit.xml -t "login"
         
     - name: Upload login test results
       uses: actions/upload-artifact@v4
@@ -124,6 +131,7 @@ jobs:
           ./GALAX_App_files/test-results/
           ./GALAX_App_files/coverage/
         retention-days: 5
+        if-no-files-found: ignore
 
   # Account Management Checks
   account-management-check:
@@ -154,20 +162,23 @@ jobs:
     - name: Test Password Reset Flow
       working-directory: ./GALAX_App_files
       run: |
+        mkdir -p test-results
         # Test logout for now - password reset tests need to be implemented
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "logout"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/password-reset-junit.xml -t "logout"
         
     - name: Test Profile Management
       working-directory: ./GALAX_App_files
       run: |
+        mkdir -p test-results
         # Test profile updates and user management - run verification tests for now
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "verify.*email"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/profile-management-junit.xml -t "verify.*email"
         
     - name: Test Two-Factor Authentication
       working-directory: ./GALAX_App_files
       run: |
+        mkdir -p test-results
         # Test 2FA setup, enable, disable, and verification - run all auth tests for now
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/2fa-junit.xml
         
     - name: Upload account management test results
       uses: actions/upload-artifact@v4
@@ -178,6 +189,7 @@ jobs:
           ./GALAX_App_files/test-results/
           ./GALAX_App_files/coverage/
         retention-days: 5
+        if-no-files-found: ignore
 
   # Security Testing
   auth-security-check:
@@ -202,20 +214,23 @@ jobs:
     - name: Test JWT Token Security
       working-directory: ./GALAX_App_files
       run: |
+        mkdir -p test-results
         # Test JWT token generation, validation, and expiration - run login tests for now
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "login"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/jwt-security-junit.xml -t "login"
         
     - name: Test Input Validation
       working-directory: ./GALAX_App_files
       run: |
+        mkdir -p test-results
         # Test input sanitization and validation
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "missing.*fields|invalid.*email"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/input-validation-junit.xml -t "missing.*fields|invalid.*email"
         
     - name: Test Rate Limiting
       working-directory: ./GALAX_App_files
       run: |
+        mkdir -p test-results
         # Test rate limiting on authentication endpoints - run all tests for now
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --reporter=junit --outputFile.junit=test-results/rate-limiting-junit.xml
         
     - name: Upload security test results
       uses: actions/upload-artifact@v4
@@ -226,6 +241,7 @@ jobs:
           ./GALAX_App_files/test-results/
           ./GALAX_App_files/coverage/
         retention-days: 5
+        if-no-files-found: ignore
 
   # End-to-End Authentication Testing
   e2e-auth-check:
@@ -381,6 +397,7 @@ jobs:
           ./GALAX_App_files/test-results/
           ./GALAX_App_files/playwright-report/
         retention-days: 5
+        if-no-files-found: ignore
 
   # Authentication Status Summary
   auth-status-summary:
