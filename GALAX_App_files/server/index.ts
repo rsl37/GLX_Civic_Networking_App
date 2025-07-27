@@ -1325,7 +1325,8 @@ app.get('/api/user/profile', authenticateToken, async (req: AuthRequest, res) =>
       .select([
         'id', 'email', 'username', 'avatar_url', 'reputation_score',
         'ap_balance', 'crowds_balance', 'gov_balance', 'roles', 'skills', 'badges',
-        'email_verified', 'phone', 'phone_verified', 'two_factor_enabled', 'created_at'
+        'email_verified', 'phone', 'phone_verified', 'two_factor_enabled', 'created_at',
+        'wallet_address'
       ])
       .where('id', '=', req.userId!)
       .executeTakeFirst();
@@ -1355,7 +1356,7 @@ app.get('/api/user/profile', authenticateToken, async (req: AuthRequest, res) =>
 app.put('/api/user/profile', profileUpdateLimiter, authenticateToken, validateProfileUpdate, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
-    const { username, email, phone, skills, bio } = req.body;
+    const { username, email, phone, skills, bio, wallet_address } = req.body;
     
     console.log('📝 Profile update for user:', userId);
 
@@ -1379,6 +1380,26 @@ app.put('/api/user/profile', profileUpdateLimiter, authenticateToken, validatePr
       }
     }
 
+    // Check if wallet address is already taken by another user (if provided)
+    if (wallet_address) {
+      const existingWallet = await db
+        .selectFrom('users')
+        .select('id')
+        .where('wallet_address', '=', wallet_address)
+        .where('id', '!=', userId)
+        .executeTakeFirst();
+        
+      if (existingWallet) {
+        return res.status(400).json({ 
+          success: false,
+          error: {
+            message: 'Wallet address is already associated with another account',
+            statusCode: 400
+          }
+        });
+      }
+    }
+
     // Update user profile
     const updateData: any = {
       updated_at: new Date().toISOString()
@@ -1388,6 +1409,7 @@ app.put('/api/user/profile', profileUpdateLimiter, authenticateToken, validatePr
     if (email !== undefined) updateData.email = email || null;
     if (phone !== undefined) updateData.phone = phone || null;
     if (skills !== undefined) updateData.skills = skills || '[]';
+    if (wallet_address !== undefined) updateData.wallet_address = wallet_address || null;
 
     await db
       .updateTable('users')
@@ -1403,6 +1425,92 @@ app.put('/api/user/profile', profileUpdateLimiter, authenticateToken, validatePr
   } catch (error) {
     console.error('❌ Profile update error:', error);
     throw error;
+  }
+});
+
+// Password change endpoint
+app.post('/api/user/change-password', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Current password and new password are required',
+          statusCode: 400
+        }
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'New password must be at least 8 characters long',
+          statusCode: 400
+        }
+      });
+    }
+
+    // Get current user
+    const user = await db
+      .selectFrom('users')
+      .select(['password_hash'])
+      .where('id', '=', userId)
+      .executeTakeFirst();
+
+    if (!user || !user.password_hash) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Cannot change password for this account type',
+          statusCode: 400
+        }
+      });
+    }
+
+    // Verify current password
+    const isValid = await comparePassword(currentPassword, user.password_hash);
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Current password is incorrect',
+          statusCode: 401
+        }
+      });
+    }
+
+    // Hash new password
+    const newPasswordHash = await hashPassword(newPassword);
+
+    // Update password
+    await db
+      .updateTable('users')
+      .set({
+        password_hash: newPasswordHash,
+        updated_at: new Date().toISOString()
+      })
+      .where('id', '=', userId)
+      .execute();
+
+    console.log('✅ Password changed successfully for user:', userId);
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Password change error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
   }
 });
 

@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
+import { AccountSettings } from '../components/AccountSettings';
 import { 
   User, 
   Mail, 
@@ -42,7 +43,8 @@ import {
   Bell,
   Globe,
   Heart,
-  Lock
+  Lock,
+  Wallet
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -74,6 +76,7 @@ export function ProfilePage() {
     username: user?.username || '',
     email: user?.email || '',
     phone: user?.phone || '',
+    wallet_address: user?.wallet_address || '',
     skills: ''
   });
 
@@ -274,6 +277,14 @@ export function ProfilePage() {
                         {user.phone}
                       </div>
                     )}
+                    {user.wallet_address && (
+                      <div className="flex items-center gap-1">
+                        <Wallet className="h-4 w-4" />
+                        <span className="font-mono text-xs">
+                          {user.wallet_address.slice(0, 6)}...{user.wallet_address.slice(-4)}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
                       Member since {formatTimeAgo(user.created_at || '')}
@@ -333,6 +344,16 @@ export function ProfilePage() {
                           />
                         </div>
                         <div>
+                          <Label htmlFor="wallet">Wallet Address</Label>
+                          <Input
+                            id="wallet"
+                            value={editForm.wallet_address}
+                            onChange={(e) => setEditForm({...editForm, wallet_address: e.target.value})}
+                            placeholder="Enter wallet address"
+                            className="font-mono text-sm"
+                          />
+                        </div>
+                        <div>
                           <Label htmlFor="skills">Skills</Label>
                           <Textarea
                             id="skills"
@@ -348,10 +369,14 @@ export function ProfilePage() {
                     </DialogContent>
                   </Dialog>
                   
-                  <Button variant="outline" size="sm">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                  </Button>
+                  <AccountSettings
+                    trigger={
+                      <Button variant="outline" size="sm">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </Button>
+                    }
+                  />
                 </div>
               </div>
             </CardContent>
@@ -540,6 +565,23 @@ export function ProfilePage() {
                     <XCircle className="h-5 w-5 text-red-500" />
                   )}
                 </div>
+
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Wallet className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Wallet Address</p>
+                      <p className="text-sm text-gray-600">
+                        {user.wallet_address ? 'Connected' : 'Not connected'}
+                      </p>
+                    </div>
+                  </div>
+                  {user.wallet_address ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  )}
+                </div>
                 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
@@ -566,9 +608,13 @@ export function ProfilePage() {
                       <p className="text-sm text-gray-600">Last changed recently</p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
-                    Change
-                  </Button>
+                  <AccountSettings
+                    trigger={
+                      <Button variant="outline" size="sm">
+                        Change
+                      </Button>
+                    }
+                  />
                 </div>
               </div>
             </CardContent>

@@ -26,6 +26,7 @@ interface User {
   two_factor_enabled: boolean;
   created_at?: string;
   phone?: string;
+  wallet_address?: string | null;
 }
 
 interface AuthContextType {
