@@ -48,19 +48,19 @@ jobs:
     - name: Test User Registration Endpoints
       working-directory: ./GALAX_App_files
       run: |
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --grep="register"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "register"
         
     - name: Test Registration Validation
       working-directory: ./GALAX_App_files
       run: |
         # Test registration validation rules
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --grep="registration.*validation"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "registration.*validation"
         
     - name: Test Email Verification Flow
       working-directory: ./GALAX_App_files
       run: |
         # Test email verification after registration
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --grep="verify-email"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "verify-email"
         
     - name: Upload registration test results
       uses: actions/upload-artifact@v4
@@ -101,19 +101,19 @@ jobs:
     - name: Test Login Endpoints
       working-directory: ./GALAX_App_files
       run: |
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --grep="login"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "login"
         
     - name: Test Multiple Login Methods
       working-directory: ./GALAX_App_files
       run: |
         # Test email, phone, and wallet-based login
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --grep="login.*credentials"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "login.*credentials"
         
     - name: Test Authentication Security
       working-directory: ./GALAX_App_files
       run: |
         # Test rate limiting, account lockout, and security features
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --grep="security|lockout|rate"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "security|lockout|rate"
         
     - name: Upload login test results
       uses: actions/upload-artifact@v4
@@ -154,19 +154,19 @@ jobs:
     - name: Test Password Reset Flow
       working-directory: ./GALAX_App_files
       run: |
-        npm run test -- --run tests/api/auth.test.ts --reporter=verbose --grep="password.*reset"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "password.*reset"
         
     - name: Test Profile Management
       working-directory: ./GALAX_App_files
       run: |
         # Test profile updates and user management
-        npm run test -- --run --reporter=verbose --grep="profile"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "profile"
         
     - name: Test Two-Factor Authentication
       working-directory: ./GALAX_App_files
       run: |
         # Test 2FA setup, enable, disable, and verification
-        npm run test -- --run --reporter=verbose --grep="2fa|two.factor"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "2fa|two.factor"
         
     - name: Upload account management test results
       uses: actions/upload-artifact@v4
@@ -202,19 +202,19 @@ jobs:
       working-directory: ./GALAX_App_files
       run: |
         # Test JWT token generation, validation, and expiration
-        npm run test -- --run --reporter=verbose --grep="token|jwt|auth"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "token|jwt|auth"
         
     - name: Test Input Validation
       working-directory: ./GALAX_App_files
       run: |
         # Test input sanitization and validation
-        npm run test -- --run --reporter=verbose --grep="validation|sanitiz"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "validation|sanitiz"
         
     - name: Test Rate Limiting
       working-directory: ./GALAX_App_files
       run: |
         # Test rate limiting on authentication endpoints
-        npm run test -- --run --reporter=verbose --grep="rate.*limit"
+        npm run test -- --run tests/api/auth.test.ts --reporter=verbose -t "rate.*limit"
         
     - name: Upload security test results
       uses: actions/upload-artifact@v4
