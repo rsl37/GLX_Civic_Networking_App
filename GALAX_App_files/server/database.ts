@@ -340,7 +340,7 @@ async function safeAddColumn(db: Database.Database, tableName: string, columnNam
     }
     
     // Whitelist allowed column definition patterns
-    const allowedColumnDefinitionRegex = /^(INTEGER|TEXT|REAL|BLOB|NUMERIC)(\s+(DEFAULT\s+[A-Za-z0-9_'"\.\-\s]+|NOT\s+NULL|PRIMARY\s+KEY|UNIQUE|CHECK\s*\([^)]*\)))*$/i;
+    const allowedColumnDefinitionRegex = /^(INTEGER|TEXT|REAL|BLOB|NUMERIC)(\s+(DEFAULT\s+[A-Za-z0-9_'"\.\-]+(?:\s+[A-Za-z0-9_'"\.\-]+)*|NOT\s+NULL|PRIMARY\s+KEY|UNIQUE|CHECK\s*\([^)]*\)))*$/i;
     if (!allowedColumnDefinitionRegex.test(columnDefinition.trim())) {
       throw new Error(`Invalid column definition: '${columnDefinition}' contains disallowed syntax`);
     }
