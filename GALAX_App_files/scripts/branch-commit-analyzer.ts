@@ -562,13 +562,13 @@ ${report.branches.filter(b => b.status !== 'merged').map(branch =>
 
 ### Branches with Issues
 ${report.branches.filter(b => b.healthStatus.hasConflicts || b.healthStatus.hasErrors).map(branch => 
-`- **${branch.name}**: ${b.healthStatus.hasConflicts ? 'Has Conflicts' : ''} ${b.healthStatus.hasErrors ? 'Has Errors' : ''}`
+`- **${branch.name}**: ${branch.healthStatus.hasConflicts ? 'Has Conflicts' : ''} ${branch.healthStatus.hasErrors ? 'Has Errors' : ''}`
 ).join('\n')}
 
 ### Recent Authentication Changes
-${report.sessionErrorAnalysis.authCommitDetails?.map(commit => 
-`- **${commit.hash}**: ${commit.message} (${commit.date}) - ${commit.filesChanged} files changed`
-).join('\n') || 'No recent authentication changes found'}
+${report.sessionErrorAnalysis.authRelatedCommits > 0 ? 
+  `Found ${report.sessionErrorAnalysis.authRelatedCommits} authentication-related commits` :
+  'No recent authentication changes found'}
 
 ## Recommendations
 

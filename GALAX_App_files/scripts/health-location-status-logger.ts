@@ -357,7 +357,7 @@ class HealthLocationStatusLogger {
             message: 'Authentication health check: PASS'
           });
         } else {
-          healthStatus.checks.authentication = 'warning';
+          healthStatus.checks.authentication = 'fail';
           healthStatus.warnings.push('Authentication tests may have issues');
           this.log({
             type: 'health',
@@ -414,7 +414,7 @@ class HealthLocationStatusLogger {
             message: 'API health check: PASS'
           });
         } else if (apiTestResult.includes('timeout')) {
-          healthStatus.checks.api = 'warning';
+          healthStatus.checks.api = 'fail';
           healthStatus.warnings.push('API tests timed out');
         } else {
           healthStatus.checks.api = 'fail';
@@ -436,7 +436,7 @@ class HealthLocationStatusLogger {
             message: 'Deployment health check: PASS'
           });
         } else if (deploymentCheck.includes('warning')) {
-          healthStatus.checks.deployment = 'warning';
+          healthStatus.checks.deployment = 'fail';
           healthStatus.warnings.push('Deployment has warnings');
         } else {
           healthStatus.checks.deployment = 'fail';
@@ -449,11 +449,11 @@ class HealthLocationStatusLogger {
 
       // Determine overall status
       const failedChecks = Object.values(healthStatus.checks).filter(check => check === 'fail').length;
-      const warningChecks = Object.values(healthStatus.checks).filter(check => check === 'warning').length;
+      const unknownChecks = Object.values(healthStatus.checks).filter(check => check === 'unknown').length;
 
       if (failedChecks > 0) {
         healthStatus.overall = 'critical';
-      } else if (warningChecks > 0) {
+      } else if (unknownChecks > 0) {
         healthStatus.overall = 'warning';
       } else {
         healthStatus.overall = 'healthy';
