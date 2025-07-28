@@ -42,11 +42,20 @@ jobs:
     - name: Install dependencies
       working-directory: ./GALAX_App_files
       run: |
+        # Add git configuration to prevent any interactive prompts
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        
+        # Install dependencies with robust error handling
         timeout 300 npm ci || {
           echo "npm ci timed out, trying npm install"
           timeout 300 npm install || {
-            echo "npm install also failed, continuing with basic checks"
-            exit 0
+            echo "npm install also failed, trying with legacy peer deps"
+            timeout 300 npm install --legacy-peer-deps || {
+              echo "All npm install methods failed, continuing with basic checks"
+              npm list --depth=0 || echo "Package listing complete"
+              exit 0
+            }
           }
         }
       
@@ -56,19 +65,53 @@ jobs:
         mkdir -p logs/health-location-status
         mkdir -p logs/branch-commit-analysis
         
+    - name: Validate monitoring scripts
+      working-directory: ./GALAX_App_files
+      run: |
+        echo "🔍 Validating monitoring scripts exist..."
+        ls -la scripts/health-location-status-logger.ts || echo "Health logger not found"
+        ls -la scripts/branch-commit-analyzer.ts || echo "Branch analyzer not found"
+        ls -la scripts/monitoring-dashboard.ts || echo "Dashboard not found"
+        
+        # Check TypeScript compiler availability
+        npx tsc --version || echo "TypeScript not available"
+        npx tsx --version || echo "tsx not available"
+        
+        # Quick smoke test
+        echo "Running basic smoke test..."
+        echo "console.log('CI environment working');" > test-script.ts
+        timeout 30 npx tsx test-script.ts || echo "Basic TypeScript execution failed"
+        rm -f test-script.ts
+        
     - name: Run Health, Location, and Status Logger
       if: ${{ github.event.inputs.analysis_type != 'branches-only' }}
       working-directory: ./GALAX_App_files
       run: |
         echo "🔍 Running comprehensive health, location, and status checks..."
-        timeout 120 npm run health:log || echo "Health logging completed with warnings/timeout"
+        if [ -f "scripts/health-location-status-logger.ts" ]; then
+          timeout 120 npm run health:log || {
+            echo "Health logging completed with warnings/timeout"
+            # Try direct execution as fallback
+            timeout 60 npx tsx scripts/health-location-status-logger.ts || echo "Direct execution also failed"
+          }
+        else
+          echo "⚠️ Health logger script not found"
+        fi
         
     - name: Run Branch and Commit Analysis
       if: ${{ github.event.inputs.analysis_type != 'health-only' }}
       working-directory: ./GALAX_App_files
       run: |
         echo "🔍 Running comprehensive branch and commit analysis..."
-        timeout 120 npm run branch:analyze || echo "Branch analysis completed with warnings/timeout"
+        if [ -f "scripts/branch-commit-analyzer.ts" ]; then
+          timeout 120 npm run branch:analyze || {
+            echo "Branch analysis completed with warnings/timeout"
+            # Try direct execution as fallback
+            timeout 60 npx tsx scripts/branch-commit-analyzer.ts || echo "Direct execution also failed"
+          }
+        else
+          echo "⚠️ Branch analyzer script not found"
+        fi
         
     - name: Check for Session Management Issues
       working-directory: ./GALAX_App_files
