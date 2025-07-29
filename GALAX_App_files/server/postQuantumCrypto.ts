@@ -113,9 +113,8 @@ export class PostQuantumKEM {
     const ecdh = crypto.createECDH('secp256k1');
     ecdh.generateKeys();
     
-    // For demo purposes, create a dummy classical shared secret
-    // In real implementation, this would use actual ECDH with peer's classical public key
-    const classicalSharedSecret = crypto.randomBytes(32);
+    // Compute the classical shared secret using ECDH with the peer's public key
+    const classicalSharedSecret = ecdh.computeSecret(peerPublicKey);
 
     // Post-quantum key encapsulation
     const { ciphertext, sharedSecret: postQuantumSharedSecret } = this.encapsulate(peerPublicKey);
