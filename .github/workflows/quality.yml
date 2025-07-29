@@ -162,7 +162,7 @@ jobs:
         sleep 10
 
         # Basic performance check
-    if curl -w "Response time: %{time_total}s\n" -f http://localhost:3000 2>/dev/null; then
+        if curl -w "Response time: %{time_total}s\n" -f http://localhost:3000 2>/dev/null; then
           echo "✓ Application responds within reasonable time"
         else
           echo "⚠️ Application may have performance issues"
