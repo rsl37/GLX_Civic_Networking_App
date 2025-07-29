@@ -553,8 +553,9 @@ export const antivirusFileScanner = async (
       // Add scan results to file object
       (file as any).antivirusScan = scanResult;
 
+      const sanitizedOriginalName = file.originalname.replace(/[\n\r]/g, "");
       console.log(
-        `✅ File passed antivirus scan: ${file.originalname} [${scanResult.scanId}]`,
+        `✅ File passed antivirus scan: ${sanitizedOriginalName} [${scanResult.scanId}]`,
       );
     }
 
