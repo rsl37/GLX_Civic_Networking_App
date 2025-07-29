@@ -4,6 +4,9 @@
   "version": "0.2.0",
   "type": "module",
   "license": "PolyForm-Shield-1.0.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "vite build && tsc --project tsconfig.server.json",
     "start": "npx tsx watch scripts/dev.ts",
