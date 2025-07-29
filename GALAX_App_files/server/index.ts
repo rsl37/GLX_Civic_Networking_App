@@ -592,7 +592,7 @@ export async function startServer(port: number) {
 
     // Initialize comprehensive security systems
     try {
-      initializeSecuritySystems();
+      await initializeSecuritySystems();
       console.log("🛡️ Comprehensive security systems initialized successfully");
 
       logSecurityEvent({

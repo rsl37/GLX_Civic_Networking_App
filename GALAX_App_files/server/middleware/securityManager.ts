@@ -193,6 +193,8 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
     const malwareStats = await getQuarantineStats();
     
     // Calculate protection score (0-125, with bonus points for post-quantum)
+    // Get post-quantum status
+    const postQuantumStatus = getPostQuantumStatus();
     let protectionScore = 0;
     
     if (SECURITY_CONFIG.antimalware.enabled) protectionScore += 20;
@@ -269,7 +271,7 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
         lastUpdate: new Date().toISOString()
       }
     };
-  } catch (error) {
+    } catch (error) {
     console.error('Error getting security status:', error);
     return {
       antimalware: { enabled: false, lastScan: '', threatsDetected: 0, quarantinedFiles: 0 },
@@ -434,6 +436,57 @@ export const securityDashboardAdmin = {
     }
   },
   
+  // Post-quantum security status
+  getPostQuantumStatus: async (req: Request, res: Response) => {
+    try {
+      const status = getPostQuantumStatus();
+      res.json({
+        success: true,
+        data: status,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: {
+          message: 'Failed to retrieve post-quantum status',
+          statusCode: 500
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+  },
+  
+  // Test post-quantum cryptographic operations
+  testPostQuantumOperations: async (req: Request, res: Response) => {
+    try {
+      const { testPostQuantumOperations } = await import('../postQuantumCrypto.js');
+      const results = await testPostQuantumOperations();
+      
+      res.json({
+        success: true,
+        data: {
+          testResults: results,
+          message: results.success ? 
+            'All post-quantum operations completed successfully' : 
+            'Some post-quantum operations failed',
+          timestamp: new Date().toISOString()
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: {
+          message: 'Failed to test post-quantum operations',
+          details: error instanceof Error ? error.message : String(error),
+          statusCode: 500
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+  },
+
   // Generate security report
   generateReport: async (req: Request, res: Response) => {
     try {
@@ -514,11 +567,20 @@ const generateSecurityRecommendations = (status: SecuritySystemStatus): string[]
 };
 
 // Initialize all security systems
-export const initializeSecuritySystems = () => {
+export const initializeSecuritySystems = async () => {
   console.log('🛡️ Initializing Comprehensive Security Protection...');
   
   // Initialize antivirus system
   initializeAntivirus();
+  
+  // Initialize post-quantum cryptography
+  try {
+    const { initializePostQuantumSecurity } = await import('../postQuantumCrypto.js');
+    await initializePostQuantumSecurity();
+  } catch (error) {
+    console.error('⚠️ Post-quantum cryptography initialization failed:', error);
+    SECURITY_CONFIG.postQuantum.enabled = false;
+  }
   
   console.log('✅ Security Systems Status:');
   console.log(`   🦠 Antimalware Protection: ${SECURITY_CONFIG.antimalware.enabled ? 'ENABLED' : 'DISABLED'}`);
