@@ -20,6 +20,43 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#x27;");
 }
 
+// Security helper function to mask email addresses for logging
+function maskEmail(email: string): string {
+  if (!email || typeof email !== "string") {
+    return "[invalid-email]";
+  }
+
+  const [localPart, domain] = email.split("@");
+  if (!localPart || !domain) {
+    return "[malformed-email]";
+  }
+
+  // Mask local part: show first character and mask the rest
+  const maskedLocal =
+    localPart.length > 1
+      ? localPart[0] + "*".repeat(Math.max(localPart.length - 1, 3))
+      : localPart[0] + "***";
+
+  // Mask domain: show first character and last 3 characters (.com/.org/etc)
+  const domainParts = domain.split(".");
+  if (domainParts.length > 1) {
+    const mainDomain = domainParts[0];
+    const tld = domainParts.slice(1).join(".");
+    const maskedDomain =
+      mainDomain.length > 1
+        ? mainDomain[0] + "*".repeat(Math.max(mainDomain.length - 1, 3))
+        : mainDomain[0] + "***";
+    return `${maskedLocal}@${maskedDomain}.${tld}`;
+  } else {
+    // Single part domain (unusual but handle it)
+    const maskedDomain =
+      domain.length > 1
+        ? domain[0] + "*".repeat(Math.max(domain.length - 1, 3))
+        : domain[0] + "***";
+    return `${maskedLocal}@${maskedDomain}`;
+  }
+}
+
 // Email configuration
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
@@ -36,7 +73,7 @@ export async function generatePasswordResetToken(
   email: string,
 ): Promise<string | null> {
   try {
-    console.log("🔐 Generating password reset token for:", email);
+    console.log("🔐 Generating password reset token for:", maskEmail(email));
 
     // Find user by email
     const user = await db
@@ -46,7 +83,7 @@ export async function generatePasswordResetToken(
       .executeTakeFirst();
 
     if (!user) {
-      console.log("❌ User not found for email:", email);
+      console.log("❌ User not found for email:", maskEmail(email));
       return null;
     }
 
@@ -83,7 +120,7 @@ export async function sendPasswordResetEmail(
   token: string,
 ): Promise<boolean> {
   try {
-    console.log("📧 Sending password reset email to:", email);
+    console.log("📧 Sending password reset email to:", maskEmail(email));
 
     const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/reset-password?token=${token}`;
 
@@ -245,7 +282,7 @@ export async function sendEmailVerification(
   username: string,
 ): Promise<boolean> {
   try {
-    console.log("📧 Sending email verification to:", email);
+    console.log("📧 Sending email verification to:", maskEmail(email));
 
     // Sanitize inputs to prevent XSS
     const safeUsername = escapeHtml(username);
