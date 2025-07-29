@@ -217,7 +217,7 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
     
     // Determine security level including quantum-safe level
     let securityLevel: 'low' | 'medium' | 'high' | 'maximum' | 'quantum-safe';
-    if (quantumReady && SECURITY_CONFIG.postQuantum.quantumResistant) {
+    if (quantumReady) {
       securityLevel = 'quantum-safe';
     } else if (displayScore >= 95) {
       securityLevel = 'maximum';
