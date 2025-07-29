@@ -74,6 +74,7 @@ class PostQuantumCryptography {
       console.log(`   • Security Level: ${this.config.securityLevel} (256-bit equivalent)`);
     } catch (error) {
       console.error('❌ Post-quantum initialization failed:', error);
+
       throw error;
     }
   }

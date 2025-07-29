@@ -483,6 +483,10 @@ app.post("/api/admin/security/antihacking/unblock-ip", authenticateToken, securi
 app.get("/api/admin/security/post-quantum/status", authenticateToken, securityAdminEndpoints.postQuantum.getStatus);
 app.post("/api/admin/security/post-quantum/test", authenticateToken, securityAdminEndpoints.postQuantum.testOperations);
 
+// Post-Quantum Cryptography Management
+app.get("/api/admin/security/post-quantum/status", authenticateToken, securityAdminEndpoints.dashboard.getPostQuantumStatus);
+app.post("/api/admin/security/post-quantum/test", authenticateToken, securityAdminEndpoints.dashboard.testPostQuantumOperations);
+
 // Serve uploaded files with security headers
 app.use(
   "/uploads",
