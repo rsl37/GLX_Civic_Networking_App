@@ -111,7 +111,7 @@ export function createHelpRequestRoutes(upload: any, io: Server) {
   );
 
   // Get help requests with pagination
-  router.get('/', authenticateToken, async (req: AuthRequest, res) => {
+  router.get('/', authenticateToken, uploadLimiter, async (req: AuthRequest, res) => {
     try {
       const {
         status,
