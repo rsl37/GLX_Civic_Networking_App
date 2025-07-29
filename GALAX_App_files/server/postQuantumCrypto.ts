@@ -225,26 +225,26 @@ class PostQuantumCryptography {
       initialized: this.initialized,
       securityLevel: this.config.securityLevel,
       algorithms: {
-        mlkem: this.keys ? 'ML-KEM-1024 (FIPS 203)' : 'Not initialized',
-        mldsa: this.keys ? 'ML-DSA-87 (FIPS 204)' : 'Not initialized',
-        slhdsa: this.keys ? 'SLH-DSA-256s (FIPS 205)' : 'Not initialized'
         mlkem: {
           algorithm: 'ML-KEM-1024',
-          publicKeySize: this.mlkemKeyPair?.publicKey.length || 0,
+          publicKeySize: this.keys?.mlkem.publicKey.length || 0,
           securityLevel: 5,
-          nistsCompliant: true
+          nistsCompliant: true,
+          status: this.keys ? 'ML-KEM-1024 (FIPS 203)' : 'Not initialized'
         },
         mldsa: {
           algorithm: 'ML-DSA-87',
-          publicKeySize: this.mldsaKeyPair?.publicKey.length || 0,
+          publicKeySize: this.keys?.mldsa.publicKey.length || 0,
           securityLevel: 5,
-          nistsCompliant: true
+          nistsCompliant: true,
+          status: this.keys ? 'ML-DSA-87 (FIPS 204)' : 'Not initialized'
         },
         slhdsa: {
           algorithm: 'SLH-DSA-SHAKE-256s',
-          publicKeySize: this.slhdsaKeyPair?.publicKey.length || 0,
+          publicKeySize: this.keys?.slhdsa.publicKey.length || 0,
           securityLevel: 5,
-          nistsCompliant: true
+          nistsCompliant: true,
+          status: this.keys ? 'SLH-DSA-256s (FIPS 205)' : 'Not initialized'
         }
       },
       features: {
