@@ -38,7 +38,21 @@ export function RegisterPage() {
 
     try {
       // Format phone number with country code if it's a phone signup
-      const identifier = signupMethod === 'email' ? email : `${countryCode}${phone.replace(/^[\+\s0]+/, '').replace(/\s/g, '')}`;
+      let identifier = email;
+      if (signupMethod === 'phone') {
+        // Clean the phone number: remove all non-digit characters except leading +
+        const cleanPhone = phone.replace(/[^\d+]/g, '');
+        
+        // Check if phone already has a country code (starts with +)
+        if (cleanPhone.startsWith('+')) {
+          identifier = cleanPhone;
+        } else {
+          // Remove any leading zeros and add the selected country code
+          const phoneWithoutLeadingZeros = cleanPhone.replace(/^0+/, '');
+          identifier = `${countryCode}${phoneWithoutLeadingZeros}`;
+        }
+      }
+      
       await register(identifier, password, username, signupMethod);
       navigate('/dashboard');
     } catch (err) {
