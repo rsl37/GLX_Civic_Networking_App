@@ -125,10 +125,17 @@ jobs:
     with:
     fetch-depth: 0  # Need full history for secret scanning
 
-  - name: Run TruffleHog
+  - name: Run TruffleHog (Verified Secrets)
     uses: trufflesecurity/trufflehog@main
     with:
     path: ./
     base: main
     head: HEAD
     extra_args: --only-verified
+
+  - name: Run TruffleHog (All Potential Secrets)
+    uses: trufflesecurity/trufflehog@main
+    with:
+    path: ./
+    base: main
+    head: HEAD
