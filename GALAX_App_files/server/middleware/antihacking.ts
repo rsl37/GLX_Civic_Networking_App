@@ -9,7 +9,6 @@
 // Added 2025-01-13 21:56:18 UTC - Comprehensive Anti-Hacking Protection System
 import { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
-import fs from "fs/promises";
 
 // Attack pattern detection
 interface AttackPattern {
