@@ -1,17 +1,20 @@
 /*
  * Copyright (c) 2025 GALAX Civic Networking App
- * 
+ *
  * This software is licensed under the PolyForm Shield License 1.0.0.
- * For the full license text, see LICENSE file in the root directory 
+ * For the full license text, see LICENSE file in the root directory
  * or visit https://polyformproject.org/licenses/shield/1.0.0
  */
 
-import Database from 'better-sqlite3';
-import { Kysely, SqliteDialect, PostgresDialect } from 'kysely';
-import { Pool } from 'pg';
-import path from 'path';
-import fs from 'fs';
-import { diagnoseDatabaseFile, createInitialDatabase } from './database-diagnostics.js';
+import Database from "better-sqlite3";
+import { Kysely, SqliteDialect, PostgresDialect } from "kysely";
+import { Pool } from "pg";
+import path from "path";
+import fs from "fs";
+import {
+  diagnoseDatabaseFile,
+  createInitialDatabase,
+} from "./database-diagnostics.js";
 
 export interface DatabaseSchema {
   users: {
@@ -257,127 +260,180 @@ export interface DatabaseSchema {
 
 // Database configuration - supports both PostgreSQL and SQLite
 const DATABASE_URL = process.env.DATABASE_URL;
-const dataDirectory = process.env.DATA_DIRECTORY || './data';
-const databasePath = path.join(dataDirectory, 'database.sqlite');
+const dataDirectory = process.env.DATA_DIRECTORY || "./data";
+const databasePath = path.join(dataDirectory, "database.sqlite");
 
-console.log('🗄️ Database initialization...');
+console.log("🗄️ Database initialization...");
 if (DATABASE_URL) {
-  console.log('📊 Using PostgreSQL from DATABASE_URL');
-  console.log('🔗 Database URL configured:', DATABASE_URL.replace(/\/\/.*@/, '//***:***@')); // Hide credentials in logs
+  console.log("📊 Using PostgreSQL from DATABASE_URL");
+  console.log(
+    "🔗 Database URL configured:",
+    DATABASE_URL.replace(/\/\/.*@/, "//***:***@"),
+  ); // Hide credentials in logs
 } else {
-  console.log('📁 Data directory:', dataDirectory);
-  console.log('📊 Database path:', databasePath);
-  console.log('🔍 Absolute database path:', path.resolve(databasePath));
+  console.log("📁 Data directory:", dataDirectory);
+  console.log("📊 Database path:", databasePath);
+  console.log("🔍 Absolute database path:", path.resolve(databasePath));
 }
 
 /**
  * Validates that a string is a safe SQL identifier (table name, column name, etc.)
  * Only allows alphanumeric characters and underscores, must start with letter or underscore
  */
-function validateSQLIdentifier(identifier: string, type: string = 'identifier'): void {
-  if (!identifier || typeof identifier !== 'string') {
+function validateSQLIdentifier(
+  identifier: string,
+  type: string = "identifier",
+): void {
+  if (!identifier || typeof identifier !== "string") {
     throw new Error(`Invalid ${type}: must be a non-empty string`);
   }
-  
+
   if (identifier.length > 64) {
     throw new Error(`Invalid ${type}: must be 64 characters or less`);
   }
-  
+
   // SQLite identifier rules: alphanumeric and underscore, must start with letter or underscore
   const validIdentifierRegex = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
   if (!validIdentifierRegex.test(identifier)) {
-    throw new Error(`Invalid ${type}: must start with letter or underscore and contain only alphanumeric characters and underscores`);
+    throw new Error(
+      `Invalid ${type}: must start with letter or underscore and contain only alphanumeric characters and underscores`,
+    );
   }
-  
+
   // Prevent SQL keywords and reserved words (basic list)
   const reservedWords = [
-    'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 'TABLE',
-    'INDEX', 'DATABASE', 'SCHEMA', 'VIEW', 'TRIGGER', 'PROCEDURE', 'FUNCTION',
-    'UNION', 'JOIN', 'WHERE', 'FROM', 'ORDER', 'GROUP', 'HAVING', 'LIMIT'
+    "SELECT",
+    "INSERT",
+    "UPDATE",
+    "DELETE",
+    "DROP",
+    "CREATE",
+    "ALTER",
+    "TABLE",
+    "INDEX",
+    "DATABASE",
+    "SCHEMA",
+    "VIEW",
+    "TRIGGER",
+    "PROCEDURE",
+    "FUNCTION",
+    "UNION",
+    "JOIN",
+    "WHERE",
+    "FROM",
+    "ORDER",
+    "GROUP",
+    "HAVING",
+    "LIMIT",
   ];
-  
+
   if (reservedWords.includes(identifier.toUpperCase())) {
-    throw new Error(`Invalid ${type}: cannot use SQL reserved word '${identifier}'`);
+    throw new Error(
+      `Invalid ${type}: cannot use SQL reserved word '${identifier}'`,
+    );
   }
 }
 
-async function checkColumnExists(db: Database.Database, tableName: string, columnName: string): Promise<boolean> {
+async function checkColumnExists(
+  db: Database.Database,
+  tableName: string,
+  columnName: string,
+): Promise<boolean> {
   try {
     // Validate inputs to prevent SQL injection
-    validateSQLIdentifier(tableName, 'table name');
-    validateSQLIdentifier(columnName, 'column name');
-    
+    validateSQLIdentifier(tableName, "table name");
+    validateSQLIdentifier(columnName, "column name");
+
     // Use parameterized query approach by validating identifiers first, then using them safely
     const columns = db.prepare(`PRAGMA table_info(${tableName})`).all();
     return columns.some((col: any) => col.name === columnName);
   } catch (error) {
-    console.error(`Error checking column ${columnName} in ${tableName}:`, error);
-    
+    console.error(
+      `Error checking column ${columnName} in ${tableName}:`,
+      error,
+    );
+
     // Re-throw validation errors to caller
-    if (error instanceof Error && error.message.includes('Invalid')) {
+    if (error instanceof Error && error.message.includes("Invalid")) {
       throw error;
     }
-    
+
     // For database errors, return false but log the specific error
     if (error instanceof Error) {
       console.error(`Database error while checking column: ${error.message}`);
-      console.error(`This may indicate the table '${tableName}' does not exist or is inaccessible`);
+      console.error(
+        `This may indicate the table '${tableName}' does not exist or is inaccessible`,
+      );
     }
-    
+
     return false;
   }
 }
 
-async function safeAddColumn(db: Database.Database, tableName: string, columnName: string, columnDefinition: string) {
+async function safeAddColumn(
+  db: Database.Database,
+  tableName: string,
+  columnName: string,
+  columnDefinition: string,
+) {
   try {
     // Validate all inputs to prevent SQL injection
-    validateSQLIdentifier(tableName, 'table name');
-    validateSQLIdentifier(columnName, 'column name');
-    
+    validateSQLIdentifier(tableName, "table name");
+    validateSQLIdentifier(columnName, "column name");
+
     // Validate column definition - only allow basic SQLite types and constraints
-    if (!columnDefinition || typeof columnDefinition !== 'string') {
-      throw new Error('Invalid column definition: must be a non-empty string');
+    if (!columnDefinition || typeof columnDefinition !== "string") {
+      throw new Error("Invalid column definition: must be a non-empty string");
     }
-    
+
     // Whitelist allowed column definition patterns - fixed ReDoS vulnerability
-    const allowedColumnDefinitionRegex = /^(INTEGER|TEXT|REAL|BLOB|NUMERIC)(?:\s+(?:DEFAULT\s+[A-Za-z0-9_'"\.\-]+(?:\s+[A-Za-z0-9_'"\.\-]+){0,3}|NOT\s+NULL|PRIMARY\s+KEY|UNIQUE|CHECK\s*\([^)]{0,100}\)))*$/i;
+    const allowedColumnDefinitionRegex =
+      /^(INTEGER|TEXT|REAL|BLOB|NUMERIC)(?:\s+(?:DEFAULT\s+[A-Za-z0-9_'"\.\-]+(?:\s+[A-Za-z0-9_'"\.\-]+){0,3}|NOT\s+NULL|PRIMARY\s+KEY|UNIQUE|CHECK\s*\([^)]{0,100}\)))*$/i;
     if (!allowedColumnDefinitionRegex.test(columnDefinition.trim())) {
-      throw new Error(`Invalid column definition: '${columnDefinition}' contains disallowed syntax`);
+      throw new Error(
+        `Invalid column definition: '${columnDefinition}' contains disallowed syntax`,
+      );
     }
-    
+
     const exists = await checkColumnExists(db, tableName, columnName);
     if (!exists) {
       console.log(`📝 Adding column ${columnName} to ${tableName}`);
-      
+
       // Execute the ALTER TABLE statement with validated inputs
-      db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
-      
+      db.exec(
+        `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`,
+      );
+
       console.log(`✅ Successfully added column ${columnName} to ${tableName}`);
     } else {
       console.log(`✅ Column ${columnName} already exists in ${tableName}`);
     }
   } catch (error) {
     console.error(`Error adding column ${columnName} to ${tableName}:`, error);
-    
+
     // Re-throw validation errors to caller
-    if (error instanceof Error && error.message.includes('Invalid')) {
+    if (error instanceof Error && error.message.includes("Invalid")) {
       throw error;
     }
-    
+
     // Handle specific database errors
     if (error instanceof Error) {
-      if (error.message.includes('no such table')) {
+      if (error.message.includes("no such table")) {
         throw new Error(`Table '${tableName}' does not exist`);
-      } else if (error.message.includes('duplicate column')) {
-        console.log(`ℹ️ Column ${columnName} already exists in ${tableName} (detected during ALTER)`);
+      } else if (error.message.includes("duplicate column")) {
+        console.log(
+          `ℹ️ Column ${columnName} already exists in ${tableName} (detected during ALTER)`,
+        );
         return; // Not an error, just already exists
-      } else if (error.message.includes('syntax error')) {
-        throw new Error(`SQL syntax error when adding column: ${error.message}`);
+      } else if (error.message.includes("syntax error")) {
+        throw new Error(
+          `SQL syntax error when adding column: ${error.message}`,
+        );
       } else {
         throw new Error(`Database error when adding column: ${error.message}`);
       }
     }
-    
+
     throw error;
   }
 }
@@ -386,48 +442,69 @@ async function initializeDatabase() {
   try {
     // Skip SQLite-specific initialization if using PostgreSQL
     if (DATABASE_URL) {
-      console.log('✅ PostgreSQL database connection configured via DATABASE_URL');
+      console.log(
+        "✅ PostgreSQL database connection configured via DATABASE_URL",
+      );
       return; // PostgreSQL databases are typically pre-created and managed externally
     }
-    
+
     // Run diagnostics first (SQLite only)
     const diagnostics = await diagnoseDatabaseFile();
-    
+
     if (!diagnostics.exists) {
-      console.log('🔧 Database file does not exist, creating it...');
+      console.log("🔧 Database file does not exist, creating it...");
       await createInitialDatabase();
     } else if (!diagnostics.valid) {
-      console.log('🔧 Database file is invalid, recreating it...');
+      console.log("🔧 Database file is invalid, recreating it...");
       // Backup the old file
-      const backupPath = databasePath + '.backup.' + Date.now();
+      const backupPath = databasePath + ".backup." + Date.now();
       fs.renameSync(databasePath, backupPath);
-      console.log('📁 Old database backed up to:', backupPath);
-      
+      console.log("📁 Old database backed up to:", backupPath);
+
       await createInitialDatabase();
     } else {
-      console.log('✅ Database file is valid');
-      
+      console.log("✅ Database file is valid");
+
       // Check and add missing columns to existing tables
       const tempDb = new Database(databasePath);
-      
+
       // Add missing columns to users table
-      await safeAddColumn(tempDb, 'users', 'email_verified', 'INTEGER DEFAULT 0');
-      await safeAddColumn(tempDb, 'users', 'phone', 'TEXT');
-      await safeAddColumn(tempDb, 'users', 'phone_verified', 'INTEGER DEFAULT 0');
-      await safeAddColumn(tempDb, 'users', 'two_factor_enabled', 'INTEGER DEFAULT 0');
-      await safeAddColumn(tempDb, 'users', 'two_factor_secret', 'TEXT');
-      
+      await safeAddColumn(
+        tempDb,
+        "users",
+        "email_verified",
+        "INTEGER DEFAULT 0",
+      );
+      await safeAddColumn(tempDb, "users", "phone", "TEXT");
+      await safeAddColumn(
+        tempDb,
+        "users",
+        "phone_verified",
+        "INTEGER DEFAULT 0",
+      );
+      await safeAddColumn(
+        tempDb,
+        "users",
+        "two_factor_enabled",
+        "INTEGER DEFAULT 0",
+      );
+      await safeAddColumn(tempDb, "users", "two_factor_secret", "TEXT");
+
       // Create missing tables if they don't exist
-      const tables = tempDb.prepare(`
+      const tables = tempDb
+        .prepare(
+          `
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name NOT LIKE 'sqlite_%'
-      `).all();
-      
+      `,
+        )
+        .all();
+
       const tableNames = tables.map((t: any) => t.name);
-      
+
       // Create password_reset_tokens table if it doesn't exist
-      if (!tableNames.includes('password_reset_tokens')) {
-        console.log('📝 Creating password_reset_tokens table');
+      if (!tableNames.includes("password_reset_tokens")) {
+        console.log("📝 Creating password_reset_tokens table");
         tempDb.exec(`
           CREATE TABLE password_reset_tokens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -439,15 +516,19 @@ async function initializeDatabase() {
             FOREIGN KEY (user_id) REFERENCES users(id)
           )
         `);
-        
+
         // Add indexes
-        tempDb.exec(`CREATE INDEX idx_password_reset_tokens_user_id ON password_reset_tokens(user_id)`);
-        tempDb.exec(`CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens(token)`);
+        tempDb.exec(
+          `CREATE INDEX idx_password_reset_tokens_user_id ON password_reset_tokens(user_id)`,
+        );
+        tempDb.exec(
+          `CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens(token)`,
+        );
       }
-      
+
       // Create passkey_credentials table if it doesn't exist
-      if (!tableNames.includes('passkey_credentials')) {
-        console.log('📝 Creating passkey_credentials table');
+      if (!tableNames.includes("passkey_credentials")) {
+        console.log("📝 Creating passkey_credentials table");
         tempDb.exec(`
           CREATE TABLE passkey_credentials (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -461,15 +542,19 @@ async function initializeDatabase() {
             FOREIGN KEY (user_id) REFERENCES users(id)
           )
         `);
-        
+
         // Add indexes
-        tempDb.exec(`CREATE INDEX idx_passkey_credentials_user_id ON passkey_credentials(user_id)`);
-        tempDb.exec(`CREATE INDEX idx_passkey_credentials_credential_id ON passkey_credentials(credential_id)`);
+        tempDb.exec(
+          `CREATE INDEX idx_passkey_credentials_user_id ON passkey_credentials(user_id)`,
+        );
+        tempDb.exec(
+          `CREATE INDEX idx_passkey_credentials_credential_id ON passkey_credentials(credential_id)`,
+        );
       }
-      
+
       // Create oauth_accounts table if it doesn't exist
-      if (!tableNames.includes('oauth_accounts')) {
-        console.log('📝 Creating oauth_accounts table');
+      if (!tableNames.includes("oauth_accounts")) {
+        console.log("📝 Creating oauth_accounts table");
         tempDb.exec(`
           CREATE TABLE oauth_accounts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -487,15 +572,19 @@ async function initializeDatabase() {
             UNIQUE(provider, provider_id)
           )
         `);
-        
+
         // Add indexes
-        tempDb.exec(`CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id)`);
-        tempDb.exec(`CREATE INDEX idx_oauth_accounts_provider ON oauth_accounts(provider, provider_id)`);
+        tempDb.exec(
+          `CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id)`,
+        );
+        tempDb.exec(
+          `CREATE INDEX idx_oauth_accounts_provider ON oauth_accounts(provider, provider_id)`,
+        );
       }
 
       // Added 2025-01-11 17:01:45 UTC - Create email_verification_tokens table if it doesn't exist
-      if (!tableNames.includes('email_verification_tokens')) {
-        console.log('📝 Creating email_verification_tokens table');
+      if (!tableNames.includes("email_verification_tokens")) {
+        console.log("📝 Creating email_verification_tokens table");
         tempDb.exec(`
           CREATE TABLE email_verification_tokens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -507,15 +596,19 @@ async function initializeDatabase() {
             FOREIGN KEY (user_id) REFERENCES users(id)
           )
         `);
-        
+
         // Add indexes
-        tempDb.exec(`CREATE INDEX idx_email_verification_tokens_user_id ON email_verification_tokens(user_id)`);
-        tempDb.exec(`CREATE INDEX idx_email_verification_tokens_token ON email_verification_tokens(token)`);
+        tempDb.exec(
+          `CREATE INDEX idx_email_verification_tokens_user_id ON email_verification_tokens(user_id)`,
+        );
+        tempDb.exec(
+          `CREATE INDEX idx_email_verification_tokens_token ON email_verification_tokens(token)`,
+        );
       }
 
       // Added 2025-01-11 17:01:45 UTC - Create phone_verification_tokens table if it doesn't exist
-      if (!tableNames.includes('phone_verification_tokens')) {
-        console.log('📝 Creating phone_verification_tokens table');
+      if (!tableNames.includes("phone_verification_tokens")) {
+        console.log("📝 Creating phone_verification_tokens table");
         tempDb.exec(`
           CREATE TABLE phone_verification_tokens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -529,15 +622,19 @@ async function initializeDatabase() {
             FOREIGN KEY (user_id) REFERENCES users(id)
           )
         `);
-        
+
         // Add indexes
-        tempDb.exec(`CREATE INDEX idx_phone_verification_tokens_user_id ON phone_verification_tokens(user_id)`);
-        tempDb.exec(`CREATE INDEX idx_phone_verification_tokens_phone ON phone_verification_tokens(phone)`);
+        tempDb.exec(
+          `CREATE INDEX idx_phone_verification_tokens_user_id ON phone_verification_tokens(user_id)`,
+        );
+        tempDb.exec(
+          `CREATE INDEX idx_phone_verification_tokens_phone ON phone_verification_tokens(phone)`,
+        );
       }
 
       // Added 2025-01-11 17:01:45 UTC - Create kyc_verifications table if it doesn't exist
-      if (!tableNames.includes('kyc_verifications')) {
-        console.log('📝 Creating kyc_verifications table');
+      if (!tableNames.includes("kyc_verifications")) {
+        console.log("📝 Creating kyc_verifications table");
         tempDb.exec(`
           CREATE TABLE kyc_verifications (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -559,16 +656,24 @@ async function initializeDatabase() {
             FOREIGN KEY (user_id) REFERENCES users(id)
           )
         `);
-        
+
         // Add indexes
-        tempDb.exec(`CREATE INDEX idx_kyc_verifications_user_id ON kyc_verifications(user_id)`);
-        tempDb.exec(`CREATE INDEX idx_kyc_verifications_status ON kyc_verifications(verification_status)`);
+        tempDb.exec(
+          `CREATE INDEX idx_kyc_verifications_user_id ON kyc_verifications(user_id)`,
+        );
+        tempDb.exec(
+          `CREATE INDEX idx_kyc_verifications_status ON kyc_verifications(verification_status)`,
+        );
       }
 
       // Check if user_privacy table exists
-      const userPrivacyCheck = tempDb.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='user_privacy'").get();
+      const userPrivacyCheck = tempDb
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='user_privacy'",
+        )
+        .get();
       if (!userPrivacyCheck) {
-        console.log('📝 Creating user_privacy table');
+        console.log("📝 Creating user_privacy table");
         tempDb.exec(`
           CREATE TABLE user_privacy (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -582,16 +687,17 @@ async function initializeDatabase() {
             FOREIGN KEY (user_id) REFERENCES users(id)
           )
         `);
-        
+
         // Add index
-        tempDb.exec(`CREATE INDEX idx_user_privacy_user_id ON user_privacy(user_id)`);
+        tempDb.exec(
+          `CREATE INDEX idx_user_privacy_user_id ON user_privacy(user_id)`,
+        );
       }
-      
+
       tempDb.close();
     }
-    
   } catch (error) {
-    console.error('❌ Database initialization failed:', error);
+    console.error("❌ Database initialization failed:", error);
     throw error;
   }
 }
@@ -601,14 +707,14 @@ await initializeDatabase();
 
 // Ensure data directory exists
 if (!fs.existsSync(dataDirectory)) {
-  console.log('📁 Creating data directory...');
+  console.log("📁 Creating data directory...");
   fs.mkdirSync(dataDirectory, { recursive: true });
 }
 
 // Ensure uploads directory exists
-const uploadsDirectory = path.join(dataDirectory, 'uploads');
+const uploadsDirectory = path.join(dataDirectory, "uploads");
 if (!fs.existsSync(uploadsDirectory)) {
-  console.log('📁 Creating uploads directory...');
+  console.log("📁 Creating uploads directory...");
   fs.mkdirSync(uploadsDirectory, { recursive: true });
 }
 
@@ -618,86 +724,91 @@ let db: Kysely<DatabaseSchema>;
 async function initializeDatabaseConnection(): Promise<Kysely<DatabaseSchema>> {
   if (DATABASE_URL) {
     // PostgreSQL configuration
-    console.log('🔌 Connecting to PostgreSQL database...');
-    
+    console.log("🔌 Connecting to PostgreSQL database...");
+
     try {
       const pool = new Pool({
         connectionString: DATABASE_URL,
-        ssl: DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+        ssl: DATABASE_URL.includes("localhost")
+          ? false
+          : { rejectUnauthorized: false },
       });
-      
+
       // Test the connection
       const client = await pool.connect();
-      const result = await client.query('SELECT version()');
-      console.log('✅ PostgreSQL connection established');
-      console.log('🧪 Database version:', result.rows[0].version);
+      const result = await client.query("SELECT version()");
+      console.log("✅ PostgreSQL connection established");
+      console.log("🧪 Database version:", result.rows[0].version);
       client.release();
-      
+
       return new Kysely<DatabaseSchema>({
         dialect: new PostgresDialect({
           pool,
         }),
         log: (event) => {
-          if (event.level === 'query') {
-            console.log('🔍 Query:', event.query.sql);
-            console.log('📊 Parameters:', event.query.parameters);
+          if (event.level === "query") {
+            console.log("🔍 Query:", event.query.sql);
+            console.log("📊 Parameters:", event.query.parameters);
           }
-          if (event.level === 'error') {
-            console.error('❌ Database error:', event.error);
+          if (event.level === "error") {
+            console.error("❌ Database error:", event.error);
           }
-        }
+        },
       });
-      
     } catch (error) {
-      console.error('❌ Failed to connect to PostgreSQL database:', error);
-      console.error('🔍 DATABASE_URL provided but connection failed');
+      console.error("❌ Failed to connect to PostgreSQL database:", error);
+      console.error("🔍 DATABASE_URL provided but connection failed");
       throw error;
     }
-    
   } else {
     // SQLite configuration (fallback)
-    console.log('🔌 Using SQLite database (no DATABASE_URL provided)...');
-    
+    console.log("🔌 Using SQLite database (no DATABASE_URL provided)...");
+
     let sqliteDb: Database.Database;
     try {
-      console.log('🔌 Connecting to SQLite database...');
+      console.log("🔌 Connecting to SQLite database...");
       sqliteDb = new Database(databasePath);
-      console.log('✅ SQLite database connection established');
-      
+      console.log("✅ SQLite database connection established");
+
       // Enable foreign keys
-      sqliteDb.pragma('foreign_keys = ON');
-      
+      sqliteDb.pragma("foreign_keys = ON");
+
       // Set journal mode to WAL for better performance
-      sqliteDb.pragma('journal_mode = WAL');
-      
+      sqliteDb.pragma("journal_mode = WAL");
+
       // Performance optimizations - Added 2025-01-11 for urgent performance fixes
-      sqliteDb.pragma('cache_size = 10000');  // Increase cache size for better performance
-      sqliteDb.pragma('temp_store = memory');  // Store temporary tables in memory
-      sqliteDb.pragma('mmap_size = 268435456'); // Enable memory mapping (256MB)
-      sqliteDb.pragma('synchronous = NORMAL');  // Balance between safety and performance
-      
+      sqliteDb.pragma("cache_size = 10000"); // Increase cache size for better performance
+      sqliteDb.pragma("temp_store = memory"); // Store temporary tables in memory
+      sqliteDb.pragma("mmap_size = 268435456"); // Enable memory mapping (256MB)
+      sqliteDb.pragma("synchronous = NORMAL"); // Balance between safety and performance
+
       // Test the connection
-      const result = sqliteDb.prepare('SELECT sqlite_version() as version').get();
-      console.log('🧪 Database test query result:', result);
-      
+      const result = sqliteDb
+        .prepare("SELECT sqlite_version() as version")
+        .get();
+      console.log("🧪 Database test query result:", result);
+
       // Verify tables exist
-      const tables = sqliteDb.prepare(`
+      const tables = sqliteDb
+        .prepare(
+          `
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name NOT LIKE 'sqlite_%'
-      `).all();
-      
-      console.log('📋 Database tables found:', tables.length);
+      `,
+        )
+        .all();
+
+      console.log("📋 Database tables found:", tables.length);
       tables.forEach((table: any) => {
-        console.log('  ✅', table.name);
+        console.log("  ✅", table.name);
       });
-      
+
       if (tables.length === 0) {
-        throw new Error('No tables found in database');
+        throw new Error("No tables found in database");
       }
-      
     } catch (error) {
-      console.error('❌ Failed to initialize SQLite database:', error);
-      console.error('🔍 Database path that failed:', databasePath);
+      console.error("❌ Failed to initialize SQLite database:", error);
+      console.error("🔍 Database path that failed:", databasePath);
       throw error;
     }
 
@@ -706,14 +817,14 @@ async function initializeDatabaseConnection(): Promise<Kysely<DatabaseSchema>> {
         database: sqliteDb,
       }),
       log: (event) => {
-        if (event.level === 'query') {
-          console.log('🔍 Query:', event.query.sql);
-          console.log('📊 Parameters:', event.query.parameters);
+        if (event.level === "query") {
+          console.log("🔍 Query:", event.query.sql);
+          console.log("📊 Parameters:", event.query.parameters);
         }
-        if (event.level === 'error') {
-          console.error('❌ Database error:', event.error);
+        if (event.level === "error") {
+          console.error("❌ Database error:", event.error);
         }
-      }
+      },
     });
   }
 }
@@ -724,7 +835,18 @@ if (DATABASE_URL) {
   const dbPromise = initializeDatabaseConnection();
   db = new Proxy({} as Kysely<DatabaseSchema>, {
     get(target, prop) {
-      if (typeof prop === 'string' && ['selectFrom', 'insertInto', 'updateTable', 'deleteFrom', 'schema', 'fn', 'transaction'].includes(prop)) {
+      if (
+        typeof prop === "string" &&
+        [
+          "selectFrom",
+          "insertInto",
+          "updateTable",
+          "deleteFrom",
+          "schema",
+          "fn",
+          "transaction",
+        ].includes(prop)
+      ) {
         return async (...args: any[]) => {
           const realDb = await dbPromise;
           return (realDb as any)[prop](...args);
@@ -734,64 +856,67 @@ if (DATABASE_URL) {
         const realDb = await dbPromise;
         return (realDb as any)[prop](...args);
       };
-    }
+    },
   });
 } else {
   // For SQLite, initialize synchronously
   try {
-    console.log('🔌 Connecting to SQLite database...');
+    console.log("🔌 Connecting to SQLite database...");
     const sqliteDb = new Database(databasePath);
-    console.log('✅ SQLite database connection established');
-    
+    console.log("✅ SQLite database connection established");
+
     // Enable foreign keys
-    sqliteDb.pragma('foreign_keys = ON');
-    
+    sqliteDb.pragma("foreign_keys = ON");
+
     // Set journal mode to WAL for better performance
-    sqliteDb.pragma('journal_mode = WAL');
-    
+    sqliteDb.pragma("journal_mode = WAL");
+
     // Performance optimizations - Added 2025-01-11 for urgent performance fixes
-    sqliteDb.pragma('cache_size = 10000');  // Increase cache size for better performance
-    sqliteDb.pragma('temp_store = memory');  // Store temporary tables in memory
-    sqliteDb.pragma('mmap_size = 268435456'); // Enable memory mapping (256MB)
-    sqliteDb.pragma('synchronous = NORMAL');  // Balance between safety and performance
-    
+    sqliteDb.pragma("cache_size = 10000"); // Increase cache size for better performance
+    sqliteDb.pragma("temp_store = memory"); // Store temporary tables in memory
+    sqliteDb.pragma("mmap_size = 268435456"); // Enable memory mapping (256MB)
+    sqliteDb.pragma("synchronous = NORMAL"); // Balance between safety and performance
+
     // Test the connection
-    const result = sqliteDb.prepare('SELECT sqlite_version() as version').get();
-    console.log('🧪 Database test query result:', result);
-    
+    const result = sqliteDb.prepare("SELECT sqlite_version() as version").get();
+    console.log("🧪 Database test query result:", result);
+
     // Verify tables exist
-    const tables = sqliteDb.prepare(`
+    const tables = sqliteDb
+      .prepare(
+        `
       SELECT name FROM sqlite_master 
       WHERE type='table' AND name NOT LIKE 'sqlite_%'
-    `).all();
-    
-    console.log('📋 Database tables found:', tables.length);
+    `,
+      )
+      .all();
+
+    console.log("📋 Database tables found:", tables.length);
     tables.forEach((table: any) => {
-      console.log('  ✅', table.name);
+      console.log("  ✅", table.name);
     });
-    
+
     if (tables.length === 0) {
-      throw new Error('No tables found in database');
+      throw new Error("No tables found in database");
     }
-    
+
     db = new Kysely<DatabaseSchema>({
       dialect: new SqliteDialect({
         database: sqliteDb,
       }),
       log: (event) => {
-        if (event.level === 'query') {
-          console.log('🔍 Query:', event.query.sql);
-          console.log('📊 Parameters:', event.query.parameters);
+        if (event.level === "query") {
+          console.log("🔍 Query:", event.query.sql);
+          console.log("📊 Parameters:", event.query.parameters);
         }
-        if (event.level === 'error') {
-          console.error('❌ Database error:', event.error);
+        if (event.level === "error") {
+          console.error("❌ Database error:", event.error);
         }
-      }
+      },
     });
-    
   } catch (error) {
-    console.error('❌ Failed to initialize SQLite database:', error);
-    console.error('🔍 Database path that failed:', databasePath);
+    console.error("❌ Failed to initialize SQLite database:", error);
+    console.error("🔍 Database path that failed:", databasePath);
     throw error;
   }
 }
@@ -801,20 +926,20 @@ export { db };
 // Test database connection
 async function testDatabaseConnection() {
   try {
-    console.log('🧪 Testing database connection...');
-    
+    console.log("🧪 Testing database connection...");
+
     // Try to get a count of users
     const userCount = await db
-      .selectFrom('users')
-      .select(db.fn.count('id').as('count'))
+      .selectFrom("users")
+      .select(db.fn.count("id").as("count"))
       .executeTakeFirst();
-    
-    console.log('✅ Database connection test successful');
-    console.log('👥 User count:', userCount?.count || 0);
-    
+
+    console.log("✅ Database connection test successful");
+    console.log("👥 User count:", userCount?.count || 0);
+
     return true;
   } catch (error) {
-    console.error('❌ Database connection test failed:', error);
+    console.error("❌ Database connection test failed:", error);
     return false;
   }
 }
@@ -822,4 +947,4 @@ async function testDatabaseConnection() {
 // Run the test
 testDatabaseConnection();
 
-console.log('✅ Database module initialized successfully');
+console.log("✅ Database module initialized successfully");

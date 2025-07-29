@@ -1,120 +1,133 @@
 /*
  * Copyright (c) 2025 GALAX Civic Networking App
- * 
+ *
  * This software is licensed under the PolyForm Shield License 1.0.0.
- * For the full license text, see LICENSE file in the root directory 
+ * For the full license text, see LICENSE file in the root directory
  * or visit https://polyformproject.org/licenses/shield/1.0.0
  */
 
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
+import Database from "better-sqlite3";
+import path from "path";
+import fs from "fs";
 
 export async function diagnoseDatabaseFile() {
-  console.log('🔍 === DATABASE FILE DIAGNOSTICS ===');
-  
-  const dataDirectory = process.env.DATA_DIRECTORY || './data';
-  const databasePath = path.join(dataDirectory, 'database.sqlite');
-  
-  console.log('📁 Data directory:', dataDirectory);
-  console.log('📊 Database path:', databasePath);
-  console.log('🔍 Absolute database path:', path.resolve(databasePath));
-  
+  console.log("🔍 === DATABASE FILE DIAGNOSTICS ===");
+
+  const dataDirectory = process.env.DATA_DIRECTORY || "./data";
+  const databasePath = path.join(dataDirectory, "database.sqlite");
+
+  console.log("📁 Data directory:", dataDirectory);
+  console.log("📊 Database path:", databasePath);
+  console.log("🔍 Absolute database path:", path.resolve(databasePath));
+
   // Check if data directory exists
   if (!fs.existsSync(dataDirectory)) {
-    console.log('❌ Data directory does not exist');
-    console.log('🔧 Creating data directory...');
+    console.log("❌ Data directory does not exist");
+    console.log("🔧 Creating data directory...");
     fs.mkdirSync(dataDirectory, { recursive: true });
-    console.log('✅ Data directory created');
+    console.log("✅ Data directory created");
   } else {
-    console.log('✅ Data directory exists');
+    console.log("✅ Data directory exists");
   }
-  
+
   // Check if database file exists
   if (!fs.existsSync(databasePath)) {
-    console.log('❌ Database file does not exist at:', databasePath);
-    console.log('🔧 This is the issue - SQLite cannot find the database file');
+    console.log("❌ Database file does not exist at:", databasePath);
+    console.log("🔧 This is the issue - SQLite cannot find the database file");
     return { exists: false, path: databasePath };
   } else {
-    console.log('✅ Database file exists');
-    
+    console.log("✅ Database file exists");
+
     // Check if it's a valid SQLite file
     try {
       // Use a single atomic read operation to avoid race conditions
       const buffer = fs.readFileSync(databasePath, { encoding: null });
-      
-      // Check file stats after reading to ensure consistency  
+
+      // Check file stats after reading to ensure consistency
       const stats = fs.statSync(databasePath);
-      console.log('📊 File size:', stats.size, 'bytes');
-      console.log('📅 Created:', stats.birthtime);
-      console.log('📅 Modified:', stats.mtime);
-      
-      const header = buffer.slice(0, 16).toString('ascii');
-      console.log('🔍 File header:', header);
-      
-      if (header.startsWith('SQLite format 3')) {
-        console.log('✅ File is a valid SQLite database');
+      console.log("📊 File size:", stats.size, "bytes");
+      console.log("📅 Created:", stats.birthtime);
+      console.log("📅 Modified:", stats.mtime);
+
+      const header = buffer.slice(0, 16).toString("ascii");
+      console.log("🔍 File header:", header);
+
+      if (header.startsWith("SQLite format 3")) {
+        console.log("✅ File is a valid SQLite database");
       } else {
-        console.log('❌ File is not a valid SQLite database');
+        console.log("❌ File is not a valid SQLite database");
         console.log('🔧 File header should start with "SQLite format 3"');
         return { exists: true, valid: false, path: databasePath };
       }
     } catch (error) {
-      console.error('❌ Error reading database file:', error);
+      console.error("❌ Error reading database file:", error);
       return { exists: true, valid: false, path: databasePath };
     }
   }
-  
+
   // Try to connect to the database
   try {
-    console.log('🔌 Attempting to connect to database...');
+    console.log("🔌 Attempting to connect to database...");
     const db = new Database(databasePath);
-    
+
     // Test basic query
-    const result = db.prepare('SELECT sqlite_version()').get();
-    console.log('✅ Database connection successful');
-    console.log('📊 SQLite version:', result['sqlite_version()']);
-    
+    const result = db.prepare("SELECT sqlite_version()").get();
+    console.log("✅ Database connection successful");
+    console.log("📊 SQLite version:", result["sqlite_version()"]);
+
     // Check if tables exist
-    const tables = db.prepare(`
+    const tables = db
+      .prepare(
+        `
       SELECT name FROM sqlite_master 
       WHERE type='table' AND name NOT LIKE 'sqlite_%'
-    `).all();
-    
-    console.log('📋 Tables in database:', tables.length);
+    `,
+      )
+      .all();
+
+    console.log("📋 Tables in database:", tables.length);
     tables.forEach((table: any) => {
-      console.log('  - ', table.name);
+      console.log("  - ", table.name);
     });
-    
+
     db.close();
-    return { exists: true, valid: true, path: databasePath, tables: tables.length };
-    
+    return {
+      exists: true,
+      valid: true,
+      path: databasePath,
+      tables: tables.length,
+    };
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    return { exists: true, valid: false, path: databasePath, error: error.message };
+    console.error("❌ Database connection failed:", error);
+    return {
+      exists: true,
+      valid: false,
+      path: databasePath,
+      error: error.message,
+    };
   }
 }
 
 export async function createInitialDatabase() {
-  console.log('🔧 Creating initial database with tables...');
-  
-  const dataDirectory = process.env.DATA_DIRECTORY || './data';
-  const databasePath = path.join(dataDirectory, 'database.sqlite');
-  
+  console.log("🔧 Creating initial database with tables...");
+
+  const dataDirectory = process.env.DATA_DIRECTORY || "./data";
+  const databasePath = path.join(dataDirectory, "database.sqlite");
+
   // Ensure directory exists
   if (!fs.existsSync(dataDirectory)) {
     fs.mkdirSync(dataDirectory, { recursive: true });
   }
-  
+
   // Create database and tables
   const db = new Database(databasePath);
-  
+
   // Enable foreign keys
-  db.pragma('foreign_keys = ON');
-  
+  db.pragma("foreign_keys = ON");
+
   // Create tables
-  console.log('📋 Creating tables...');
-  
+  console.log("📋 Creating tables...");
+
   // Users table
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -135,7 +148,7 @@ export async function createInitialDatabase() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-  
+
   // Help requests table
   db.exec(`
     CREATE TABLE IF NOT EXISTS help_requests (
@@ -166,7 +179,7 @@ export async function createInitialDatabase() {
       FOREIGN KEY (helper_id) REFERENCES users(id)
     )
   `);
-  
+
   // Crisis alerts table
   db.exec(`
     CREATE TABLE IF NOT EXISTS crisis_alerts (
@@ -184,7 +197,7 @@ export async function createInitialDatabase() {
       FOREIGN KEY (created_by) REFERENCES users(id)
     )
   `);
-  
+
   // Proposals table
   db.exec(`
     CREATE TABLE IF NOT EXISTS proposals (
@@ -201,7 +214,7 @@ export async function createInitialDatabase() {
       FOREIGN KEY (created_by) REFERENCES users(id)
     )
   `);
-  
+
   // Votes table
   db.exec(`
     CREATE TABLE IF NOT EXISTS votes (
@@ -216,7 +229,7 @@ export async function createInitialDatabase() {
       FOREIGN KEY (delegate_id) REFERENCES users(id)
     )
   `);
-  
+
   // Messages table
   db.exec(`
     CREATE TABLE IF NOT EXISTS messages (
@@ -229,7 +242,7 @@ export async function createInitialDatabase() {
       FOREIGN KEY (sender_id) REFERENCES users(id)
     )
   `);
-  
+
   // Delegates table
   db.exec(`
     CREATE TABLE IF NOT EXISTS delegates (
@@ -242,7 +255,7 @@ export async function createInitialDatabase() {
       FOREIGN KEY (delegate_id) REFERENCES users(id)
     )
   `);
-  
+
   // Transactions table
   db.exec(`
     CREATE TABLE IF NOT EXISTS transactions (
@@ -256,7 +269,7 @@ export async function createInitialDatabase() {
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
-  
+
   // Chat rooms table
   db.exec(`
     CREATE TABLE IF NOT EXISTS chat_rooms (
@@ -271,7 +284,7 @@ export async function createInitialDatabase() {
       FOREIGN KEY (helper_id) REFERENCES users(id)
     )
   `);
-  
+
   // Notifications table
   db.exec(`
     CREATE TABLE IF NOT EXISTS notifications (
@@ -286,7 +299,7 @@ export async function createInitialDatabase() {
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
-  
+
   // User connections table
   db.exec(`
     CREATE TABLE IF NOT EXISTS user_connections (
@@ -297,21 +310,25 @@ export async function createInitialDatabase() {
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
-  
-  console.log('✅ All tables created successfully');
-  
+
+  console.log("✅ All tables created successfully");
+
   // Verify tables were created
-  const tables = db.prepare(`
+  const tables = db
+    .prepare(
+      `
     SELECT name FROM sqlite_master 
     WHERE type='table' AND name NOT LIKE 'sqlite_%'
-  `).all();
-  
-  console.log('📋 Created tables:', tables.length);
+  `,
+    )
+    .all();
+
+  console.log("📋 Created tables:", tables.length);
   tables.forEach((table: any) => {
-    console.log('  ✅', table.name);
+    console.log("  ✅", table.name);
   });
-  
+
   db.close();
-  
+
   return { success: true, path: databasePath, tables: tables.length };
 }
