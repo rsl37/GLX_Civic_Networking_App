@@ -67,6 +67,8 @@ import SocketManager from "./socketManager.js";
 import stablecoinRoutes from "./stablecoin/routes.js";
 import { stablecoinService } from "./stablecoin/StablecoinService.js";
 
+import { postQuantumSecurity } from "./postQuantumCrypto.js";
+
 // Import comprehensive security systems
 import {
   comprehensiveSecurityMiddleware,
@@ -544,6 +546,29 @@ export async function startServer(port: number) {
       });
     } catch (error) {
       console.error("❌ Security system initialization error:", error);
+    }
+
+    // Initialize Post-Quantum Cryptography Security Baseline
+    try {
+      const pqSecurityStatus = postQuantumSecurity.initializeSecurity();
+      console.log("🔐 Post-Quantum Security Baseline initialized successfully");
+      console.log(`   • Security Level: ${pqSecurityStatus.securityLevel} (256-bit equivalent)`);
+      console.log(`   • Algorithms: ${pqSecurityStatus.algorithms.join(', ')}`);
+
+      logSecurityEvent({
+        type: "system",
+        severity: "info",
+        ip: "system",
+        details: { 
+          event: "Post-Quantum Security initialized",
+          securityLevel: pqSecurityStatus.securityLevel,
+          algorithms: pqSecurityStatus.algorithms
+        },
+        action: "Post-quantum cryptography baseline enabled",
+        status: "allowed",
+      });
+    } catch (error) {
+      console.error("❌ Post-Quantum Security initialization error:", error);
     }
 
     // Initialize and start stablecoin service

@@ -53,10 +53,11 @@ interface SecuritySystemStatus {
   };
   postQuantum: {
     enabled: boolean;
-    algorithmsActive: number;
+    algorithms: string[];
     securityLevel: number;
-    nistsCompliant: boolean;
-    quantumSafe: boolean;
+    quantumResistant: boolean;
+    hybridCrypto: boolean;
+    lastTest: string;
   };
   overall: {
     securityLevel: 'low' | 'medium' | 'high' | 'maximum' | 'quantum-safe';
@@ -91,10 +92,12 @@ const SECURITY_CONFIG = {
   },
   postQuantum: {
     enabled: true,
-    mlkem: true,
-    mldsa: true,
-    slhdsa: true,
-    hybridMode: true
+    mlKemEnabled: true,     // ML-KEM (CRYSTALS-Kyber)
+    mlDsaEnabled: true,     // ML-DSA (CRYSTALS-Dilithium)
+    slhDsaEnabled: true,    // SLH-DSA (SPHINCS+)
+    hybridCrypto: true,     // Classical + Post-quantum hybrid
+    securityLevel: 5,       // 256-bit security level
+    quantumResistant: true  // Full quantum resistance
   }
 };
 
@@ -102,8 +105,8 @@ const SECURITY_CONFIG = {
 interface SecurityEvent {
   id: string;
   timestamp: Date;
-  type: 'malware' | 'virus' | 'attack' | 'ddos' | 'bot' | 'honeypot' | 'csrf' | 'behavioral';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: 'malware' | 'virus' | 'attack' | 'ddos' | 'bot' | 'honeypot' | 'csrf' | 'behavioral' | 'post-quantum' | 'system' | 'test';
+  severity: 'low' | 'medium' | 'high' | 'critical' | 'info';
   ip: string;
   userAgent?: string;
   details: any;
@@ -195,9 +198,9 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
     // Calculate protection score (0-130 for quantum-safe)
     let protectionScore = 0;
     
-    if (SECURITY_CONFIG.antimalware.enabled) protectionScore += 25;
-    if (SECURITY_CONFIG.antivirus.enabled) protectionScore += 25;
-    if (SECURITY_CONFIG.antiHacking.enabled) protectionScore += 25;
+    if (SECURITY_CONFIG.antimalware.enabled) protectionScore += 20;
+    if (SECURITY_CONFIG.antivirus.enabled) protectionScore += 20;
+    if (SECURITY_CONFIG.antiHacking.enabled) protectionScore += 20;
     if (SECURITY_CONFIG.antiHacking.ddosProtection) protectionScore += 5;
     if (SECURITY_CONFIG.antiHacking.botDetection) protectionScore += 5;
     if (SECURITY_CONFIG.antiHacking.honeypot) protectionScore += 5;
@@ -207,13 +210,8 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
     // Add post-quantum bonus protection (30 points for quantum-safe level)
     if (pqStatus.initialized) protectionScore += 30;
     
-    // Determine security level
-    let securityLevel: 'low' | 'medium' | 'high' | 'maximum' | 'quantum-safe';
-    if (protectionScore >= 130) securityLevel = 'quantum-safe';
-    else if (protectionScore >= 95) securityLevel = 'maximum';
-    else if (protectionScore >= 80) securityLevel = 'high';
-    else if (protectionScore >= 60) securityLevel = 'medium';
-    else securityLevel = 'low';
+    // Get post-quantum security status
+    const pqStatus = postQuantumSecurity.getSecurityStatus();
     
     const status: SecuritySystemStatus = {
       antimalware: {
@@ -247,7 +245,7 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
       },
       overall: {
         securityLevel,
-        protectionScore,
+        protectionScore: displayScore,
         lastUpdate: new Date().toISOString()
       }
     };
@@ -258,7 +256,7 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
       antimalware: { enabled: false, lastScan: '', threatsDetected: 0, quarantinedFiles: 0 },
       antivirus: { enabled: false, definitionsCount: 0, lastUpdate: '', totalScans: 0, virusesDetected: 0 },
       antiHacking: { enabled: false, attackPatternsActive: 0, suspiciousIPs: 0, blockedIPs: 0, ddosProtectionActive: false, botDetectionActive: false, honeypotActive: false },
-      postQuantum: { enabled: false, algorithmsActive: 0, securityLevel: 0, nistsCompliant: false, quantumSafe: false },
+      postQuantum: { enabled: false, algorithms: [], securityLevel: 0, quantumResistant: false, hybridCrypto: false, lastTest: '' },
       overall: { securityLevel: 'low', protectionScore: 0, lastUpdate: new Date().toISOString() }
     };
   }
@@ -373,7 +371,7 @@ export const securityDashboardAdmin = {
     try {
       const { reason } = req.body;
       
-      // Enable maximum security including post-quantum
+      // Enable maximum security including post-quantum protection
       SECURITY_CONFIG.antimalware.enabled = true;
       SECURITY_CONFIG.antivirus.enabled = true;
       SECURITY_CONFIG.antiHacking.enabled = true;
@@ -383,6 +381,7 @@ export const securityDashboardAdmin = {
       SECURITY_CONFIG.antiHacking.botDetection = true;
       SECURITY_CONFIG.antiHacking.behavioralAnalysis = true;
       SECURITY_CONFIG.postQuantum.enabled = true;
+      SECURITY_CONFIG.postQuantum.quantumResistant = true;
       
       logSecurityEvent({
         type: 'attack',
