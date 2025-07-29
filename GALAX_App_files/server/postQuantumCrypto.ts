@@ -224,7 +224,7 @@ class PostQuantumCryptography {
         slhdsa: this.keys ? 'SLH-DSA-256s (FIPS 205)' : 'Not initialized'
       },
       hybridMode: this.config.hybridMode,
-      zeroKnowledgeProofs: this.config.zerknowledgeProofs,
+      zeroKnowledgeProofs: this.config.zeroKnowledgeProofs,
       keySizes: this.keys ? {
         mlkemPublic: this.keys.mlkem.publicKey.length,
         mldsaPublic: this.keys.mldsa.publicKey.length,
