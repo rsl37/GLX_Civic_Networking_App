@@ -353,7 +353,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
   
   // Sanitize user-controlled data to prevent format string injection
   const safeMethod = req.method.slice(0, 10).replace(/[^A-Z]/g, '');
-  const safePath = req.path.slice(0, 100).replace(/[^\w\/\-_?.=&]/g, '');
+  const safePath = req.path.slice(0, 100).replace(/[^\w\/\-_?.=&]/g, '').replace(/\r?\n/g, '');
   
   // Log request details
   console.log('📝 Request:', safeMethod, safePath, {
