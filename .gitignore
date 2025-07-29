@@ -86,6 +86,10 @@ bundle-size-report.md
 api-contract-test.js
 socket-test.js
 Dockerfile.test
+
+# Workflow backups (temporary)
+.github/workflows-backup/
+
 # Exclude generated test files but allow e2e source files
 **/src/__tests__/
 # Allow e2e directory but exclude specific generated content

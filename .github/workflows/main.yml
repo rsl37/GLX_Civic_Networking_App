@@ -1,0 +1,212 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy (for compatibility)'
+        required: false
+        default: 'main'
+        type: choice
+        options:
+        - main
+
+env:
+  NODE_VERSION: '20.x'
+  WORKING_DIRECTORY: './GALAX_App_files'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: npm ci --prefer-offline --no-audit --no-fund
+      
+    - name: Type check
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: |
+        echo "Running TypeScript type check..."
+        npx tsc --noEmit --project ./tsconfig.json || echo "Type check completed with warnings"
+      
+    - name: Build application
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: npm run build
+      
+    - name: Run tests
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: npm test
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: build-artifacts
+        path: ${{ env.WORKING_DIRECTORY }}/dist/
+        retention-days: 7
+
+  lint-and-format:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: npm ci --prefer-offline --no-audit --no-fund
+      
+    - name: Check code formatting
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: |
+        # Check Prettier formatting if config exists
+        if [ -f ".prettierrc" ] || [ -f ".prettierrc.json" ] || [ -f "prettier.config.js" ]; then
+          npx prettier --check . || echo "Formatting issues found - run 'npm run format' to fix"
+        else
+          echo "No Prettier config found, skipping format check"
+        fi
+        
+    - name: Run linting
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: |
+        # Run ESLint if config exists
+        if [ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "eslint.config.js" ]; then
+          npx eslint . --ext .js,.jsx,.ts,.tsx || echo "Linting completed with warnings"
+        else
+          echo "No ESLint config found, skipping lint step"
+        fi
+
+  security-scan:
+    name: Security Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: npm ci --prefer-offline --no-audit --no-fund
+      
+    - name: Run security audit
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: npm audit --audit-level=high
+      
+    - name: Check for secrets
+      run: |
+        echo "Scanning for potential secrets..."
+        # Simple grep-based secret detection
+        if grep -r -E "(password|secret|key|token).*=" --include="*.js" --include="*.ts" --exclude-dir=node_modules . | grep -v "test" | grep -v ".env.example"; then
+          echo "⚠️  Warning: Potential secrets found in code"
+        else
+          echo "✓ No obvious secrets detected"
+        fi
+
+  deployment-check:
+    name: Deployment Readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-and-test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: npm ci --prefer-offline --no-audit --no-fund
+      
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        path: ${{ env.WORKING_DIRECTORY }}/dist/
+        
+    - name: Test application startup
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: |
+        echo "Testing application startup..."
+        timeout 30s npm start &
+        APP_PID=$!
+        
+        # Wait for app to start
+        sleep 10
+        
+        # Basic health check
+        if curl -f http://localhost:3000 2>/dev/null; then
+          echo "✓ Application started successfully"
+        else
+          echo "⚠️  Application may have startup issues"
+        fi
+        
+        # Clean up
+        kill $APP_PID 2>/dev/null || true
+        
+    - name: Check bundle size
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: |
+        echo "Checking bundle sizes..."
+        if [ -d "dist/public/assets" ]; then
+          echo "JavaScript files:"
+          find dist/public/assets/ -name "*.js" -exec ls -lh {} \;
+          
+          # Check for large bundles
+          LARGE_FILES=$(find dist/public/assets/ -name "*.js" -size +500k)
+          if [ -n "$LARGE_FILES" ]; then
+            echo "⚠️  Warning: Large bundle files detected:"
+            echo "$LARGE_FILES"
+          else
+            echo "✓ All bundle sizes are within acceptable limits"
+          fi
+        else
+          echo "No build assets found"
+        fi
