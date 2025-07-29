@@ -72,7 +72,6 @@ const ATTACK_PATTERNS: AttackPattern[] = [
     type: "xss",
     severity: "high",
     description: "Cross-site scripting via script tags",
-    countermeasure: "Sanitize HTML and block",
   },
   {
     id: "XSS_EVENT_HANDLER",
