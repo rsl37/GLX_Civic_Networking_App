@@ -375,7 +375,7 @@ export const requestLogger = (
   const safePath = req.path
     .slice(0, 100)
     // Remove all non-path-safe characters, including all line breaks and control chars
-    .replace(/[\r\n\u2028\u2029\t\f\v\0\x0B\x1B\x7F-\u009F]/g, "")
+    .replace(/[\r\n\u2028\u2029\t\f\0\x0B\x1B\x7F-\u009F]/g, "")
     .replace(/[^\w\/\-_?.=&]/g, "");
 
   // Log request details
