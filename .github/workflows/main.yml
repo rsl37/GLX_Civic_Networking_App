@@ -2,9 +2,19 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy (for compatibility)'
+        required: false
+        default: 'main'
+        type: choice
+        options:
+        - main
+        - develop
 
 env:
   NODE_VERSION: '20.x'

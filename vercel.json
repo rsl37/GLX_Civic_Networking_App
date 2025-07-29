@@ -53,5 +53,10 @@
       "destination": "https://galaxcivicnetwork.me/",
       "permanent": true
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  }
 }
