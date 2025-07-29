@@ -1038,7 +1038,18 @@ app.post(
   authenticateToken,
   async (req: AuthRequest, res) => {
     try {
-      const userId = req.userId!;
+      // Validate user ID from token
+      if (!req.userId || typeof req.userId !== 'number') {
+        return res.status(401).json({
+          success: false,
+          error: {
+            message: "Invalid authentication token",
+            statusCode: 401,
+          },
+        });
+      }
+      
+      const userId = req.userId;
       const { code } = req.body;
 
       console.log("🔒 2FA enable request from user:", userId);

@@ -13,14 +13,14 @@ import { AuthRequest } from "../auth.js";
 interface MetricsStore {
   requests: {
     total: number;
-    by_endpoint: Record<string, number>;
-    by_method: Record<string, number>;
-    by_status: Record<string, number>;
-    by_version: Record<string, number>;
+    by_endpoint: Map<string, number>;
+    by_method: Map<string, number>;
+    by_status: Map<string, number>;
+    by_version: Map<string, number>;
   };
   errors: {
     total: number;
-    by_type: Record<string, number>;
+    by_type: Map<string, number>;
     recent: Array<{
       timestamp: string;
       error: string;
@@ -57,14 +57,14 @@ interface MetricsStore {
 const metrics: MetricsStore = {
   requests: {
     total: 0,
-    by_endpoint: {},
-    by_method: {},
-    by_status: {},
-    by_version: {},
+    by_endpoint: new Map(),
+    by_method: new Map(),
+    by_status: new Map(),
+    by_version: new Map(),
   },
   errors: {
     total: 0,
-    by_type: {},
+    by_type: new Map(),
     recent: [],
   },
   performance: {
@@ -119,10 +119,14 @@ export const collectMetrics = (
   const method = req.method.slice(0, 10);
   const sanitizedMethod = method.replace(/[^A-Z]/g, "");
 
-  metrics.requests.by_endpoint[sanitizedEndpoint] =
-    (metrics.requests.by_endpoint[sanitizedEndpoint] || 0) + 1;
-  metrics.requests.by_method[sanitizedMethod] =
-    (metrics.requests.by_method[sanitizedMethod] || 0) + 1;
+  metrics.requests.by_endpoint.set(
+    sanitizedEndpoint,
+    (metrics.requests.by_endpoint.get(sanitizedEndpoint) || 0) + 1,
+  );
+  metrics.requests.by_method.set(
+    sanitizedMethod,
+    (metrics.requests.by_method.get(sanitizedMethod) || 0) + 1,
+  );
 
   // Validate and sanitize API version
   if (req.apiVersion && typeof req.apiVersion === "string") {
@@ -130,8 +134,10 @@ export const collectMetrics = (
       .slice(0, 10)
       .replace(/[^a-zA-Z0-9.]/g, "");
     if (sanitizedVersion) {
-      metrics.requests.by_version[sanitizedVersion] =
-        (metrics.requests.by_version[sanitizedVersion] || 0) + 1;
+      metrics.requests.by_version.set(
+        sanitizedVersion,
+        (metrics.requests.by_version.get(sanitizedVersion) || 0) + 1,
+      );
     }
   }
 
@@ -173,8 +179,10 @@ export const collectMetrics = (
     }
 
     // Track status codes
-    metrics.requests.by_status[res.statusCode] =
-      (metrics.requests.by_status[res.statusCode] || 0) + 1;
+    metrics.requests.by_status.set(
+      res.statusCode.toString(),
+      (metrics.requests.by_status.get(res.statusCode.toString()) || 0) + 1,
+    );
 
     return originalEnd.call(this, chunk, encoding);
   };
@@ -192,8 +200,10 @@ export const trackError = (
 
   // Sanitize error name to prevent property injection
   const errorName = error.name.slice(0, 50).replace(/[^a-zA-Z0-9_]/g, "");
-  metrics.errors.by_type[errorName] =
-    (metrics.errors.by_type[errorName] || 0) + 1;
+  metrics.errors.by_type.set(
+    errorName,
+    (metrics.errors.by_type.get(errorName) || 0) + 1,
+  );
 
   metrics.errors.recent.push({
     timestamp: new Date().toISOString(),
@@ -468,18 +478,31 @@ const calculatePercentiles = (values: number[]) => {
 };
 
 // Export metrics for testing or external monitoring
-export const getMetricsSnapshot = () => ({ ...metrics });
+export const getMetricsSnapshot = () => ({
+  ...metrics,
+  requests: {
+    ...metrics.requests,
+    by_endpoint: Object.fromEntries(metrics.requests.by_endpoint),
+    by_method: Object.fromEntries(metrics.requests.by_method),
+    by_status: Object.fromEntries(metrics.requests.by_status),
+    by_version: Object.fromEntries(metrics.requests.by_version),
+  },
+  errors: {
+    ...metrics.errors,
+    by_type: Object.fromEntries(metrics.errors.by_type),
+  },
+});
 
 // Reset all metrics (useful for testing)
 export const resetMetrics = () => {
   metrics.requests = {
     total: 0,
-    by_endpoint: {},
-    by_method: {},
-    by_status: {},
-    by_version: {},
+    by_endpoint: new Map(),
+    by_method: new Map(),
+    by_status: new Map(),
+    by_version: new Map(),
   };
-  metrics.errors = { total: 0, by_type: {}, recent: [] };
+  metrics.errors = { total: 0, by_type: new Map(), recent: [] };
   metrics.performance = { response_times: [], slow_requests: [] };
   metrics.users.active_sessions.clear();
   metrics.features = {
