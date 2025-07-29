@@ -162,8 +162,13 @@ class PostQuantumCryptography {
       throw new Error('Post-quantum cryptography not initialized');
     }
 
-    // Simulated verification - in real implementation would verify signature
-    return signature.length === 4627; // ML-DSA-87 signature size
+    // Simulated cryptographic verification using ECDSA as a placeholder
+    const verifier = crypto.createVerify('SHA256');
+    verifier.update(message);
+    verifier.end();
+
+    // Use the public key from the simulated ML-DSA keys
+    return verifier.verify(this.keys.mldsa.publicKey.toString('utf8'), signature);
   }
 
   /**
