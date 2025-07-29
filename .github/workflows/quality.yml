@@ -73,26 +73,26 @@ jobs:
   - name: Start application for testing
     working-directory: ./GALAX_App_files
     run: |
-        npm start &
-        APP_PID=$!
-        echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+      npm start &
+      APP_PID=$!
+      echo "APP_PID=$APP_PID" >> $GITHUB_ENV
 
-        # Wait for app to start
-    timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+      # Wait for app to start
+      timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
 
   - name: Run accessibility tests
     working-directory: ./GALAX_App_files
     run: |
-        echo "Running accessibility tests..."
+      echo "Running accessibility tests..."
 
-        # Test main pages for accessibility
-    npx axe http://localhost:3000 --reporter json --output-file accessibility-results.json || true
+      # Test main pages for accessibility
+      npx axe http://localhost:3000 --reporter json --output-file accessibility-results.json || true
 
-        # Display results
-        if [ -f accessibility-results.json ]; then
-      echo "Accessibility test results:"
-          cat accessibility-results.json | head -50
-        fi
+      # Display results
+      if [ -f accessibility-results.json ]; then
+        echo "Accessibility test results:"
+        cat accessibility-results.json | head -50
+      fi
 
   - name: Stop application
     if: always()

@@ -182,7 +182,7 @@ jobs:
 
         echo "Checking for API keys and tokens..."
         if grep -r -E "(apiKey|secretKey|authToken|api_key|secret_key|auth_token)\s*=\s*[\"'][a-zA-Z0-9_-]{20,}[\"']" --include="*.js" --include="*.ts" --exclude-dir=node_modules . | grep -v "test" | grep -v ".env.example"; then
-      echo "⚠️  Warning: Potential API keys found"
+          echo "⚠️  Warning: Potential API keys found"
           SECRET_FOUND=true
         fi
 
