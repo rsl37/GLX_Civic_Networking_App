@@ -518,7 +518,8 @@ export const antivirusFileScanner = async (
     await ensureDirectories();
 
     for (const file of files.filter((f) => f)) {
-      console.log(`🔍 Scanning file for viruses: ${file.originalname}`);
+      const sanitizedOriginalName = file.originalname.replace(/[\n\r]/g, "");
+      console.log(`🔍 Scanning file for viruses: ${sanitizedOriginalName}`);
 
       // Perform virus scan
       const scanResult = await performVirusScan(file.path);
@@ -561,7 +562,6 @@ export const antivirusFileScanner = async (
       // Add scan results to file object
       (file as any).antivirusScan = scanResult;
 
-      const sanitizedOriginalName = file.originalname.replace(/[\n\r]/g, "");
       console.log(
         `✅ File passed antivirus scan: ${sanitizedOriginalName} [${scanResult.scanId}]`,
       );
