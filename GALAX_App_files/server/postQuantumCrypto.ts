@@ -10,6 +10,9 @@
 // Implements NIST-compliant post-quantum algorithms for future-proof security
 
 import crypto from 'crypto';
+import { ml_kem1024 } from '@noble/post-quantum/ml-kem';
+import { ml_dsa87 } from '@noble/post-quantum/ml-dsa';
+import { slh_dsa_shake_256s } from '@noble/post-quantum/slh-dsa';
 
 // Simulated NIST post-quantum algorithms for demonstration
 // In production, would use actual libraries like @noble/post-quantum, crystals-kyber, etc.
@@ -121,6 +124,7 @@ class PostQuantumCryptography {
     return {
       publicKey: crypto.randomBytes(publicKeySize),
       secretKey: crypto.randomBytes(secretKeySize)
+
     };
   }
 
@@ -224,6 +228,31 @@ class PostQuantumCryptography {
         mlkem: this.keys ? 'ML-KEM-1024 (FIPS 203)' : 'Not initialized',
         mldsa: this.keys ? 'ML-DSA-87 (FIPS 204)' : 'Not initialized',
         slhdsa: this.keys ? 'SLH-DSA-256s (FIPS 205)' : 'Not initialized'
+        mlkem: {
+          algorithm: 'ML-KEM-1024',
+          publicKeySize: this.mlkemKeyPair?.publicKey.length || 0,
+          securityLevel: 5,
+          nistsCompliant: true
+        },
+        mldsa: {
+          algorithm: 'ML-DSA-87',
+          publicKeySize: this.mldsaKeyPair?.publicKey.length || 0,
+          securityLevel: 5,
+          nistsCompliant: true
+        },
+        slhdsa: {
+          algorithm: 'SLH-DSA-SHAKE-256s',
+          publicKeySize: this.slhdsaKeyPair?.publicKey.length || 0,
+          securityLevel: 5,
+          nistsCompliant: true
+        }
+      },
+      features: {
+        keyEncapsulation: true,
+        digitalSignatures: true,
+        zeroKnowledgeProofs: true,
+        hybridCryptography: true,
+        secureStorage: true
       },
       hybridMode: this.config.hybridMode,
       zeroKnowledgeProofs: this.config.zeroKnowledgeProofs,

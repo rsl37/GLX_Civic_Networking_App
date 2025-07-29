@@ -46,7 +46,6 @@ describe('Post-Quantum Cryptography Security Baseline', () => {
       
       expect(status.algorithms.mlkem).toBe('ML-KEM-1024 (FIPS 203)');
       expect(status.keySizes?.mlkemPublic).toBe(1568); // ML-KEM-1024 public key size
-    });
 
     it('should perform key encapsulation successfully', async () => {
       // Test through the service
