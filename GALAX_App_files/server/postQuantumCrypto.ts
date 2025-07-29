@@ -44,7 +44,7 @@ class PostQuantumCryptography {
     this.config = {
       securityLevel: 5, // 256-bit equivalent
       hybridMode: true, // Combine classical + post-quantum
-      zerknowledgeProofs: true
+      zeroKnowledgeProofs: true
     };
   }
 

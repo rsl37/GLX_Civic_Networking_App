@@ -9,7 +9,7 @@
 // Added 2025-01-13 21:57:30 UTC - Centralized Security Management System
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import { postQuantumCrypto, getPostQuantumStatus } from '../postQuantumCrypto.js';
+import { postQuantumCrypto } from '../postQuantumCrypto.js';
 import { antimalwareFileScanner, antimalwarePayloadScanner, getQuarantineStats, manageQuarantine } from './antimalware.js';
 import { antivirusFileScanner, realTimeProtection, antivirusAdmin, initializeAntivirus, globalScanStats } from './antivirus.js';
 import { 
@@ -26,7 +26,6 @@ import {
   suspiciousIPs,
   blockedIPs
 } from './antihacking.js';
-import { postQuantumCrypto } from '../postQuantumCrypto.js';
 
 // Security system status
 interface SecuritySystemStatus {
@@ -63,13 +62,6 @@ interface SecuritySystemStatus {
     securityLevel: 'low' | 'medium' | 'high' | 'maximum' | 'quantum-safe';
     protectionScore: number;
     lastUpdate: string;
-  };
-  postQuantum?: {
-    enabled: boolean;
-    algorithms: string[];
-    securityLevel: number;
-    protectionScore: number;
-    compliance: string;
   };
 }
 
@@ -247,11 +239,11 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
         honeypotActive: SECURITY_CONFIG.antiHacking.honeypot
       },
       postQuantum: {
-        enabled: SECURITY_CONFIG.postQuantum.enabled,
-        algorithmsActive: postQuantumStatus.initialized ? 3 : 0, // ML-KEM, ML-DSA, SLH-DSA
-        securityLevel: postQuantumStatus.initialized ? 5 : 0,
-        nistsCompliant: postQuantumStatus.complianceStatus?.fips203 && postQuantumStatus.complianceStatus?.fips204 && postQuantumStatus.complianceStatus?.fips205,
-        quantumSafe: postQuantumStatus.complianceStatus?.quantumSafe || false
+        enabled: SECURITY_CONFIG.postQuantum.enabled && pqStatus.initialized,
+        algorithmsActive: pqStatus.initialized ? 3 : 0, // ML-KEM, ML-DSA, SLH-DSA
+        securityLevel: pqStatus.initialized ? pqStatus.securityLevel : 0,
+        nistsCompliant: pqStatus.initialized && pqStatus.complianceLevel === 'NIST Post-Quantum Standards',
+        quantumSafe: pqStatus.initialized && pqStatus.protectionScore >= 130
       },
       overall: {
         securityLevel,
@@ -259,18 +251,6 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
         lastUpdate: new Date().toISOString()
       }
     };
-
-    // Add post-quantum status if initialized
-    if (pqStatus.initialized) {
-      status.postQuantum = {
-        enabled: true,
-        algorithms: ['ML-KEM-1024', 'ML-DSA-87', 'SLH-DSA-256s'],
-        securityLevel: pqStatus.securityLevel,
-        protectionScore: pqStatus.protectionScore,
-        compliance: pqStatus.complianceLevel
-      };
-    }
-
     return status;
   } catch (error) {
     console.error('Error getting security status:', error);
@@ -439,7 +419,7 @@ export const securityDashboardAdmin = {
   // Post-quantum security status
   getPostQuantumStatus: async (req: Request, res: Response) => {
     try {
-      const status = getPostQuantumStatus();
+      const status = postQuantumCrypto.getStatus();
       res.json({
         success: true,
         data: status,
@@ -460,8 +440,7 @@ export const securityDashboardAdmin = {
   // Test post-quantum cryptographic operations
   testPostQuantumOperations: async (req: Request, res: Response) => {
     try {
-      const { testPostQuantumOperations } = await import('../postQuantumCrypto.js');
-      const results = await testPostQuantumOperations();
+      const results = await postQuantumCrypto.testOperations();
       
       res.json({
         success: true,
