@@ -18,12 +18,15 @@ on:
 env:
   NODE_VERSION: '20.x'
   WORKING_DIRECTORY: './GALAX_App_files'
+  CACHE_VERSION: 'v1' # Increment to bust cache when needed
 
 jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
     
     steps:
     - name: Checkout code
@@ -31,12 +34,26 @@ jobs:
       with:
         fetch-depth: 1
         
+    - name: Generate cache key
+      id: cache-key
+      run: |
+        echo "key=${{ env.CACHE_VERSION }}-${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('GALAX_App_files/package-lock.json') }}" >> $GITHUB_OUTPUT
+        
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+        
+    - name: Cache node modules
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.WORKING_DIRECTORY }}/node_modules
+        key: ${{ steps.cache-key.outputs.key }}
+        restore-keys: |
+          ${{ env.CACHE_VERSION }}-${{ runner.os }}-node-${{ env.NODE_VERSION }}-
+          ${{ env.CACHE_VERSION }}-${{ runner.os }}-node-
         
     - name: Install dependencies
       working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -63,11 +80,13 @@ jobs:
         name: build-artifacts
         path: ${{ env.WORKING_DIRECTORY }}/dist/
         retention-days: 7
+        compression-level: 6
 
   lint-and-format:
     name: Code Quality
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: [build-and-test]
     
     steps:
     - name: Checkout code
@@ -82,10 +101,21 @@ jobs:
         cache: 'npm'
         cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
         
-    - name: Install dependencies
+    - name: Restore node modules cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.WORKING_DIRECTORY }}/node_modules
+        key: ${{ needs.build-and-test.outputs.cache-key }}
+        
+    - name: Install dependencies (if cache miss)
       working-directory: ${{ env.WORKING_DIRECTORY }}
-      run: npm ci --prefer-offline --no-audit --no-fund
-      
+      run: |
+        if [ ! -d "node_modules" ]; then
+          npm ci --prefer-offline --no-audit --no-fund
+        else
+          echo "Using cached node_modules"
+        fi
+        
     - name: Check code formatting
       working-directory: ${{ env.WORKING_DIRECTORY }}
       run: |
@@ -101,10 +131,21 @@ jobs:
       run: |
         # Run ESLint if config exists
         if [ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "eslint.config.js" ]; then
-          npx eslint . --ext .js,.jsx,.ts,.tsx || echo "Linting completed with warnings"
+          npx eslint . --ext .js,.jsx,.ts,.tsx --format json --output-file eslint-results.json || echo "Linting completed with warnings"
+          
+          # Show results in readable format too
+          npx eslint . --ext .js,.jsx,.ts,.tsx || true
         else
           echo "No ESLint config found, skipping lint step"
         fi
+        
+    - name: Upload lint results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: lint-results
+        path: ${{ env.WORKING_DIRECTORY }}/eslint-results.json
+        retention-days: 7
 
   security-scan:
     name: Security Check
