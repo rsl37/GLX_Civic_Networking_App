@@ -112,7 +112,10 @@ export const collectMetrics = (
   metrics.requests.total++;
 
   // Sanitize endpoint to prevent property injection
-  const endpoint = (req.route?.path || req.path).toString().slice(0, 100);
+  const rawEndpoint = 
+    (typeof req.route?.path === "string" ? req.route.path : 
+    (typeof req.path === "string" ? req.path : ""));
+  const endpoint = rawEndpoint.slice(0, 100);
   const sanitizedEndpoint = endpoint.replace(/[^a-zA-Z0-9\/\-_:.]/g, "");
 
   // Sanitize HTTP method
