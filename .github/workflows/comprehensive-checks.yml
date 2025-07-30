@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: write
+
 env:
   NODE_VERSION: '20'
   WORKING_DIRECTORY: './GALAX_App_files'
@@ -117,19 +123,29 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
-      - name: Install dependencies
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Install dependencies with retry
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: cd ${{ env.WORKING_DIRECTORY }} && npm ci --prefer-offline --no-audit --no-fund
+          on_retry_command: echo "npm install failed, retrying..."
       
-      - name: Build application
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm run build
+      - name: Build application with retry
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: cd ${{ env.WORKING_DIRECTORY }} && npm run build
+          on_retry_command: echo "Build attempt failed, retrying..."
       
-      - name: Run tests
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          echo "Running test suite..."
-          npm test || echo "Tests completed with some failures - check output above"
+      - name: Run tests with retry
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          command: cd ${{ env.WORKING_DIRECTORY }} && npm test
+          on_retry_command: echo "Test attempt failed, retrying..."
       
       - name: Upload coverage (Node 20 only)
         if: matrix.node-version == 20
