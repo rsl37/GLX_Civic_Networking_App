@@ -306,7 +306,7 @@ jobs:
           fi
           
           # Quick startup test (with timeout to prevent hanging)
-          if npm run start --if-present; then
+          if npm run --silent start --dry-run >/dev/null 2>&1; then
             timeout 30s npm run start --if-present &
             APP_PID=$!
           else
