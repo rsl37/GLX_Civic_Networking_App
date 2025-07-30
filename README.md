@@ -20,13 +20,20 @@
 ```bash
 # Clone the repository
 git clone https://github.com/rsl37/GALAX_Civic_Networking_App.git
-cd GALAX_Civic_Networking_App/GALAX_App_files
+cd GALAX_Civic_Networking_App
 
-# Install dependencies
+# Option 1: Run commands from root directory (recommended)
+npm run setup              # Install dependencies
+npm run deployment:check   # Check deployment readiness
+npm run build              # Build the application
+npm start                  # Start development server
+
+# Option 2: Run commands from app directory
+cd GALAX_App_files
 npm install
-
-# Start development server
-npm start
+npm run deployment:check   # Check deployment readiness
+npm run build              # Build the application
+npm start                  # Start development server
 
 # Build for production
 npm run build
