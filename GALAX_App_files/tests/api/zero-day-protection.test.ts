@@ -16,7 +16,8 @@ import {
   updateThreatIntelligence,
   AI_ML_THREATS,
   CLOUD_EDGE_THREATS,
-  NETWORK_INFRA_THREATS
+  NETWORK_INFRA_THREATS,
+  POST_QUANTUM_THREATS
 } from '../../server/middleware/zeroDayProtection.js';
 
 describe('Zero-Day Protection System', () => {
@@ -145,6 +146,38 @@ describe('Zero-Day Protection System', () => {
     });
   });
 
+  describe('Post-Quantum Cryptography Threats', () => {
+    it('should detect lattice-based cryptography exploits', async () => {
+      const response = await request(app)
+        .post('/test')
+        .send({
+          attack: 'lattice basis reduction SVP attack on Ring-LWE encryption'
+        });
+
+      expect(response.status).toBe(403);
+      expect(response.body.code).toBe('ZERO_DAY_THREAT_BLOCKED');
+    });
+
+    it('should detect quantum key distribution vulnerabilities', async () => {
+      const response = await request(app)
+        .post('/test')
+        .send({
+          exploit: 'QKD quantum channel photon interception BB84 eavesdropping'
+        });
+
+      expect(response.status).toBe(403);
+      expect(response.body.code).toBe('ZERO_DAY_THREAT_BLOCKED');
+    });
+
+    it('should detect NTRU cryptanalysis attempts', async () => {
+      const response = await request(app)
+        .get('/test?research=NTRU lattice attack BKZ reduction enumeration');
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe('Security violation detected');
+    });
+  });
+
   describe('Behavioral Anomaly Detection', () => {
     it('should detect rapid request patterns', async () => {
       // Send multiple rapid requests
@@ -258,9 +291,10 @@ describe('Zero-Day Protection System', () => {
       expect(AI_ML_THREATS.length).toBeGreaterThan(0);
       expect(CLOUD_EDGE_THREATS.length).toBeGreaterThan(0);
       expect(NETWORK_INFRA_THREATS.length).toBeGreaterThan(0);
+      expect(POST_QUANTUM_THREATS.length).toBeGreaterThan(0);
       
       // Verify each threat has required properties
-      [...AI_ML_THREATS, ...CLOUD_EDGE_THREATS, ...NETWORK_INFRA_THREATS].forEach(threat => {
+      [...AI_ML_THREATS, ...CLOUD_EDGE_THREATS, ...NETWORK_INFRA_THREATS, ...POST_QUANTUM_THREATS].forEach(threat => {
         expect(threat.id).toBeDefined();
         expect(threat.category).toBeDefined();
         expect(threat.type).toBeDefined();
@@ -282,6 +316,10 @@ describe('Zero-Day Protection System', () => {
       
       NETWORK_INFRA_THREATS.forEach(threat => {
         expect(threat.category).toBe('network_infra');
+      });
+      
+      POST_QUANTUM_THREATS.forEach(threat => {
+        expect(threat.category).toBe('post_quantum_crypto');
       });
     });
   });

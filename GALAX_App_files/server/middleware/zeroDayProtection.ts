@@ -15,7 +15,7 @@ import { postQuantumCrypto } from '../postQuantumCrypto.js';
 // Zero-day threat categories
 interface ZeroDayThreat {
   id: string;
-  category: 'ai_ml' | 'cloud_edge' | 'network_infra' | 'behavioral_anomaly';
+  category: 'ai_ml' | 'cloud_edge' | 'network_infra' | 'post_quantum_crypto' | 'behavioral_anomaly';
   type: string;
   pattern: RegExp | ((req: Request) => boolean);
   severity: 'low' | 'medium' | 'high' | 'critical';
@@ -155,6 +155,30 @@ const NETWORK_INFRA_THREATS: ZeroDayThreat[] = [
   }
 ];
 
+// Post-Quantum Cryptography Threat Patterns
+const POST_QUANTUM_THREATS: ZeroDayThreat[] = [
+  {
+    id: 'LATTICE_CRYPTO_EXPLOIT',
+    category: 'post_quantum_crypto',
+    type: 'lattice_attack',
+    pattern: /(?:lattice|basis.?reduction|SVP|CVP|LWE|Ring.?LWE|NTRU|shortest.?vector|closest.?vector|Babai|LLL|BKZ|sieve|enumeration)/gi,
+    severity: 'critical',
+    description: 'Lattice-based cryptography exploit attempt detected',
+    countermeasure: 'Block request, strengthen lattice parameters, alert cryptographic team',
+    detectionCount: 0
+  },
+  {
+    id: 'QKD_VULNERABILITY_EXPLOIT',
+    category: 'post_quantum_crypto',
+    type: 'quantum_key_distribution',
+    pattern: /(?:QKD|quantum.?key.?distribution|photon.?interception|quantum.?channel|BB84|E91|quantum.?eavesdrop|no.?cloning|quantum.?state.?measurement|quantum.?security)/gi,
+    severity: 'critical',
+    description: 'Quantum key distribution vulnerability exploitation attempt',
+    countermeasure: 'Secure quantum channels, verify photon integrity, quantum protocol validation',
+    detectionCount: 0
+  }
+];
+
 // Behavioral anomaly detection
 interface BehavioralMetrics {
   requestPattern: Map<string, number>;
@@ -172,7 +196,8 @@ const ANOMALY_THRESHOLD = 3; // Standard deviations
 const ALL_ZERO_DAY_THREATS = [
   ...AI_ML_THREATS,
   ...CLOUD_EDGE_THREATS,
-  ...NETWORK_INFRA_THREATS
+  ...NETWORK_INFRA_THREATS,
+  ...POST_QUANTUM_THREATS
 ];
 
 // Zero-day detection statistics
@@ -184,6 +209,7 @@ interface ZeroDayStats {
     ai_ml: number;
     cloud_edge: number;
     network_infra: number;
+    post_quantum_crypto: number;
     behavioral_anomaly: number;
   };
   criticalThreats: number;
@@ -198,6 +224,7 @@ const zeroDayStats: ZeroDayStats = {
     ai_ml: 0,
     cloud_edge: 0,
     network_infra: 0,
+    post_quantum_crypto: 0,
     behavioral_anomaly: 0
   },
   criticalThreats: 0,
@@ -495,6 +522,14 @@ export function zeroDayProtectionAdmin(req: Request, res: Response) {
           description: t.description,
           detectionCount: t.detectionCount,
           lastDetected: t.lastDetected
+        })),
+        postQuantumThreats: POST_QUANTUM_THREATS.map(t => ({
+          id: t.id,
+          type: t.type,
+          severity: t.severity,
+          description: t.description,
+          detectionCount: t.detectionCount,
+          lastDetected: t.lastDetected
         }))
       });
       
@@ -533,6 +568,7 @@ export function initializeZeroDayProtection() {
   console.log(`[ZERO-DAY-PROTECTION] AI/ML threat patterns: ${AI_ML_THREATS.length}`);
   console.log(`[ZERO-DAY-PROTECTION] Cloud/Edge threat patterns: ${CLOUD_EDGE_THREATS.length}`);
   console.log(`[ZERO-DAY-PROTECTION] Network Infrastructure threat patterns: ${NETWORK_INFRA_THREATS.length}`);
+  console.log(`[ZERO-DAY-PROTECTION] Post-Quantum Cryptography threat patterns: ${POST_QUANTUM_THREATS.length}`);
   console.log(`[ZERO-DAY-PROTECTION] Total threat patterns: ${ALL_ZERO_DAY_THREATS.length}`);
   console.log('[ZERO-DAY-PROTECTION] Behavioral anomaly detection: ACTIVE');
   console.log('[ZERO-DAY-PROTECTION] Automated threat intelligence: ACTIVE');
@@ -547,6 +583,7 @@ export {
   AI_ML_THREATS,
   CLOUD_EDGE_THREATS,
   NETWORK_INFRA_THREATS,
+  POST_QUANTUM_THREATS,
   zeroDayStats,
   securityEvents
 };

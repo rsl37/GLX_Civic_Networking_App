@@ -78,6 +78,20 @@ The GALAX app now features a comprehensive **Zero-Day Vulnerability Protection S
 - **Severity**: High
 - **Countermeasure**: SDN controller protection and flow monitoring
 
+### 4. 🔐 Post-Quantum Cryptography Threats
+
+#### Lattice-Based Cryptography Exploits
+- **Detection**: Monitors for attacks on quantum-resistant encryption foundations
+- **Patterns**: `lattice|basis-reduction|SVP|CVP|LWE|Ring-LWE|NTRU|shortest-vector|closest-vector|Babai|LLL|BKZ|sieve|enumeration`
+- **Severity**: Critical
+- **Countermeasure**: Block request, strengthen lattice parameters, alert cryptographic team
+
+#### Quantum Key Distribution Vulnerabilities
+- **Detection**: Identifies attempts to compromise "unhackable" quantum communication channels
+- **Patterns**: `QKD|quantum-key-distribution|photon-interception|quantum-channel|BB84|E91|quantum-eavesdrop|no-cloning|quantum-state-measurement|quantum-security`
+- **Severity**: Critical
+- **Countermeasure**: Secure quantum channels, verify photon integrity, quantum protocol validation
+
 ## 🔬 Advanced Behavioral Anomaly Detection
 
 ### Real-Time Pattern Analysis
