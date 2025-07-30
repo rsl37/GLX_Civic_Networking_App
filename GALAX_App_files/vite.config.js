@@ -110,7 +110,7 @@ export default defineConfig(({ mode }) => {
       },
       chunkSizeWarningLimit: isProduction ? 500 : 1000, // Stricter limits in production
       cssCodeSplit: isProduction, // Split CSS in production for better caching
-      assetsInlineLimit: isProduction ? 4096 : 0, // Inline small assets in production only
+      assetsInlineLimit: isProduction ? ASSET_INLINE_LIMIT_BYTES : 0, // Inline small assets in production only
     },
     clearScreen: false,
     server: {
