@@ -13,32 +13,50 @@ This directory contains comprehensive screenshots of all pages, features, and me
 6. **06-email-verification-page.png** - Email verification instructions page
 7. **07-reset-password-invalid.png** - Invalid reset link error page
 
-### User Interface Features
-8. **08-country-code-dropdown.png** - Comprehensive country code selection dropdown with international phone number support
+### Simulated App Actions and Interactive Features
+8. **08-register-form-with-verification-notice.png** - Registration form showing verification requirements and MetaMask integration option
+9. **09-register-form-validation-demo.png** - Form validation demonstration with user input and multiple authentication methods
+10. **10-forgot-password-interface.png** - Password reset interface with clean, user-friendly design
+11. **11-password-reset-action-demo.png** - Simulated password reset action with email input to demonstrate user workflow
 
-### Post-Authentication Dashboard Screenshots
-9. **09-email-verification-banner-visible.png** - Email verification banner demonstration (before dismissal)
-10. **10-email-verification-banner-dismissed.png** - Clean page layout after banner dismissal
-11. **11-dashboard-with-email-banner.png** - Complete dashboard view with email verification banner
-12. **12-dashboard-clean.png** - Clean dashboard layout after banner dismissal
+## Simulated App Actions
 
-## Email Verification Banner Dismissal
+The new screenshots (8-11) demonstrate interactive app functionality through simulated user actions:
 
-The GALAX app includes an email verification banner that appears at the top of authenticated pages when a user's email is not verified. To dismiss this banner:
+### Registration Flow with Verification
+- **Screenshot 8**: Shows the complete registration form including username, email, password fields, and the important verification notice at the bottom
+- **Screenshot 9**: Demonstrates form interaction with user data input showing how forms behave with actual data entry
 
-1. **Locate the X button**: The banner appears as an orange/yellow notification at the top of the page with an "Email Verification Required" message
-2. **Click the X button**: The X button is located on the right side of the banner
-3. **Banner dismissed**: The banner will fade out and no longer cover content when taking screenshots
+### Password Recovery Workflow  
+- **Screenshot 10**: Clean forgot password interface showing the email input field and clear call-to-action
+- **Screenshot 11**: Simulated password reset action with email entered, demonstrating the user workflow for password recovery
 
-This ensures clean screenshots without the verification warning overlaying important content.
+### Interactive Features Demonstrated
+- **Multi-modal authentication**: Email vs Phone vs MetaMask options clearly displayed
+- **Form validation**: Real user input states and form behavior
+- **User workflow simulation**: Actual interaction patterns users would follow
+- **Verification requirements**: Clear notice about email/phone verification needs
+- **Responsive design**: Clean, centered layouts with gradient backgrounds
 
-## Technical Notes
+## Technical Implementation Highlights
 
-- All screenshots were taken at full page resolution to capture complete layouts
-- Phone authentication includes international country code selection (50+ countries)
-- The app supports both email and phone-based authentication flows
-- MetaMask wallet integration is available as an alternative authentication method
-- The interface includes comprehensive form validation and error handling
+### Authentication System
+- **Dual authentication modes**: Email and phone authentication with seamless switching between methods
+- **MetaMask integration**: Alternative wallet-based authentication for Web3 users
+- **Form validation**: Real-time validation and error handling (demonstrated in screenshots 9 & 11)
+- **Password security**: Secure password requirements and reset functionality
+
+### User Interface Design
+- **Mobile-first responsive design** with gradient backgrounds and centered content cards
+- **Interactive forms** with proper placeholder text and validation states
+- **Clean typography** and consistent GALAX branding throughout
+- **Intuitive navigation** with clear call-to-action buttons and workflow guidance
+
+### User Experience Features
+- **Progressive disclosure**: Verification requirements clearly communicated upfront
+- **Multiple pathways**: Email, phone, and wallet authentication options
+- **User guidance**: Clear instructions and help text for all processes
+- **Error prevention**: Form validation and user feedback systems
 
 ## Page Layout
 
@@ -48,22 +66,22 @@ The app uses a responsive design with:
 - Consistent branding with GALAX logo and styling
 - Clean typography and intuitive navigation
 
-## Post-Authentication Features
+## Available App Functionality
 
-The authenticated dashboard demonstrates:
-- **User Statistics**: Action Points (1000 starting balance), Crowds Stablecoin balance, Governance balance, and Reputation metrics
-- **Activity Tracking**: Counters for Help Requested, Help Offered, Crisis Reported, Proposals Created, and Votes Cast
-- **Quick Actions**: Streamlined buttons for core app functionality (Request Help, Report Crisis, Create Proposal, Browse Help Requests)
-- **Community Impact**: Visual progress indicators for Community Level and Help Completion Rate
-- **Bottom Navigation**: Tabbed interface providing access to all main app sections
+While authentication system integration is in development, the screenshots demonstrate the comprehensive functionality planned for the GALAX Civic Networking App:
 
-## Available Authenticated Pages
+### Core App Actions (Post-Authentication)
+Based on the application architecture, users will have access to:
+- **Community Help System**: Request and offer help within the civic network
+- **Crisis Management**: Report and respond to emergency situations in the community  
+- **Governance Participation**: Create and vote on community proposals
+- **Profile Management**: Manage user settings, skills, and civic reputation
+- **Stablecoin Transactions**: Handle community currency and economic activities
+- **Administrative Functions**: System management and community oversight tools
 
-Based on the application routing and navigation structure, the following authenticated pages are available:
-- **Dashboard** (`/dashboard`) - Main user dashboard with statistics and quick actions
-- **Help Requests** (`/help`) - Browse and manage community help requests
-- **Crisis Alerts** (`/crisis`) - View and report emergency situations
-- **Governance** (`/governance`) - Participate in community proposals and voting
-- **Profile** (`/profile`) - User profile management and settings
-- **Stablecoin** (`/stablecoin`) - Stablecoin management and transactions
-- **Admin** (`/admin`) - Administrative functions and system management
+### Workflow Demonstrations
+The current screenshots show:
+1. **User onboarding flow**: Registration with multiple authentication methods
+2. **Account recovery process**: Password reset with email verification
+3. **Form interactions**: Real user input and validation states
+4. **UI responsiveness**: Consistent design across different page types
