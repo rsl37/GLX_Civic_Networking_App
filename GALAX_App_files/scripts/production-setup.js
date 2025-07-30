@@ -38,7 +38,7 @@ const prodEnvPath = join(process.cwd(), '.env.production');
 const envPath = join(process.cwd(), '.env');
 
 if (!existsSync(prodEnvPath)) {
-  console.error('❌ Error: .env.production file not found. Please ensure the file exists.');
+  console.error('❌ Error: .env.production file not found. You can create it by copying .env.example and updating the values for production, or refer to the documentation for more details.');
   process.exit(1);
 }
 
