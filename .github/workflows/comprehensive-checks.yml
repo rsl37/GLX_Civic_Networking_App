@@ -306,8 +306,13 @@ jobs:
           fi
           
           # Quick startup test (with timeout to prevent hanging)
-          timeout 30s npm start &
-          APP_PID=$!
+          if npm run start --if-present; then
+            timeout 30s npm run start --if-present &
+            APP_PID=$!
+          else
+            echo "❌ 'start' script not found in package.json. Skipping application startup test."
+            exit 1
+          fi
           
           # Wait for app to start
           sleep 15
