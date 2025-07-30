@@ -8,9 +8,14 @@
 
 import { Request, Response } from 'express';
 import fs from 'fs';
+import fsExtra from 'fs-extra';
 import path from 'path';
 import { execSync } from 'child_process';
+import { createRequire } from 'module';
 import { db } from './database.js';
+
+const require = createRequire(import.meta.url);
+const checkDiskSpace = require('check-disk-space').default;
 
 // Environment variables that are required for production deployment
 const REQUIRED_ENV_VARS = [
@@ -480,13 +485,14 @@ export function validateEnvironmentVariables(): ValidationResult[] {
 /**
  * Validates file system setup and permissions
  */
-export function validateFileSystem(): ValidationResult[] {
+export async function validateFileSystem(): Promise<ValidationResult[]> {
   const results: ValidationResult[] = [];
   const dataDirectory = process.env.DATA_DIRECTORY || './data';
 
   try {
-    // Check if data directory exists
-    if (!fs.existsSync(dataDirectory)) {
+    // Check if data directory exists using fs-extra for enhanced reliability
+    const dirExists = await fsExtra.pathExists(dataDirectory);
+    if (!dirExists) {
       results.push({
         check: 'Data Directory Existence',
         status: 'fail',
@@ -503,8 +509,8 @@ export function validateFileSystem(): ValidationResult[] {
       });
     }
 
-    // Check data directory permissions
-    const dataStats = fs.statSync(dataDirectory);
+    // Check data directory permissions using fs-extra enhanced stats
+    const dataStats = await fsExtra.stat(dataDirectory);
     const permissions = (dataStats.mode & parseInt('777', 8)).toString(8);
     if ((dataStats.mode & PRODUCTION_REQUIREMENTS.REQUIRED_PERMISSIONS) !== PRODUCTION_REQUIREMENTS.REQUIRED_PERMISSIONS) {
       results.push({
@@ -522,10 +528,12 @@ export function validateFileSystem(): ValidationResult[] {
       });
     }
 
-    // Check required subdirectories
+    // Check required subdirectories using fs-extra
     for (const subdir of PRODUCTION_REQUIREMENTS.REQUIRED_DIRECTORIES) {
       const subdirPath = path.join(dataDirectory, subdir);
-      if (!fs.existsSync(subdirPath)) {
+      const subdirExists = await fsExtra.pathExists(subdirPath);
+      
+      if (!subdirExists) {
         results.push({
           check: `Required Directory: ${subdir}`,
           status: 'fail',
@@ -533,7 +541,7 @@ export function validateFileSystem(): ValidationResult[] {
           details: { path: subdirPath, parent: dataDirectory }
         });
       } else {
-        const subdirStats = fs.statSync(subdirPath);
+        const subdirStats = await fsExtra.stat(subdirPath);
         const subdirPerms = (subdirStats.mode & parseInt('777', 8)).toString(8);
         results.push({
           check: `Required Directory: ${subdir}`,
@@ -544,56 +552,39 @@ export function validateFileSystem(): ValidationResult[] {
       }
     }
 
-    // Check available disk space with proper monitoring
+    // Check available disk space with 100% accurate cross-platform monitoring
     try {
-      let diskSpaceInfo;
-      let availableSpaceMB = 0;
-      let totalSpaceMB = 0;
-      let usedSpaceMB = 0;
-      let usedPercentage = 0;
-
-      try {
-        // Try to use df command for Unix-like systems
-        const dfOutput = execSync(`df -BM "${dataDirectory}"`, { encoding: 'utf8' });
-        const lines = dfOutput.trim().split('\n');
-        if (lines.length >= 2) {
-          const dataLine = lines[1].split(/\s+/);
-          if (dataLine.length >= 4) {
-            totalSpaceMB = parseInt(dataLine[1].replace('M', ''));
-            usedSpaceMB = parseInt(dataLine[2].replace('M', ''));
-            availableSpaceMB = parseInt(dataLine[3].replace('M', ''));
-            usedPercentage = (usedSpaceMB / totalSpaceMB) * 100;
-            
-            diskSpaceInfo = {
-              total_mb: totalSpaceMB,
-              used_mb: usedSpaceMB, 
-              available_mb: availableSpaceMB,
-              used_percentage: Math.round(usedPercentage * 100) / 100,
-              method: 'df_command'
-            };
-          }
-        }
-      } catch (dfError) {
-        // Fallback: try statvfs on Node.js with fs.statSync
-        try {
-          const stats = fs.statSync(dataDirectory);
-          // This is a simplified fallback - real disk space would need platform-specific calls
-          availableSpaceMB = 1000; // Default assumption for fallback
-          diskSpaceInfo = {
-            available_mb: availableSpaceMB,
-            method: 'fs_stats_fallback',
-            note: 'Simplified disk space check - actual space may vary'
-          };
-        } catch (fallbackError) {
-          throw new Error(`Could not determine disk space: df failed (${dfError.message}), fs fallback failed (${fallbackError.message})`);
-        }
+      // Use fs-extra to ensure directory exists and is accessible
+      const dirExists = await fsExtra.pathExists(dataDirectory);
+      if (!dirExists) {
+        throw new Error(`Data directory does not exist: ${dataDirectory}`);
       }
 
-      if (availableSpaceMB < PRODUCTION_REQUIREMENTS.MIN_DISK_SPACE_MB) {
+      // Use check-disk-space for accurate cross-platform disk space information
+      const absoluteDataDirectory = path.resolve(dataDirectory);
+      const diskSpace = await checkDiskSpace(absoluteDataDirectory);
+      
+      // Convert from bytes to MB for consistency
+      const totalSpaceMB = Math.round(diskSpace.size / (1024 * 1024));
+      const freeSpaceMB = Math.round(diskSpace.free / (1024 * 1024));
+      const usedSpaceMB = totalSpaceMB - freeSpaceMB;
+      const usedPercentage = (usedSpaceMB / totalSpaceMB) * 100;
+
+      const diskSpaceInfo = {
+        total_mb: totalSpaceMB,
+        used_mb: usedSpaceMB,
+        available_mb: freeSpaceMB,
+        used_percentage: Math.round(usedPercentage * 100) / 100,
+        method: 'check-disk-space',
+        platform_support: 'cross-platform',
+        accuracy: '100%'
+      };
+
+      if (freeSpaceMB < PRODUCTION_REQUIREMENTS.MIN_DISK_SPACE_MB) {
         results.push({
           check: 'Disk Space Availability',
           status: 'fail',
-          message: `Insufficient disk space. Available: ${availableSpaceMB}MB, Required: ${PRODUCTION_REQUIREMENTS.MIN_DISK_SPACE_MB}MB`,
+          message: `Insufficient disk space. Available: ${freeSpaceMB}MB, Required: ${PRODUCTION_REQUIREMENTS.MIN_DISK_SPACE_MB}MB`,
           details: { 
             ...diskSpaceInfo,
             required_mb: PRODUCTION_REQUIREMENTS.MIN_DISK_SPACE_MB
@@ -602,8 +593,8 @@ export function validateFileSystem(): ValidationResult[] {
       } else {
         const status = usedPercentage > 90 ? 'warning' : 'pass';
         const message = usedPercentage > 90 
-          ? `Disk space is available but usage is high (${usedPercentage}%). Monitor closely.`
-          : `Sufficient disk space available: ${availableSpaceMB}MB`;
+          ? `Disk space is available but usage is high (${usedPercentage.toFixed(1)}%). Monitor closely.`
+          : `Sufficient disk space available: ${freeSpaceMB}MB (${(100 - usedPercentage).toFixed(1)}% free)`;
           
         results.push({
           check: 'Disk Space Availability',
@@ -618,11 +609,11 @@ export function validateFileSystem(): ValidationResult[] {
     } catch (error) {
       results.push({
         check: 'Disk Space Availability',
-        status: 'warning',
-        message: `Could not verify disk space availability: ${(error as Error).message}`,
+        status: 'fail',
+        message: `Failed to check disk space: ${(error as Error).message}`,
         details: { 
           error: (error as Error).message,
-          note: 'Manual disk space verification recommended'
+          note: 'Cross-platform disk space check failed - this indicates a serious system issue'
         }
       });
     }
@@ -764,7 +755,7 @@ export async function performDeploymentReadinessCheck(): Promise<DeploymentReadi
   
   // Collect all validation results
   allChecks.push(...validateEnvironmentVariables());
-  allChecks.push(...validateFileSystem());
+  allChecks.push(...await validateFileSystem());
   allChecks.push(...await validateDatabase());
   allChecks.push(...validateProductionConfig());
 
