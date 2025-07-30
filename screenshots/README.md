@@ -16,6 +16,12 @@ This directory contains comprehensive screenshots of all pages, features, and me
 ### User Interface Features
 8. **08-country-code-dropdown.png** - Comprehensive country code selection dropdown with international phone number support
 
+### Post-Authentication Dashboard Screenshots
+9. **09-email-verification-banner-visible.png** - Email verification banner demonstration (before dismissal)
+10. **10-email-verification-banner-dismissed.png** - Clean page layout after banner dismissal
+11. **11-dashboard-with-email-banner.png** - Complete dashboard view with email verification banner
+12. **12-dashboard-clean.png** - Clean dashboard layout after banner dismissal
+
 ## Email Verification Banner Dismissal
 
 The GALAX app includes an email verification banner that appears at the top of authenticated pages when a user's email is not verified. To dismiss this banner:
@@ -41,3 +47,23 @@ The app uses a responsive design with:
 - Mobile-first design approach
 - Consistent branding with GALAX logo and styling
 - Clean typography and intuitive navigation
+
+## Post-Authentication Features
+
+The authenticated dashboard demonstrates:
+- **User Statistics**: Action Points (1000 starting balance), Crowds Stablecoin balance, Governance balance, and Reputation metrics
+- **Activity Tracking**: Counters for Help Requested, Help Offered, Crisis Reported, Proposals Created, and Votes Cast
+- **Quick Actions**: Streamlined buttons for core app functionality (Request Help, Report Crisis, Create Proposal, Browse Help Requests)
+- **Community Impact**: Visual progress indicators for Community Level and Help Completion Rate
+- **Bottom Navigation**: Tabbed interface providing access to all main app sections
+
+## Available Authenticated Pages
+
+Based on the application routing and navigation structure, the following authenticated pages are available:
+- **Dashboard** (`/dashboard`) - Main user dashboard with statistics and quick actions
+- **Help Requests** (`/help`) - Browse and manage community help requests
+- **Crisis Alerts** (`/crisis`) - View and report emergency situations
+- **Governance** (`/governance`) - Participate in community proposals and voting
+- **Profile** (`/profile`) - User profile management and settings
+- **Stablecoin** (`/stablecoin`) - Stablecoin management and transactions
+- **Admin** (`/admin`) - Administrative functions and system management
