@@ -8,6 +8,8 @@
 
 import { Server, Socket } from 'socket.io';
 import { db } from './database.js';
+import { WebSocketSecurityMiddleware, defaultSecurityConfig } from './middleware/websocket-security.js';
+import jwt from 'jsonwebtoken';
 
 interface UserConnection {
   userId: number;
@@ -29,9 +31,11 @@ class SocketManager {
   private connectionRetries = new Map<string, ConnectionRetry>();
   private cleanupInterval: NodeJS.Timeout;
   private io: Server;
+  private securityMiddleware: WebSocketSecurityMiddleware;
 
   constructor(io: Server) {
     this.io = io;
+    this.securityMiddleware = new WebSocketSecurityMiddleware(defaultSecurityConfig);
     this.setupConnectionHandling();
     this.startCleanupProcess();
   }
@@ -39,8 +43,52 @@ class SocketManager {
   private setupConnectionHandling() {
     this.io.on('connection', (socket: Socket) => {
       console.log(`🔌 Socket connected: ${socket.id}`);
+      
+      // Enhanced security validation
+      if (!this.validateConnection(socket)) {
+        socket.disconnect(true);
+        return;
+      }
+      
       this.handleNewConnection(socket);
     });
+  }
+
+  private validateConnection(socket: Socket): boolean {
+    const headers = socket.handshake.headers;
+    const origin = headers.origin || headers.referer;
+    const ip = socket.handshake.address;
+
+    // Validate origin to prevent CSWH
+    if (origin && !this.securityMiddleware.validateOrigin(origin)) {
+      this.securityMiddleware.logSecurityEvent('invalid_origin', {
+        socketId: socket.id,
+        origin,
+        ip
+      }, 'high');
+      return false;
+    }
+
+    // Check for CSWH indicators
+    if (this.securityMiddleware.detectCSWH(headers, origin || '')) {
+      this.securityMiddleware.logSecurityEvent('cswh_detected', {
+        socketId: socket.id,
+        headers: headers,
+        ip
+      }, 'critical');
+      return false;
+    }
+
+    // Check connection rate limit
+    if (!this.securityMiddleware.checkConnectionRateLimit(ip)) {
+      this.securityMiddleware.logSecurityEvent('connection_rate_limit', {
+        socketId: socket.id,
+        ip
+      }, 'medium');
+      return false;
+    }
+
+    return true;
   }
 
   private handleNewConnection(socket: Socket) {
@@ -123,18 +171,44 @@ class SocketManager {
   private handleAuthentication(socket: Socket) {
     socket.on('authenticate', async (token) => {
       try {
-        console.log(`🔐 Authenticating socket: ${socket.id}`);
+        const ip = socket.handshake.address;
         
-        if (!token || typeof token !== 'string') {
-          socket.emit('auth_error', { message: 'Invalid token format' });
+        // Check authentication rate limit
+        if (!this.securityMiddleware.checkAuthRateLimit(ip)) {
+          socket.emit('auth_error', { message: 'Too many authentication attempts' });
           return;
         }
 
-        const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+        console.log(`🔐 Authenticating socket: ${socket.id}`);
+        
+        // Enhanced token validation
+        if (!this.securityMiddleware.validateTokenFormat(token)) {
+          socket.emit('auth_error', { message: 'Invalid token format' });
+          this.securityMiddleware.logSecurityEvent('invalid_token_format', {
+            socketId: socket.id,
+            ip
+          }, 'medium');
+          return;
+        }
+
+        // Verify JWT token with proper secret
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          console.error('❌ JWT_SECRET not configured');
+          socket.emit('auth_error', { message: 'Authentication service unavailable' });
+          return;
+        }
+
+        const decoded = jwt.verify(token, secret) as any;
         const userId = decoded.userId;
 
         if (!userId || typeof userId !== 'number') {
           socket.emit('auth_error', { message: 'Invalid user ID in token' });
+          this.securityMiddleware.logSecurityEvent('invalid_user_id', {
+            socketId: socket.id,
+            ip,
+            tokenPayload: decoded
+          }, 'medium');
           return;
         }
 
@@ -147,6 +221,11 @@ class SocketManager {
 
         if (!user) {
           socket.emit('auth_error', { message: 'User not found' });
+          this.securityMiddleware.logSecurityEvent('user_not_found', {
+            socketId: socket.id,
+            userId,
+            ip
+          }, 'medium');
           return;
         }
 
@@ -174,9 +253,31 @@ class SocketManager {
         socket.emit('authenticated', { userId, timestamp: Date.now() });
         console.log(`✅ User ${userId} authenticated successfully`);
         
+        this.securityMiddleware.logSecurityEvent('authentication_success', {
+          socketId: socket.id,
+          userId,
+          ip
+        }, 'low');
+        
       } catch (error) {
         console.error(`❌ Authentication error for ${socket.id}:`, error);
-        socket.emit('auth_error', { message: 'Authentication failed' });
+        
+        // Determine if this is a JWT verification error
+        if (error instanceof jwt.JsonWebTokenError) {
+          socket.emit('auth_error', { message: 'Invalid authentication token' });
+          this.securityMiddleware.logSecurityEvent('jwt_verification_failed', {
+            socketId: socket.id,
+            error: error.message,
+            ip: socket.handshake.address
+          }, 'high');
+        } else {
+          socket.emit('auth_error', { message: 'Authentication failed' });
+          this.securityMiddleware.logSecurityEvent('authentication_error', {
+            socketId: socket.id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            ip: socket.handshake.address
+          }, 'medium');
+        }
       }
     });
   }
@@ -231,6 +332,16 @@ class SocketManager {
           return;
         }
 
+        // Check message rate limit
+        if (!this.securityMiddleware.checkMessageRateLimit(connection.userId.toString())) {
+          socket.emit('error', { message: 'Message rate limit exceeded' });
+          this.securityMiddleware.logSecurityEvent('message_rate_limit', {
+            socketId: socket.id,
+            userId: connection.userId
+          }, 'medium');
+          return;
+        }
+
         const { helpRequestId, message } = data;
         
         // Validate input
@@ -244,20 +355,31 @@ class SocketManager {
           return;
         }
         
-        if (message.length > 1000) {
-          socket.emit('error', { message: 'Message too long (max 1000 characters)' });
+        // Enhanced message validation and sanitization
+        const validation = this.securityMiddleware.validateMessage(message);
+        if (!validation.isValid) {
+          socket.emit('error', { 
+            message: 'Message contains inappropriate content',
+            details: 'Please review your message and try again'
+          });
+          this.securityMiddleware.logSecurityEvent('malicious_message_blocked', {
+            socketId: socket.id,
+            userId: connection.userId,
+            threats: validation.threats,
+            originalMessage: message.substring(0, 100) // Log first 100 chars for analysis
+          }, 'high');
           return;
         }
         
         console.log(`💬 Message from user ${connection.userId} in help request ${helpRequestId}`);
         
-        // Save message to database
+        // Save message to database (using sanitized version)
         const savedMessage = await db
           .insertInto('messages')
           .values({
             help_request_id: helpRequestId,
             sender_id: connection.userId,
-            message: message.trim()
+            message: validation.sanitized
           })
           .returning(['id', 'created_at'])
           .executeTakeFirst();
@@ -277,7 +399,7 @@ class SocketManager {
         // Broadcast to help request room
         const messageData = {
           id: savedMessage.id,
-          message: message.trim(),
+          message: validation.sanitized,
           sender: sender?.username || 'Unknown',
           avatar: sender?.avatar_url,
           timestamp: savedMessage.created_at
@@ -296,6 +418,11 @@ class SocketManager {
       } catch (error) {
         console.error(`❌ Message send error for ${socket.id}:`, error);
         socket.emit('error', { message: 'Failed to send message' });
+        
+        this.securityMiddleware.logSecurityEvent('message_processing_error', {
+          socketId: socket.id,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }, 'medium');
       }
     });
   }
@@ -532,8 +659,13 @@ class SocketManager {
     return {
       activeConnections: this.connectedUsers.size,
       retryAttempts: this.connectionRetries.size,
+      rateLimits: this.securityMiddleware.getRateLimitStatus(),
       timestamp: new Date().toISOString()
     };
+  }
+
+  public getSecurityMiddleware(): WebSocketSecurityMiddleware {
+    return this.securityMiddleware;
   }
 
   // Cleanup method for graceful shutdown
