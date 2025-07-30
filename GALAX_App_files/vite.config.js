@@ -13,6 +13,9 @@ import compression from 'vite-plugin-compression';
 
 export const vitePort = 3000;
 
+// Asset inline limit - 4KB for production builds
+const ASSET_INLINE_LIMIT_BYTES = 4096;
+
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
   const isDevelopment = mode === 'development';
