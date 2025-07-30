@@ -36,12 +36,8 @@ const REQUIRED_ENV_VARS = [
   'CLIENT_ORIGIN',    // CORS configuration
   'DATABASE_URL',     // Production database connection
   'SOCKET_PATH',      // Custom Socket.IO path
-  'FRONTEND_URL'      // Legacy frontend URL support
-];
-
-// Optional environment variables with validation
-const OPTIONAL_ENV_VARS = [
-  'TRUSTED_ORIGINS'
+  'FRONTEND_URL',     // Legacy frontend URL support
+  'TRUSTED_ORIGINS'   // Required for Version 3.0: third-party integrations, mobile contexts, enterprise deployments
 ];
 
 // Top 50 SMTP hosts used globally
@@ -371,15 +367,6 @@ export function validateEnvironmentVariables(): ValidationResult[] {
       }
     }
   }
-  const trustedOrigins = process.env.TRUSTED_ORIGINS;
-  if (trustedOrigins) {
-    results.push({
-      check: `Optional Configuration: TRUSTED_ORIGINS`,
-      status: 'pass',
-      message: `Additional trusted origins are configured`,
-      details: { variable: 'TRUSTED_ORIGINS', value: trustedOrigins.split(',').length + ' origins' }
-    });
-  }
 
   // Validate DATABASE_URL format if provided
   const databaseUrl = process.env.DATABASE_URL;
@@ -457,6 +444,52 @@ export function validateEnvironmentVariables(): ValidationResult[] {
         status: 'warning',
         message: 'SOCKET_PATH should start with / and have additional path components',
         details: { path: socketPath }
+      });
+    }
+  }
+
+  // Validate TRUSTED_ORIGINS format (required for Version 3.0)
+  const trustedOrigins = process.env.TRUSTED_ORIGINS;
+  if (trustedOrigins) {
+    const origins = trustedOrigins.split(',').map(origin => origin.trim());
+    let validOrigins = 0;
+    let invalidOrigins = 0;
+    
+    for (const origin of origins) {
+      try {
+        const url = new URL(origin);
+        if (url.protocol === 'https:' || (process.env.NODE_ENV !== 'production' && url.protocol === 'http:')) {
+          validOrigins++;
+        } else {
+          invalidOrigins++;
+        }
+      } catch (error) {
+        invalidOrigins++;
+      }
+    }
+    
+    if (invalidOrigins === 0) {
+      results.push({
+        check: 'TRUSTED_ORIGINS Format',
+        status: 'pass',
+        message: `All ${validOrigins} trusted origins are properly formatted`,
+        details: { 
+          total_origins: origins.length,
+          valid_origins: validOrigins,
+          purpose: 'Version 3.0: third-party integrations, mobile contexts, enterprise deployments'
+        }
+      });
+    } else {
+      results.push({
+        check: 'TRUSTED_ORIGINS Format',
+        status: 'fail',
+        message: `${invalidOrigins} of ${origins.length} trusted origins have invalid format`,
+        details: { 
+          total_origins: origins.length,
+          valid_origins: validOrigins,
+          invalid_origins: invalidOrigins,
+          requirement: 'All origins must be valid URLs with https:// (or http:// in development)'
+        }
       });
     }
   }
