@@ -330,6 +330,11 @@ export const corsConfig = {
         callback(new Error("Not allowed by CORS"));
       }
     } else {
+      // Explicitly handle missing `origin` headers in non-development environments
+      console.warn("🚨 CORS: Missing origin header in non-development environment", {
+        isProduction,
+        timestamp: new Date().toISOString(),
+      });
       callback(new Error("Origin header missing"));
     }
   },
