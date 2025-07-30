@@ -199,8 +199,7 @@ jobs:
         run: |
           if [ -f ".lighthouserc.json" ]; then
             echo "Running Lighthouse CI..."
-            npm install -g @lhci/cli@0.12.x
-            timeout 300s lhci autorun || echo "Lighthouse CI completed with warnings"
+            timeout 300s npx @lhci/cli@0.12.0 autorun || echo "Lighthouse CI completed with warnings"
           else
             echo "✓ No Lighthouse config found - skipping performance tests"
           fi
