@@ -280,6 +280,35 @@ class RealtimeManager {
     };
   }
 
+  // Test helper method to create mock connections for testing
+  public createTestConnection(connectionId: string, userId: number): boolean {
+    if (this.connections.has(connectionId)) {
+      return false; // Connection already exists
+    }
+
+    // Create a mock response object for testing
+    const mockResponse = {
+      writeHead: () => {},
+      write: () => {},
+      on: () => {},
+      end: () => {},
+      destroyed: false
+    } as any;
+
+    const connection: SSEConnection = {
+      userId,
+      connectionId,
+      response: mockResponse,
+      rooms: new Set([`user_${userId}`]),
+      connectedAt: new Date(),
+      lastActivity: new Date()
+    };
+
+    this.connections.set(connectionId, connection);
+    console.log(`🧪 Test connection created for user ${userId}: ${connectionId}`);
+    return true;
+  }
+
   // Graceful shutdown
   public shutdown() {
     console.log('📡 Shutting down realtime manager...');
