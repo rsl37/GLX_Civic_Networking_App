@@ -4,14 +4,14 @@ name: Workflow Health Monitor
 'on':
   schedule:
     # Monitor workflow health daily at 6 AM UTC
-  - cron: '0 6 * * *'
+    - cron: '0 6 * * *'
   workflow_dispatch:
   workflow_run:
-  workflows:
-    - "CI/CD Pipeline"
-    - "Security Scan"
-    - "Quality & Performance"
-  types: [completed]
+    workflows:
+      - "CI/CD Pipeline"
+      - "Security Scan"
+      - "Quality & Performance"
+    types: [completed]
 
 jobs:
   monitor-workflows:
@@ -56,31 +56,31 @@ jobs:
                     per_page: 10
                   });
 
-              const recentRuns = runs.workflow_runs.slice(0, 5);
-              const failureCount = recentRuns.filter(run => run.conclusion === 'failure').length;
-              const successRate = ((recentRuns.length - failureCount) / recentRuns.length * 100).toFixed(1);
+                const recentRuns = runs.workflow_runs.slice(0, 5);
+                const failureCount = recentRuns.filter(run => run.conclusion === 'failure').length;
+                const successRate = ((recentRuns.length - failureCount) / recentRuns.length * 100).toFixed(1);
 
-              results.push({
-        name: workflowName,
-        successRate: successRate,
-        recentFailures: failureCount,
-        lastRun: recentRuns[0]?.created_at || 'Never',
-        status: failureCount > 2 ? '🔴 Critical' : failureCount > 0 ? '🟡 Warning' : '🟢 Healthy'
-              });
-            } catch (error) {
-              results.push({
-        name: workflowName,
-        status: '❓ Unknown',
-        error: error.message
-              });
+                results.push({
+                  name: workflowName,
+                  successRate: successRate,
+                  recentFailures: failureCount,
+                  lastRun: recentRuns[0]?.created_at || 'Never',
+                  status: failureCount > 2 ? '🔴 Critical' : failureCount > 0 ? '🟡 Warning' : '🟢 Healthy'
+                });
+              } catch (error) {
+                results.push({
+                  name: workflowName,
+                  status: '❓ Unknown',
+                  error: error.message
+                });
+              }
             }
-          }
 
-          return results;
+            return results;
 
-  - name: Generate health report
-    id: health-report
-    run: |
+      - name: Generate health report
+        id: health-report
+        run: |
         cat << 'EOF' > workflow-health-report.md
         # 🔍 Workflow Health Report
 

@@ -3,116 +3,116 @@ name: Release Management
 
 'on':
   workflow_dispatch:
-  inputs:
-    release_type:
-    description: 'Type of release (patch, minor, major)'
-    required: true
-    default: 'patch'
-    type: choice
-    options:
-    - patch
-    - minor
-    - major
+    inputs:
+      release_type:
+        description: 'Type of release (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 jobs:
   release:
-  name: Automated Release
-  runs-on: ubuntu-latest
-  timeout-minutes: 20
-  permissions:
-    contents: write
-    pull-requests: write
-    issues: write
+    name: Automated Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
 
-  steps:
-  - name: Checkout code
-    uses: actions/checkout@v4
-    with:
-    fetch-depth: 0 # Need full history for changelog generation
-    token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for changelog generation
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-  - name: Setup Node.js
-    uses: actions/setup-node@v4
-    with:
-    node-version: '20.x'
-    cache: 'npm'
-    cache-dependency-path: './GALAX_App_files/package-lock.json'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: './GALAX_App_files/package-lock.json'
 
-  - name: Install dependencies
-    working-directory: ./GALAX_App_files
-    run: npm ci --prefer-offline --no-audit --no-fund
+      - name: Install dependencies
+        working-directory: ./GALAX_App_files
+        run: npm ci --prefer-offline --no-audit --no-fund
 
-  - name: Run tests
-    working-directory: ./GALAX_App_files
-    run: npm test
+      - name: Run tests
+        working-directory: ./GALAX_App_files
+        run: npm test
 
-  - name: Build application
-    working-directory: ./GALAX_App_files
-    run: npm run build
+      - name: Build application
+        working-directory: ./GALAX_App_files
+        run: npm run build
 
-  - name: Determine release type
-    id: release-type
-    run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "type=${{ github.event.inputs.release_type }}" >> $GITHUB_OUTPUT
-        else
-          # Auto-determine based on commit messages
-          if git log --format=%B -n 20 | grep -q "BREAKING CHANGE"; then
-            echo "type=major" >> $GITHUB_OUTPUT
-          elif git log --format=%B -n 20 | grep -qE "^feat(\(.+\))?: "; then
-            echo "type=minor" >> $GITHUB_OUTPUT
+      - name: Determine release type
+        id: release-type
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "type=${{ github.event.inputs.release_type }}" >> $GITHUB_OUTPUT
           else
-            echo "type=patch" >> $GITHUB_OUTPUT
+            # Auto-determine based on commit messages
+            if git log --format=%B -n 20 | grep -q "BREAKING CHANGE"; then
+              echo "type=major" >> $GITHUB_OUTPUT
+            elif git log --format=%B -n 20 | grep -qE "^feat(\(.+\))?: "; then
+              echo "type=minor" >> $GITHUB_OUTPUT
+            else
+              echo "type=patch" >> $GITHUB_OUTPUT
+            fi
           fi
-        fi
 
-  - name: Generate changelog
-    id: changelog
-    run: |
-        # Create changelog based on git commits
-        echo "## Changes" > CHANGELOG_TEMP.md
-        echo "" >> CHANGELOG_TEMP.md
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Create changelog based on git commits
+          echo "## Changes" > CHANGELOG_TEMP.md
+          echo "" >> CHANGELOG_TEMP.md
 
-        # Get commits since last tag
-        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        if [ -n "$LAST_TAG" ]; then
-          RANGE="$LAST_TAG..HEAD"
-        else
-          RANGE="HEAD"
-        fi
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            RANGE="$LAST_TAG..HEAD"
+          else
+            RANGE="HEAD"
+          fi
 
-        # Process commits
-    git log $RANGE --pretty=format:"- %s (%h)" --reverse >> CHANGELOG_TEMP.md
+          # Process commits
+          git log $RANGE --pretty=format:"- %s (%h)" --reverse >> CHANGELOG_TEMP.md
 
-        # Set output for use in release
-        echo "changelog<<EOF" >> $GITHUB_OUTPUT
-        cat CHANGELOG_TEMP.md >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+          # Set output for use in release
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG_TEMP.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-  - name: Update version in package.json
-    working-directory: ./GALAX_App_files
-    run: |
-        # Update version based on release type
-        npm version ${{ steps.release-type.outputs.type }} --no-git-tag-version
+      - name: Update version in package.json
+        working-directory: ./GALAX_App_files
+        run: |
+          # Update version based on release type
+          npm version ${{ steps.release-type.outputs.type }} --no-git-tag-version
 
-        # Get new version
-        NEW_VERSION=$(node -p "require('./package.json').version")
-        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          # Get new version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
-  - name: Commit version bump
-    run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add GALAX_App_files/package.json
-    git commit -m "chore: bump version to ${{ env.NEW_VERSION }}"
-        git tag "v${{ env.NEW_VERSION }}"
-        git push origin main --tags
+      - name: Commit version bump
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add GALAX_App_files/package.json
+          git commit -m "chore: bump version to ${{ env.NEW_VERSION }}"
+          git tag "v${{ env.NEW_VERSION }}"
+          git push origin main --tags
 
-  - name: Create GitHub Release
-    uses: softprops/action-gh-release@v2
-    with:
-    tag_name: v${{ env.NEW_VERSION }}
-    name: Release v${{ env.NEW_VERSION }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.NEW_VERSION }}
+          name: Release v${{ env.NEW_VERSION }}
     body: |
           # Release v${{ env.NEW_VERSION }}
 
