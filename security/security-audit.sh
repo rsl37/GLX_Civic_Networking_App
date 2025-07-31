@@ -247,9 +247,9 @@ log ""
 
 log "${GREEN}✅ Security audit completed successfully${NC}"
 
-# Set exit code based on critical issues found
-if grep -q "❌" "$LOG_FILE"; then
-    log "${RED}🚨 Critical security issues detected - immediate action required${NC}"
+# Set exit code based on critical issues found (using plain text marker "[CRITICAL]")
+if grep -q "[CRITICAL]" "$LOG_FILE"; then
+    log "${RED}Critical security issues detected - immediate action required${NC}"
     exit 1
 else
     log "${GREEN}🎉 No critical security issues detected${NC}"
