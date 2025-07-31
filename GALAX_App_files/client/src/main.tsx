@@ -35,6 +35,19 @@ function updateDarkClass(e = null) {
 updateDarkClass();
 darkQuery.addEventListener('change', updateDarkClass);
 
+// Register service worker for lean civic data caching
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('🌟 Service Worker registered for lean civic caching:', registration.scope);
+      })
+      .catch(error => {
+        console.warn('⚠️ Service Worker registration failed:', error);
+      });
+  });
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
