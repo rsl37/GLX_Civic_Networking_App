@@ -574,6 +574,40 @@ async function createAdditionalTables(database: Kysely<DatabaseSchema>, dbType: 
     .addColumn('created_at', isPostgres ? 'timestamp' : 'datetime', (col) => col.defaultTo(isPostgres ? 'now()' : "datetime('now')"))
     .execute();
 
+  // Proposals table for governance system
+  await database.schema
+    .createTable('proposals')
+    .ifNotExists()
+    .addColumn('id', isPostgres ? 'serial' : 'integer', (col) => {
+      col = col.primaryKey();
+      return isPostgres ? col : col.autoIncrement();
+    })
+    .addColumn('title', 'varchar(255)', (col) => col.notNull())
+    .addColumn('description', 'text', (col) => col.notNull())
+    .addColumn('category', 'varchar(50)', (col) => col.notNull())
+    .addColumn('created_by', 'integer', (col) => col.references('users.id').onDelete('cascade'))
+    .addColumn('deadline', isPostgres ? 'timestamp' : 'datetime', (col) => col.notNull())
+    .addColumn('status', 'varchar(20)', (col) => col.defaultTo('active'))
+    .addColumn('votes_for', 'integer', (col) => col.defaultTo(0))
+    .addColumn('votes_against', 'integer', (col) => col.defaultTo(0))
+    .addColumn('created_at', isPostgres ? 'timestamp' : 'datetime', (col) => col.defaultTo(isPostgres ? 'now()' : "datetime('now')"))
+    .execute();
+
+  // Votes table for governance system
+  await database.schema
+    .createTable('votes')
+    .ifNotExists()
+    .addColumn('id', isPostgres ? 'serial' : 'integer', (col) => {
+      col = col.primaryKey();
+      return isPostgres ? col : col.autoIncrement();
+    })
+    .addColumn('proposal_id', 'integer', (col) => col.references('proposals.id').onDelete('cascade'))
+    .addColumn('user_id', 'integer', (col) => col.references('users.id').onDelete('cascade'))
+    .addColumn('vote_type', 'varchar(10)', (col) => col.notNull())
+    .addColumn('delegate_id', 'integer', (col) => col.references('users.id').onDelete('set null'))
+    .addColumn('created_at', isPostgres ? 'timestamp' : 'datetime', (col) => col.defaultTo(isPostgres ? 'now()' : "datetime('now')"))
+    .execute();
+
   console.log(`✅ Additional ${dbType.toUpperCase()} tables created successfully`);
 }
 

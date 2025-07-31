@@ -202,15 +202,22 @@ export function validateEnvironmentVariables(): ValidationResult[] {
       });
     } else {
       // Check for placeholder values that indicate incomplete configuration
-      const placeholderValues = ['dev-', 'your-', 'example', 'localhost', 'test-'];
-      const isPlaceholder = placeholderValues.some(placeholder => value.toLowerCase().includes(placeholder));
+      const placeholderValues = ['dev-', 'your-', 'example', 'localhost', 'test-', 'REQUIRED-'];
+      const isPlaceholder = placeholderValues.some(placeholder => value.toLowerCase().includes(placeholder.toLowerCase()));
       
       if (isPlaceholder) {
+        // In development environments, treat placeholder values as warnings, not failures
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        const status = isDevelopment ? 'warning' : 'fail';
+        const message = isDevelopment 
+          ? `Essential environment variable ${envVar} contains placeholder value - configure with real credentials for production`
+          : `Essential environment variable ${envVar} contains placeholder value - must be configured with real service credentials`;
+        
         results.push({
           check: `Essential Environment Variable: ${envVar}`,
-          status: 'fail',
-          message: `Essential environment variable ${envVar} contains placeholder value - must be configured with real service credentials`,
-          details: { variable: envVar, value_type: 'placeholder', category: 'essential' }
+          status: status,
+          message: message,
+          details: { variable: envVar, value_type: 'placeholder', category: 'essential', environment: process.env.NODE_ENV }
         });
       } else {
         results.push({
