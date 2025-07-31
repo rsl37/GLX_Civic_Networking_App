@@ -199,7 +199,7 @@ class SocketManager {
           return;
         }
 
-        const decoded = jwt.verify(token, secret) as any;
+        const decoded = jwt.verify(token, secret) as JwtPayload;
         const userId = decoded.userId;
 
         if (!userId || typeof userId !== 'number') {
