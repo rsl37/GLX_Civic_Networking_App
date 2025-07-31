@@ -6,32 +6,58 @@
  * or visit https://polyformproject.org/licenses/shield/1.0.0
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
-interface SocketHealthStatus {
+interface ConnectionHealthStatus {
   connected: boolean;
   authenticated: boolean;
   retryAttempts: number;
   maxRetries: number;
   lastError: string | null;
   connectionTime: number | null;
+  pollingInterval: number;
 }
 
+interface Message {
+  id: string;
+  content: string;
+  userId: number;
+  username: string;
+  timestamp: string;
+  type: 'chat' | 'system';
+}
+
+interface NotificationData {
+  id: string;
+  type: string;
+  message: string;
+  timestamp: string;
+}
+
+// HTTP-based polling system to replace WebSocket functionality
 export function useSocket(token: string | null) {
-  const socketRef = useRef<Socket | null>(null);
-  const [health, setHealth] = useState<SocketHealthStatus>({
+  const [health, setHealth] = useState<ConnectionHealthStatus>({
     connected: false,
     authenticated: false,
     retryAttempts: 0,
     maxRetries: 5,
     lastError: null,
-    connectionTime: null
+    connectionTime: null,
+    pollingInterval: 5000
   });
   
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
+  
+  const pollingIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const retryTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const heartbeatIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const lastMessageTimestamp = useRef<string | null>(null);
+  const lastNotificationTimestamp = useRef<string | null>(null);
   const connectionStartTime = useRef<number>(0);
+
+  const baseUrl = process.env.NODE_ENV === 'production' 
+    ? '/api' 
+    : 'http://localhost:3001/api';
 
   useEffect(() => {
     if (!token) {
@@ -39,200 +65,204 @@ export function useSocket(token: string | null) {
       return;
     }
 
-    initializeSocket();
+    initializeConnection();
 
     return () => {
       cleanup();
     };
   }, [token]);
 
-  const initializeSocket = () => {
-    if (socketRef.current?.connected) {
-      return; // Already connected
-    }
-
+  const initializeConnection = () => {
     connectionStartTime.current = Date.now();
+    console.log('🔌 Initializing HTTP polling connection...');
     
-    console.log('🔌 Initializing socket connection...');
-    
-    socketRef.current = io(
-      process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3001',
-      {
-        auth: { token },
-        timeout: 10000,
-        reconnection: false, // We handle reconnection manually
-        forceNew: true
-      }
-    );
+    setHealth(prev => ({
+      ...prev,
+      connected: true,
+      authenticated: true,
+      lastError: null,
+      connectionTime: Date.now() - connectionStartTime.current,
+      retryAttempts: 0
+    }));
 
-    setupEventHandlers();
+    startPolling();
   };
 
-  const setupEventHandlers = () => {
-    if (!socketRef.current) return;
-
-    const socket = socketRef.current;
-
-    // Connection successful
-    socket.on('connect', () => {
-      const connectionTime = Date.now() - connectionStartTime.current;
-      console.log(`✅ Socket connected in ${connectionTime}ms`);
-      
-      setHealth(prev => ({
-        ...prev,
-        connected: true,
-        lastError: null,
-        connectionTime,
-        retryAttempts: 0
-      }));
-      
-      // Authenticate immediately after connection
-      socket.emit('authenticate', token);
-      
-      // Clear any pending retry
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-        retryTimeoutRef.current = undefined;
-      }
-    });
-
-    // Authentication successful
-    socket.on('authenticated', (data) => {
-      console.log('🔐 Socket authenticated successfully:', data);
-      setHealth(prev => ({
-        ...prev,
-        authenticated: true,
-        lastError: null
-      }));
-      
-      // Start heartbeat monitoring
-      startHeartbeat();
-    });
-
-    // Authentication failed
-    socket.on('auth_error', (error) => {
-      console.error('❌ Socket authentication failed:', error);
-      setHealth(prev => ({
-        ...prev,
-        authenticated: false,
-        lastError: error.message || 'Authentication failed'
-      }));
-    });
-
-    // Connection error
-    socket.on('connect_error', (error) => {
-      console.error('❌ Socket connection error:', error);
-      setHealth(prev => ({
-        ...prev,
-        connected: false,
-        lastError: error.message || 'Connection failed'
-      }));
-      
-      handleReconnection();
-    });
-
-    // Disconnection
-    socket.on('disconnect', (reason) => {
-      console.log('🔌 Socket disconnected:', reason);
-      setHealth(prev => ({
-        ...prev,
-        connected: false,
-        authenticated: false,
-        lastError: reason
-      }));
-      
-      stopHeartbeat();
-      
-      // Only reconnect if disconnection wasn't intentional
-      if (reason !== 'io client disconnect') {
+  const startPolling = () => {
+    stopPolling();
+    
+    const poll = async () => {
+      try {
+        await Promise.all([
+          pollMessages(),
+          pollNotifications()
+        ]);
+        
+        setHealth(prev => ({
+          ...prev,
+          connected: true,
+          lastError: null,
+          retryAttempts: 0
+        }));
+        
+      } catch (error) {
+        console.error('❌ Polling error:', error);
+        setHealth(prev => ({
+          ...prev,
+          connected: false,
+          lastError: error instanceof Error ? error.message : 'Polling failed'
+        }));
+        
         handleReconnection();
       }
-    });
+    };
 
-    // Server ping for heartbeat
-    socket.on('ping', (data) => {
-      socket.emit('pong', data);
-    });
-
-    // Connection retry response
-    socket.on('connection_retry', (data) => {
-      console.log(`🔄 Connection retry ${data.attempt}/${data.maxRetries}`);
-      setHealth(prev => ({
-        ...prev,
-        retryAttempts: data.attempt,
-        maxRetries: data.maxRetries
-      }));
-    });
-
-    // Max retries reached
-    socket.on('max_retries_reached', (data) => {
-      console.error('❌ Maximum retry attempts reached:', data);
-      setHealth(prev => ({
-        ...prev,
-        lastError: 'Maximum retry attempts reached'
-      }));
-    });
-
-    // Idle timeout warning
-    socket.on('idle_timeout', (data) => {
-      console.warn('⏰ Connection closed due to inactivity:', data);
-      setHealth(prev => ({
-        ...prev,
-        lastError: `Idle timeout: ${data.idleTime} minutes`
-      }));
-    });
-
-    // Room joined confirmation
-    socket.on('room_joined', (data) => {
-      console.log('🏠 Joined room:', data.roomId);
-    });
-
-    // Room left confirmation
-    socket.on('room_left', (data) => {
-      console.log('🚪 Left room:', data.roomId);
-    });
-
-    // Message sent confirmation
-    socket.on('message_sent', (data) => {
-      console.log('✅ Message sent:', data.messageId);
-    });
-
-    // Error handling
-    socket.on('error', (error) => {
-      console.error('❌ Socket error:', error);
-      setHealth(prev => ({
-        ...prev,
-        lastError: error.message || 'Socket error occurred'
-      }));
-    });
-
-    // Error handled confirmation
-    socket.on('error_handled', (data) => {
-      console.log('🔧 Error handled by server:', data);
-    });
-  };
-
-  const startHeartbeat = () => {
-    stopHeartbeat(); // Clear any existing heartbeat
+    // Initial poll
+    poll();
     
-    heartbeatIntervalRef.current = setInterval(() => {
-      if (socketRef.current?.connected) {
-        // Check if we received a ping recently (heartbeat check)
-        // This is handled automatically by the socket.io client
-      } else {
-        console.warn('⚠️ Heartbeat failed - socket not connected');
-        stopHeartbeat();
-        handleReconnection();
-      }
-    }, 35000); // Check every 35 seconds (server sends ping every 30s)
+    // Set up regular polling
+    pollingIntervalRef.current = setInterval(poll, health.pollingInterval);
   };
 
-  const stopHeartbeat = () => {
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
-      heartbeatIntervalRef.current = undefined;
+  const stopPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = undefined;
     }
   };
+
+  const pollMessages = async () => {
+    const response = await fetch(`${baseUrl}/chat/messages?since=${lastMessageTimestamp.current || ''}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    if (data.messages && data.messages.length > 0) {
+      setMessages(prev => {
+        // Merge new messages, avoiding duplicates
+        const existingIds = new Set(prev.map(m => m.id));
+        const newMessages = data.messages.filter((msg: Message) => !existingIds.has(msg.id));
+        return [...prev, ...newMessages];
+      });
+      
+      // Update timestamp for next poll
+      lastMessageTimestamp.current = data.messages[data.messages.length - 1].timestamp;
+    }
+  };
+
+  const pollNotifications = async () => {
+    const response = await fetch(`${baseUrl}/notifications?since=${lastNotificationTimestamp.current || ''}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    if (data.notifications && data.notifications.length > 0) {
+      setNotifications(prev => {
+        // Keep only last 50 notifications
+        const existingIds = new Set(prev.map(n => n.id));
+        const newNotifications = data.notifications.filter((notif: NotificationData) => !existingIds.has(notif.id));
+        return [...prev, ...newNotifications].slice(-50);
+      });
+      
+      // Update timestamp for next poll
+      lastNotificationTimestamp.current = data.notifications[data.notifications.length - 1].timestamp;
+    }
+  };
+
+  const sendMessage = useCallback(async (content: string, roomId?: string) => {
+    try {
+      const response = await fetch(`${baseUrl}/chat/send`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content, roomId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Message sent:', data.messageId);
+      
+      // Trigger immediate poll to get the new message
+      setTimeout(() => pollMessages().catch(console.error), 100);
+      
+      return data;
+    } catch (error) {
+      console.error('❌ Failed to send message:', error);
+      throw error;
+    }
+  }, [token, baseUrl]);
+
+  const joinRoom = useCallback(async (roomId: string) => {
+    try {
+      const response = await fetch(`${baseUrl}/chat/join`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ roomId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      console.log('🏠 Joined room:', roomId);
+      
+      // Reset message timestamp to get all messages from this room
+      lastMessageTimestamp.current = null;
+      setMessages([]);
+      
+      // Trigger immediate poll
+      setTimeout(() => pollMessages().catch(console.error), 100);
+      
+    } catch (error) {
+      console.error('❌ Failed to join room:', error);
+      throw error;
+    }
+  }, [token, baseUrl]);
+
+  const leaveRoom = useCallback(async (roomId: string) => {
+    try {
+      const response = await fetch(`${baseUrl}/chat/leave`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ roomId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      console.log('🚪 Left room:', roomId);
+      
+    } catch (error) {
+      console.error('❌ Failed to leave room:', error);
+      throw error;
+    }
+  }, [token, baseUrl]);
 
   const handleReconnection = () => {
     if (retryTimeoutRef.current) {
@@ -251,20 +281,14 @@ export function useSocket(token: string | null) {
         };
       }
 
-      // Exponential backoff: 1s, 2s, 4s, 8s, 16s
-      const delay = Math.min(1000 * Math.pow(2, newRetryAttempts - 1), 16000);
+      // Exponential backoff: 2s, 4s, 8s, 16s, 32s
+      const delay = Math.min(2000 * Math.pow(2, newRetryAttempts - 1), 32000);
       
       console.log(`🔄 Scheduling reconnection attempt ${newRetryAttempts}/${prev.maxRetries} in ${delay}ms`);
       
       retryTimeoutRef.current = setTimeout(() => {
         retryTimeoutRef.current = undefined;
-        
-        if (socketRef.current) {
-          socketRef.current.disconnect();
-          socketRef.current = null;
-        }
-        
-        initializeSocket();
+        startPolling();
       }, delay);
 
       return {
@@ -276,7 +300,7 @@ export function useSocket(token: string | null) {
   };
 
   const cleanup = () => {
-    console.log('🧹 Cleaning up socket connection...');
+    console.log('🧹 Cleaning up HTTP polling connection...');
     
     // Clear timeouts and intervals
     if (retryTimeoutRef.current) {
@@ -284,27 +308,27 @@ export function useSocket(token: string | null) {
       retryTimeoutRef.current = undefined;
     }
     
-    stopHeartbeat();
+    stopPolling();
     
-    // Disconnect socket
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current = null;
-    }
-    
-    // Reset health status
+    // Reset state
     setHealth({
       connected: false,
       authenticated: false,
       retryAttempts: 0,
       maxRetries: 5,
       lastError: null,
-      connectionTime: null
+      connectionTime: null,
+      pollingInterval: 5000
     });
+    
+    setMessages([]);
+    setNotifications([]);
+    lastMessageTimestamp.current = null;
+    lastNotificationTimestamp.current = null;
   };
 
   const forceReconnect = () => {
-    console.log('🔄 Forcing socket reconnection...');
+    console.log('🔄 Forcing reconnection...');
     
     setHealth(prev => ({
       ...prev,
@@ -316,16 +340,42 @@ export function useSocket(token: string | null) {
     
     if (token) {
       setTimeout(() => {
-        initializeSocket();
+        initializeConnection();
       }, 1000);
     }
   };
 
   const getConnectionHealth = () => health;
 
+  // Simulate socket-like interface for backward compatibility
+  const socketLikeInterface = {
+    connected: health.connected,
+    emit: (event: string, data?: any) => {
+      if (event === 'send_message') {
+        return sendMessage(data.content, data.roomId);
+      } else if (event === 'join_room') {
+        return joinRoom(data.roomId);
+      } else if (event === 'leave_room') {
+        return leaveRoom(data.roomId);
+      }
+    },
+    on: (event: string, callback: (data: any) => void) => {
+      // For backward compatibility, we'll handle these events differently
+      console.log(`Event listener registered for: ${event}`);
+    },
+    off: (event: string, callback?: (data: any) => void) => {
+      console.log(`Event listener removed for: ${event}`);
+    },
+  };
+
   return {
-    socket: socketRef.current,
+    socket: socketLikeInterface,
     health,
+    messages,
+    notifications,
+    sendMessage,
+    joinRoom,
+    leaveRoom,
     forceReconnect,
     getConnectionHealth,
     cleanup

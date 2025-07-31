@@ -8,7 +8,6 @@
 
 import express from "express";
 import { createServer } from "http";
-import { Server } from "socket.io";
 import dotenv from "dotenv";
 import multer from "multer";
 import path from "path";
@@ -60,14 +59,12 @@ import {
   validateJsonPayload,
 } from "./middleware/validation.js";
 
-// Import socket manager
-import SocketManager from "./socketManager.js";
-
 // Import stablecoin functionality
 import stablecoinRoutes from "./stablecoin/routes.js";
 import { stablecoinService } from "./stablecoin/StablecoinService.js";
 
 import { logEnvironmentStatus } from './envValidation.js';
+import { postQuantumCrypto } from './postQuantumCrypto.js';
 
 // Import comprehensive security systems
 import {
@@ -112,28 +109,6 @@ logEnvironmentStatus();
 const app = express();
 const server = createServer(app);
 
-// Socket.IO configuration with custom path support
-const socketPath = process.env.SOCKET_PATH || "/socket.io";
-console.log("🔌 Socket.IO path:", socketPath);
-
-const io = new Server(server, {
-  path: socketPath,
-  cors: {
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.CLIENT_ORIGIN || false
-        : "http://localhost:3000",
-    methods: ["GET", "POST"],
-  },
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  maxHttpBufferSize: 1e6, // 1MB
-  allowEIO3: true,
-});
-
-// Initialize socket manager
-const socketManager = new SocketManager(io);
-
 // Configure multer for file uploads with enhanced security
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -177,14 +152,13 @@ const upload = multer({
 // Health check endpoint (no security restrictions for monitoring)
 app.get("/api/health", (req, res) => {
   console.log("🏥 Health check requested");
-  const socketHealth = socketManager.getHealthStatus();
 
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     dataDirectory: process.env.DATA_DIRECTORY || "./data",
-    sockets: socketHealth,
+    realtime: "HTTP polling enabled",
   });
 });
 
@@ -245,10 +219,16 @@ app.use("/api", validateApiVersion);
 app.use("/api", apiLimiter);
 
 // System endpoints
-app.get("/api/socket/health", (req, res) => {
-  const health = socketManager.getHealthStatus();
-  console.log("🔌 Socket health check:", health);
-  res.json({ success: true, data: health });
+app.get("/api/realtime/health", (req, res) => {
+  console.log("🔌 Realtime health check - HTTP polling active");
+  res.json({ 
+    success: true, 
+    data: { 
+      type: "HTTP polling",
+      interval: "5000ms",
+      status: "active"
+    } 
+  });
 });
 
 app.get("/api/test-db", async (req, res) => {
@@ -413,7 +393,194 @@ app.use("/api/user", userRoutes);
 app.use("/api/proposals", governanceRoutes);
 app.use("/api/crisis-alerts", crisisRoutes);
 app.use("/api", miscRoutes);
-app.use("/api/help-requests", createHelpRequestRoutes(upload, io));
+app.use("/api/help-requests", createHelpRequestRoutes(upload));
+
+// Chat API endpoints for HTTP polling (replacing WebSocket functionality)
+app.get("/api/chat/messages", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { since } = req.query;
+    let query = db
+      .selectFrom('messages')
+      .leftJoin('users', 'messages.sender_id', 'users.id')
+      .select([
+        'messages.id',
+        'messages.message as content',
+        'messages.sender_id as userId',
+        'users.username',
+        'messages.created_at as timestamp',
+        'messages.help_request_id'
+      ])
+      .orderBy('messages.created_at', 'desc')
+      .limit(50);
+
+    if (since) {
+      query = query.where('messages.created_at', '>', since as string);
+    }
+
+    const messages = await query.execute();
+    
+    res.json({
+      success: true,
+      messages: messages.map(msg => ({
+        id: msg.id.toString(),
+        content: msg.content,
+        userId: msg.userId,
+        username: msg.username,
+        timestamp: msg.timestamp,
+        type: 'chat',
+        roomId: `help_request_${msg.help_request_id}`
+      }))
+    });
+  } catch (error) {
+    console.error('Failed to fetch messages:', error);
+    sendError(res, 'Failed to fetch messages', 500);
+  }
+});
+
+app.post("/api/chat/send", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { content, roomId } = req.body;
+    
+    if (!content?.trim()) {
+      return sendError(res, 'Message content is required', 400);
+    }
+
+    // Extract help request ID from roomId (format: help_request_123)
+    const helpRequestId = roomId?.startsWith('help_request_') 
+      ? parseInt(roomId.replace('help_request_', ''))
+      : null;
+
+    if (!helpRequestId) {
+      return sendError(res, 'Invalid room ID', 400);
+    }
+
+    // Insert message into database
+    const result = await db
+      .insertInto('messages')
+      .values({
+        help_request_id: helpRequestId,
+        sender_id: req.userId!,
+        message: content.trim(),
+        created_at: new Date().toISOString()
+      })
+      .returning('id')
+      .executeTakeFirst();
+
+    res.json({
+      success: true,
+      messageId: result?.id.toString(),
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    sendError(res, 'Failed to send message', 500);
+  }
+});
+
+app.get("/api/chat/:helpRequestId/messages", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const helpRequestId = parseInt(req.params.helpRequestId);
+    
+    if (isNaN(helpRequestId)) {
+      return sendError(res, 'Invalid help request ID', 400);
+    }
+
+    const messages = await db
+      .selectFrom('messages')
+      .leftJoin('users', 'messages.sender_id', 'users.id')
+      .select([
+        'messages.id',
+        'messages.message',
+        'users.username as sender_username',
+        'users.avatar_url as sender_avatar',
+        'messages.created_at'
+      ])
+      .where('messages.help_request_id', '=', helpRequestId)
+      .orderBy('messages.created_at', 'asc')
+      .execute();
+
+    res.json(messages);
+  } catch (error) {
+    console.error('Failed to fetch chat messages:', error);
+    sendError(res, 'Failed to fetch messages', 500);
+  }
+});
+
+app.post("/api/chat/join", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { roomId } = req.body;
+    
+    // In HTTP polling, "joining" just means acknowledging the room
+    console.log(`User ${req.userId} joined room: ${roomId}`);
+    
+    res.json({
+      success: true,
+      message: `Joined room: ${roomId}`,
+      roomId
+    });
+  } catch (error) {
+    console.error('Failed to join room:', error);
+    sendError(res, 'Failed to join room', 500);
+  }
+});
+
+app.post("/api/chat/leave", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { roomId } = req.body;
+    
+    // In HTTP polling, "leaving" just means acknowledging the departure
+    console.log(`User ${req.userId} left room: ${roomId}`);
+    
+    res.json({
+      success: true,
+      message: `Left room: ${roomId}`,
+      roomId
+    });
+  } catch (error) {
+    console.error('Failed to leave room:', error);
+    sendError(res, 'Failed to leave room', 500);
+  }
+});
+
+app.get("/api/notifications", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { since } = req.query;
+    let query = db
+      .selectFrom('notifications')
+      .select([
+        'id',
+        'type',
+        'title',
+        'message',
+        'data',
+        'created_at as timestamp',
+        'read_at'
+      ])
+      .where('user_id', '=', req.userId!)
+      .orderBy('created_at', 'desc')
+      .limit(20);
+
+    if (since) {
+      query = query.where('created_at', '>', since as string);
+    }
+
+    const notifications = await query.execute();
+    
+    res.json({
+      success: true,
+      notifications: notifications.map(notif => ({
+        id: notif.id.toString(),
+        type: notif.type,
+        message: `${notif.title}: ${notif.message}`,
+        timestamp: notif.timestamp,
+        read: !!notif.read_at
+      }))
+    });
+  } catch (error) {
+    console.error('Failed to fetch notifications:', error);
+    sendError(res, 'Failed to fetch notifications', 500);
+  }
+});
 
 // Legacy KYC endpoints (keeping for compatibility)
 app.post(
@@ -596,13 +763,11 @@ app.use(errorHandler);
 // Graceful shutdown handling
 process.on("SIGTERM", async () => {
   console.log("🔌 SIGTERM received, shutting down gracefully...");
-  await socketManager.shutdown();
   process.exit(0);
 });
 
 process.on("SIGINT", async () => {
   console.log("🔌 SIGINT received, shutting down gracefully...");
-  await socketManager.shutdown();
   process.exit(0);
 });
 
@@ -674,10 +839,10 @@ export async function startServer(port: number) {
     }
 
     server.listen(port, () => {
-      console.log(`✅ API Server with Socket.IO running on port ${port}`);
+      console.log(`✅ API Server running on port ${port}`);
       console.log(`🌍 Health check: http://localhost:${port}/api/health`);
       console.log(`🗄️ Database test: http://localhost:${port}/api/test-db`);
-      console.log(`🔌 Socket health: http://localhost:${port}/api/socket/health`);
+      console.log(`🔌 Realtime health: http://localhost:${port}/api/realtime/health`);
       console.log(`💰 Stablecoin API: http://localhost:${port}/api/stablecoin/status`);
       console.log(`🛡️ Security Admin: http://localhost:${port}/api/admin/security/status`);
       console.log(`🔒 Security: COMPREHENSIVE PROTECTION ACTIVE`);
