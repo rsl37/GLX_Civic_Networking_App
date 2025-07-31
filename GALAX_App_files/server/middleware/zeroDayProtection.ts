@@ -418,6 +418,11 @@ export function zeroDayProtectionMiddleware(req: Request, res: Response, next: N
       } else if (threat.severity === 'high') {
         res.set('X-Zero-Day-Alert', 'high-severity-threat');
         res.set('X-Security-Monitor', 'enhanced');
+      } else if (threat.severity === 'medium') {
+        res.set('X-Zero-Day-Alert', 'medium-severity-threat');
+        res.set('X-Security-Monitor', 'active');
+      } else if (threat.severity === 'low') {
+        res.set('X-Security-Monitor', 'basic');
       }
     }
   }

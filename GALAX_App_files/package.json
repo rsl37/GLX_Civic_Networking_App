@@ -16,7 +16,7 @@
     "test:e2e": "scripts/ensure-test-dirs.sh && playwright test",
     "test:all": "npm run test && npm run test:e2e",
     "test:env": "npx tsx scripts/test-env.ts",
-    "deployment:check": "npx tsx scripts/deployment-check.js",
+    "deployment:check": "npx tsx scripts/deployment-check.ts",
     "deployment:test": "npx tsx scripts/test-deployment-validation.ts",
     "domain:check": "npx tsx scripts/domain-check.ts",
     "health:log": "npx tsx scripts/health-location-status-logger.ts",
