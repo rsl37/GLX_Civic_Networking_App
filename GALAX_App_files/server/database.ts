@@ -295,9 +295,17 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const sqliteDb = new Database(path.join(dataDir, 'galax.db'), {
-  verbose: process.env.NODE_ENV === 'development' ? console.log : undefined,
-});
+let sqliteDb: Database | null = null;
+try {
+  sqliteDb = new Database(path.join(dataDir, 'galax.db'), {
+    verbose: process.env.NODE_ENV === 'development' ? console.log : undefined,
+  });
+  console.log("✅ SQLite database initialized successfully.");
+} catch (error) {
+  console.error("❌ Failed to initialize SQLite database:", error.message);
+  console.error("💡 Ensure the data directory is writable and the database file is not corrupted.");
+  process.exit(1); // Exit the application with a failure code
+}
 
 // PostgreSQL Configuration - Best for: Production, complex queries, concurrent operations, scalable data  
 let postgresPool: Pool | null = null;
