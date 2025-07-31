@@ -24,7 +24,7 @@ console.log("🧪 Testing Environment Variables Configuration\n");
 
 const requiredVars = ["NODE_ENV", "PORT", "JWT_SECRET"];
 
-const recommendedVars = ["CLIENT_ORIGIN", "DATABASE_URL", "WEBSOCKET_PATH"];
+const recommendedVars = ["CLIENT_ORIGIN", "DATABASE_URL", "REALTIME_PATH"];
 
 const optionalVars = ["SMTP_HOST", "SMTP_PORT", "TWILIO_SID"];
 
@@ -132,18 +132,18 @@ if (databaseUrl) {
   console.log(`   ➖ DATABASE_URL: Not set (will use SQLite fallback)`);
 }
 
-// WEBSOCKET_PATH validation
-const websocketPath = process.env.WEBSOCKET_PATH;
-if (websocketPath) {
-  if (websocketPath.startsWith("/") && websocketPath.length > 1) {
-    console.log(`   ✅ WEBSOCKET_PATH: Valid path "${websocketPath}"`);
+// REALTIME_PATH validation
+const realtimePath = process.env.REALTIME_PATH;
+if (realtimePath) {
+  if (realtimePath.startsWith("/") && realtimePath.length > 1) {
+    console.log(`   ✅ REALTIME_PATH: Valid path "${realtimePath}"`);
   } else {
     console.log(
-      `   ⚠️ WEBSOCKET_PATH: Should start with / and have additional components (current: "${websocketPath}")`,
+      `   ⚠️ REALTIME_PATH: Should start with / and have additional components (current: "${realtimePath}")`,
     );
   }
 } else {
-  console.log(`   ➖ WEBSOCKET_PATH: Not set (will use default /websocket)`);
+  console.log(`   ➖ REALTIME_PATH: Not set (will use default /api/realtime)`);
 }
 
 console.log("\n📋 Summary:");

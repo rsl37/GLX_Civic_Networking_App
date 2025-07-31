@@ -64,8 +64,8 @@ export const securityHeaders = helmet({
       ],
       connectSrc: [
         "'self'",
-        "ws:", // WebSocket connections
-        "wss:", // Secure WebSocket connections
+        // WebSocket protocols removed - using SSE instead 
+        // "ws:", "wss:", 
         "https://api.openstreetmap.org", // OpenStreetMap API
         "https://tile.openstreetmap.org", // OpenStreetMap tiles
       ],
