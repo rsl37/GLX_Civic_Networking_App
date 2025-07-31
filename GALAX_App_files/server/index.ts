@@ -97,6 +97,9 @@ import {
   getHealthMetrics,
 } from "./middleware/monitoring.js";
 
+// Import post-quantum cryptography
+import { postQuantumCrypto } from "./postQuantumCrypto.js";
+
 // Import deployment validation
 import { getDeploymentReadiness } from "./deployment-validation.js";
 

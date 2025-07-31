@@ -16,55 +16,54 @@
  */
 
 import dotenv from 'dotenv';
-import { validateEnvironment, generateDeploymentChecklist } from '../server/envValidation.js';
+import { performDeploymentReadinessCheck } from '../server/deployment-validation.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: join(__dirname, '../.env') });
 
-console.log('🔍 GALAX Civic Networking App - Deployment Check');
-console.log('='.repeat(60));
-console.log('');
-
-// Run environment validation
-const validation = validateEnvironment();
-
-console.log('');
-console.log('📋 DEPLOYMENT CHECKLIST');
-console.log('='.repeat(60));
-
-// Generate and display checklist
-const checklist = generateDeploymentChecklist(validation);
-checklist.forEach(line => console.log(line));
-
-console.log('');
-console.log('🚀 QUICK FIX FOR "REQUEST FAILED" ERRORS');
-console.log('='.repeat(60));
-console.log('');
-console.log('1. In Vercel Dashboard → Project Settings → Environment Variables:');
-console.log('   ✅ Set CLIENT_ORIGIN to your exact Vercel app URL');
-console.log('   ✅ Set JWT_SECRET to a secure random string (32+ chars)');
-console.log('   ✅ Set NODE_ENV to "production"');
-console.log('');
-console.log('2. Common CLIENT_ORIGIN values:');
-console.log('   • https://galax-civic-networking.vercel.app');
-console.log('   • https://your-custom-domain.com');
-console.log('');
-console.log('3. After setting variables, REDEPLOY your application');
-console.log('');
-
-// Display current environment status
-console.log('🔧 CURRENT ENVIRONMENT STATUS');
-console.log('='.repeat(60));
-console.log(`NODE_ENV: ${process.env.NODE_ENV || '[NOT SET]'}`);
-console.log(`CLIENT_ORIGIN: ${process.env.CLIENT_ORIGIN || '[NOT SET - THIS CAUSES REQUEST FAILED ERRORS]'}`);
-console.log(`JWT_SECRET: ${process.env.JWT_SECRET ? '[SET]' : '[NOT SET - THIS CAUSES REQUEST FAILED ERRORS]'}`);
-console.log(`DATABASE_URL: ${process.env.DATABASE_URL ? '[SET]' : '[NOT SET - Using SQLite fallback]'}`);
-console.log('');
-
-if (!validation.isValid) {
-  console.log('❌ DEPLOYMENT BLOCKED - Fix the issues above before deploying');
-  process.exit(1);
-} else {
-  console.log('✅ Environment validation passed - Ready for deployment');
-  process.exit(0);
+/**
+ * Get emoji for overall status
+ */
+function getStatusEmoji(status: string) {
+  switch (status) {
+    case 'ready': return '✅';
+    case 'warning': return '⚠️';
+    case 'not_ready': return '❌';
+    default: return '❓';
+  }
 }
+
+async function runDeploymentCheck() {
+  console.log('🔍 GALAX Civic Networking App - Deployment Check');
+  console.log('='.repeat(60));
+  console.log('');
+
+  try {
+    const report = await performDeploymentReadinessCheck();
+    
+    // Print summary in expected format
+    console.log(`\n📊 DEPLOYMENT READINESS SUMMARY`);
+    console.log(`==============================`);
+    console.log(`Overall Status: ${getStatusEmoji(report.overall_status)} ${report.overall_status.toUpperCase()}`);
+    console.log(`Environment: ${report.environment}`);
+    console.log(`Timestamp: ${report.timestamp}`);
+    
+    // Exit with appropriate code based on status
+    if (report.overall_status === 'not_ready') {
+      process.exit(1);
+    } else {
+      process.exit(0);
+    }
+  } catch (error) {
+    console.error('❌ Deployment readiness check failed:', error);
+    process.exit(1);
+  }
+}
+
+// Run the check
+runDeploymentCheck();

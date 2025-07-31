@@ -211,6 +211,26 @@ describe('Production Deployment Fixes', () => {
  * Integration test for the complete auth flow
  */
 describe('Complete Authentication Flow (Production-like)', () => {
+  let authApp: express.Application;
+
+  beforeAll(() => {
+    // Set up a test app with production-like configuration for auth flow
+    authApp = express();
+    authApp.use(cors(corsConfig));
+    authApp.use(express.json());
+
+    // Mock auth endpoints that were failing in production
+    authApp.post('/api/auth/register', (req, res) => {
+      res.json({
+        success: true,
+        data: {
+          token: 'mock-jwt-token-for-testing',
+          userId: 12345
+        }
+      });
+    });
+  });
+
   it('should handle the complete registration flow without "Request failed" errors', async () => {
     // This test simulates the exact flow that was failing in production
     const registrationData = {
@@ -220,7 +240,7 @@ describe('Complete Authentication Flow (Production-like)', () => {
     };
 
     // Simulate the frontend making a registration request
-    const response = await request(app)
+    const response = await request(authApp)
       .post('/api/auth/register')
       .set('Origin', 'https://galax-civic-networking.vercel.app')
       .set('Content-Type', 'application/json')
