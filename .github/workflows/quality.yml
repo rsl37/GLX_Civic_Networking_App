@@ -349,8 +349,11 @@ jobs:
               status = 'failure';
               description = `${failed.length} quality check(s) failed: ${failed.map(j => j.name).join(', ')}`;
             } else if (cancelled.length > 0) {
-              status = 'cancelled';
+              status = 'error';
               description = `${cancelled.length} quality check(s) cancelled: ${cancelled.map(j => j.name).join(', ')}`;
+            } else if (skipped.length > 0) {
+              status = 'success'; // Treat skipped as neutral success when no failures
+              description = `${successful.length} passed, ${skipped.length} skipped (${successful.length + skipped.length}/${jobs.length})`;
             }
 
             console.log(`Quality & Performance Status: ${status}`);
@@ -375,8 +378,31 @@ jobs:
             ];
 
             for (const job of jobs) {
-              const state = job.result === 'success' ? 'success' : 
-                           job.result === 'failure' ? 'failure' : 'pending';
+              let state = 'pending';
+              let description = `${job.name}: ${job.result}`;
+              
+              // Map all possible job results to proper GitHub status states
+              switch (job.result) {
+                case 'success':
+                  state = 'success';
+                  break;
+                case 'failure':
+                  state = 'failure';
+                  break;
+                case 'cancelled':
+                  state = 'error';
+                  description = `${job.name}: cancelled`;
+                  break;
+                case 'skipped':
+                  state = 'success'; // Treat skipped as neutral success
+                  description = `${job.name}: skipped (conditional)`;
+                  break;
+                default:
+                  state = 'error';
+                  description = `${job.name}: ${job.result || 'unknown'}`;
+              }
+              
+              console.log(`Setting status for ${job.name}: ${state} (${job.result})`);
               
               await github.rest.repos.createCommitStatus({
                 owner: context.repo.owner,
@@ -384,7 +410,7 @@ jobs:
                 sha: context.payload.pull_request.head.sha,
                 state: state,
                 context: `Quality & Performance / ${job.name}`,
-                description: `${job.name}: ${job.result}`,
+                description: description,
                 target_url: `${context.payload.pull_request.html_url}/checks`
               });
             }

@@ -70,10 +70,31 @@ jobs:
               
               // Force update stuck pending statuses
               for (const status of pendingStatuses) {
-                const newState = conclusion === 'success' ? 'success' : 
-                                conclusion === 'failure' ? 'failure' : 'error';
+                let newState = 'error'; // Default to error for stuck statuses
+                let newDescription = `Auto-updated: ${workflowName} ${conclusion}`;
                 
-                console.log(`Updating stuck status: ${status.context}`);
+                // Map workflow conclusion to appropriate status
+                switch (conclusion) {
+                  case 'success':
+                    newState = 'success';
+                    break;
+                  case 'failure':
+                    newState = 'failure';
+                    break;
+                  case 'cancelled':
+                    newState = 'error';
+                    newDescription = `Auto-updated: ${workflowName} cancelled`;
+                    break;
+                  case 'skipped':
+                    newState = 'success';
+                    newDescription = `Auto-updated: ${workflowName} skipped (conditional)`;
+                    break;
+                  default:
+                    newState = 'error';
+                    newDescription = `Auto-updated: ${workflowName} ${conclusion || 'unknown'}`;
+                }
+                
+                console.log(`Updating stuck status: ${status.context} -> ${newState}`);
                 
                 await github.rest.repos.createCommitStatus({
                   owner: context.repo.owner,
@@ -81,7 +102,7 @@ jobs:
                   sha: headSha,
                   state: newState,
                   context: status.context,
-                  description: `Auto-updated: ${workflowName} ${conclusion}`,
+                  description: newDescription,
                   target_url: '${{ github.event.workflow_run.html_url }}'
                 });
               }

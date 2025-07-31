@@ -122,7 +122,7 @@ interface ValidationResult {
   details?: any;
 }
 
-interface DeploymentReadinessReport {
+export interface DeploymentReadinessReport {
   overall_status: 'ready' | 'warning' | 'not_ready';
   timestamp: string;
   environment: string;
