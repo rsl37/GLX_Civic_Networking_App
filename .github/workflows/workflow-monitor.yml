@@ -13,6 +13,13 @@ name: Workflow Health Monitor
       - "Quality & Performance"
     types: [completed]
 
+permissions:
+  contents: read
+  issues: write
+  statuses: write
+  checks: write
+  actions: read
+
 jobs:
   monitor-workflows:
     name: Monitor Workflow Health
@@ -224,3 +231,76 @@ jobs:
               labels: ['workflow-failure', 'urgent'],
               assignees: ['rsl37']
             });
+
+  check-pending-status:
+    name: Check Pending Status Updates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run'
+    timeout-minutes: 5
+
+    steps:
+      - name: Check and update pending statuses
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const workflowName = '${{ github.event.workflow_run.name }}';
+            const conclusion = '${{ github.event.workflow_run.conclusion }}';
+            const runUrl = '${{ github.event.workflow_run.html_url }}';
+            const headSha = '${{ github.event.workflow_run.head_sha }}';
+
+            console.log(`Checking status for workflow: ${workflowName}`);
+            console.log(`Conclusion: ${conclusion}`);
+            console.log(`Head SHA: ${headSha}`);
+
+            // Get current commit statuses
+            const { data: statuses } = await github.rest.repos.listCommitStatusesForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: headSha
+            });
+
+            console.log(`Found ${statuses.length} existing statuses for commit ${headSha}`);
+            
+            // Find pending statuses related to this workflow
+            const pendingStatuses = statuses.filter(status => 
+              status.state === 'pending' && 
+              status.context.includes(workflowName)
+            );
+
+            console.log(`Found ${pendingStatuses.length} pending statuses for ${workflowName}`);
+
+            // Update pending statuses to match workflow conclusion
+            for (const status of pendingStatuses) {
+              const newState = conclusion === 'success' ? 'success' : 
+                              conclusion === 'failure' ? 'failure' : 'error';
+              
+              console.log(`Updating status ${status.context} from pending to ${newState}`);
+              
+              await github.rest.repos.createCommitStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha: headSha,
+                state: newState,
+                context: status.context,
+                description: `${workflowName}: ${conclusion}`,
+                target_url: runUrl
+              });
+            }
+
+            // If no pending statuses found, create a general workflow status
+            if (pendingStatuses.length === 0) {
+              console.log(`No pending statuses found, creating new status for ${workflowName}`);
+              
+              const newState = conclusion === 'success' ? 'success' : 
+                              conclusion === 'failure' ? 'failure' : 'error';
+              
+              await github.rest.repos.createCommitStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha: headSha,
+                state: newState,
+                context: `${workflowName} / Complete`,
+                description: `${workflowName} workflow: ${conclusion}`,
+                target_url: runUrl
+              });
+            }
