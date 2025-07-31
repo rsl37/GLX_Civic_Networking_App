@@ -14,6 +14,18 @@ cd GALAX_App_files
 This script will:
 - Create `.env` files from the `.env.example` templates
 - Set appropriate development defaults
+- Create all required application directories:
+  - `./data/uploads` - File upload storage
+  - `./data/logs` - Application logs
+  - `./data/encrypted_documents` - Encrypted document storage
+  - `./quarantine` - Antimalware quarantine
+  - `./virus_quarantine` - Antivirus quarantine
+  - `./coverage` - Test coverage reports
+  - `./test-results` - Test result files
+  - `./playwright-report` - End-to-end test reports
+  - `/tmp/galax-sandbox-quarantine` - Sandbox quarantine (temporary)
+  - `/tmp/kyc-uploads` - KYC upload processing (temporary)
+- Set appropriate permissions for security-sensitive directories
 - Provide guidance on configuration options
 
 ## Manual Setup

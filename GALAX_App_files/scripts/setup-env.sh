@@ -148,6 +148,53 @@ create_env_file ".env.example" ".env" "main backend environment file"
 create_env_file "client/.env.example" "client/.env" "client environment file"
 
 echo ""
+echo "📁 Creating required directories..."
+
+# Function to create directory if it doesn't exist
+create_directory() {
+    local dir_path="$1"
+    local description="$2"
+    
+    if [ ! -d "$dir_path" ]; then
+        mkdir -p "$dir_path"
+        echo "✅ Created $description at $dir_path"
+    else
+        echo "ℹ️  $description already exists at $dir_path"
+    fi
+}
+
+# Create all required directories for the application
+create_directory "./data" "main data directory"
+create_directory "./data/uploads" "file uploads directory"
+create_directory "./data/logs" "application logs directory"
+create_directory "./data/encrypted_documents" "encrypted documents directory"
+create_directory "./quarantine" "antimalware quarantine directory"
+create_directory "./virus_quarantine" "antivirus quarantine directory"
+create_directory "/tmp/galax-sandbox-quarantine" "sandbox quarantine directory"
+create_directory "/tmp/kyc-uploads" "temporary KYC uploads directory"
+create_directory "./coverage" "test coverage reports directory"
+create_directory "./test-results" "test results directory"
+create_directory "./playwright-report" "playwright test reports directory"
+
+# Create .gitkeep files for empty directories (except /tmp directories)
+echo '# Directory for file uploads' > ./data/uploads/.gitkeep
+echo '# Directory for application logs' > ./data/logs/.gitkeep
+echo '# Directory for encrypted documents' > ./data/encrypted_documents/.gitkeep
+echo '# Directory for quarantined files' > ./quarantine/.gitkeep
+echo '# Directory for virus quarantine' > ./virus_quarantine/.gitkeep
+echo '# Directory for test coverage reports' > ./coverage/.gitkeep
+echo '# Directory for test results' > ./test-results/.gitkeep
+echo '# Directory for playwright reports' > ./playwright-report/.gitkeep
+
+# Set proper permissions for data directories
+chmod 755 ./data 2>/dev/null || true
+chmod 755 ./data/uploads 2>/dev/null || true
+chmod 755 ./data/logs 2>/dev/null || true
+chmod 700 ./data/encrypted_documents 2>/dev/null || true  # More restrictive for encrypted docs
+chmod 700 ./quarantine 2>/dev/null || true              # Restrict quarantine access
+chmod 700 ./virus_quarantine 2>/dev/null || true        # Restrict virus quarantine access
+
+echo ""
 echo "🎉 Environment setup complete!"
 echo ""
 echo "📋 Next steps:"
