@@ -137,9 +137,9 @@ const realtimeManager = new RealtimeManager();
 
 console.log('🔌 Pusher initialized for real-time communication');
 
-// Initialize RealtimeManager for SSE connections
+// Initialize realtime manager
 const realtimeManager = new RealtimeManager();
-console.log('⚡ RealtimeManager initialized for real-time connections');
+console.log('🔌 RealtimeManager initialized');
 
 const app = express();
 const server = createServer(app);

@@ -85,14 +85,12 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
     const existingUser = await db
       .selectFrom('users')
       .select(['id', 'email', 'phone', 'username', 'wallet_address'])
-      .where((eb) => 
-        eb.or([
-          email ? eb('email', '=', email) : eb.lit(false),
-          phone ? eb('phone', '=', phone) : eb.lit(false),
-          eb('username', '=', username),
-          walletAddress ? eb('wallet_address', '=', walletAddress) : eb.lit(false)
-        ])
-      )
+      .where((eb) => eb.or([
+        email ? eb('email', '=', email) : eb('id', '=', -1), // Never matches if email is null
+        phone ? eb('phone', '=', phone) : eb('id', '=', -1), // Never matches if phone is null
+        eb('username', '=', username),
+        walletAddress ? eb('wallet_address', '=', walletAddress) : eb('id', '=', -1) // Never matches if walletAddress is null
+      ]))
       .executeTakeFirst();
 
     let conflictField = null;
