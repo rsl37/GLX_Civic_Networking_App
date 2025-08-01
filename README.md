@@ -253,6 +253,7 @@ GALAX_App_files/
 
 ## 📖 Documentation
 
+### Core Documentation
 - [About GALAX](ABOUT_GALAX.md) - Project overview and mission
 - [Project Structure](PROJECT_STRUCTURE.md) - Detailed directory structure
 - [Production Mode Guide](GALAX_App_files/PRODUCTION_MODE_GUIDE.md) - Production deployment setup
@@ -261,6 +262,11 @@ GALAX_App_files/
 - [Privacy & Badges](PRIVACY_AND_BADGES_IMPLEMENTATION.md) - Implementation details
 - [Workspace Guide](GALAX_Project_Workspace.md) - Development workspace setup
 - [MCP Setup Guide](MCP_SETUP_GUIDE.md) - GitHub Copilot MCP configuration
+
+### Development History & Planning
+- [Development Activity History](DEVELOPMENT_ACTIVITY_HISTORY.md) - Complete development timeline organized by month
+- [Monthly Development Metrics](MONTHLY_DEVELOPMENT_METRICS.md) - Detailed monthly breakdown and performance indicators
+- [Fiscal Quarter Summary](FISCAL_QUARTER_SUMMARY.md) - Executive summary for fiscal quarter planning and milestone assessment
 
 ---
 
