@@ -72,67 +72,27 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
     const { email, phone, password, username, walletAddress } = req.body;
 
     console.log('📝 Registration attempt:', {
-      email,
-      phone,
+      email: email ? `${email.substring(0, 3)}***` : null,
+      phone: phone ? `${phone.substring(0, 3)}***` : null,
       username,
-      walletAddress,
+      walletAddress: walletAddress ? `${walletAddress.substring(0, 6)}***` : null,
+      userAgent: req.get('User-Agent'),
+      origin: req.get('Origin'),
+      ip: req.ip,
     });
 
     // Check if user already exists - check each field separately for specific error messages
     let conflictField = null;
     let conflictMessage: string = ErrorMessages.REGISTRATION_USER_EXISTS;
 
-    if (email) {
-      const emailUser = await db
-        .selectFrom('users')
-        .selectAll()
-        .where('email', '=', email)
-        .executeTakeFirst();
-      if (emailUser) {
-        conflictField = 'email';
-        conflictMessage = ErrorMessages.REGISTRATION_EMAIL_EXISTS;
-      }
-    }
-
-    if (!conflictField && phone) {
-      const phoneUser = await db
-        .selectFrom('users')
-        .selectAll()
-        .where('phone', '=', phone)
-        .executeTakeFirst();
-      if (phoneUser) {
-        conflictField = 'phone';
-        conflictMessage = ErrorMessages.REGISTRATION_PHONE_EXISTS;
-      }
-    }
-
-    if (!conflictField) {
-      const usernameUser = await db
-        .selectFrom('users')
-        .selectAll()
-        .where('username', '=', username)
-        .executeTakeFirst();
-      if (usernameUser) {
-        conflictField = 'username';
-        conflictMessage = ErrorMessages.REGISTRATION_USERNAME_EXISTS;
-      }
-    }
-
-    if (!conflictField && walletAddress) {
-      const walletUser = await db
-        .selectFrom('users')
-        .selectAll()
-        .where('wallet_address', '=', walletAddress)
-        .executeTakeFirst();
-      if (walletUser) {
-        conflictField = 'wallet';
-        conflictMessage = ErrorMessages.REGISTRATION_WALLET_EXISTS;
-      }
-    }
-
-    if (conflictField) {
-      console.log(`❌ Registration failed: ${conflictField} already exists`);
-      return sendError(res, conflictMessage, StatusCodes.BAD_REQUEST);
+    if (existingUser) {
+      console.log('❌ Registration failed: User already exists', {
+        conflictField: email && existingUser.email === email ? 'email' :
+                      phone && existingUser.phone === phone ? 'phone' :
+                      existingUser.username === username ? 'username' : 'wallet',
+        ip: req.ip,
+      });
+      return sendError(res, 'User already exists with this email, phone, username, or wallet address', StatusCodes.BAD_REQUEST);
     }
 
     const passwordHash = password ? await hashPassword(password) : null;
@@ -159,8 +119,11 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
       .executeTakeFirst();
 
     if (!user) {
-      console.log('❌ Registration failed: Failed to create user');
-      return sendError(res, ErrorMessages.REGISTRATION_DATABASE_ERROR, StatusCodes.INTERNAL_ERROR);
+      console.log('❌ Registration failed: Failed to create user', {
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+      return sendError(res, 'Failed to create user account', StatusCodes.INTERNAL_ERROR);
     }
 
     // Send email verification if email provided
@@ -184,7 +147,12 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
     const token = generateToken(user.id);
     trackUserAction('registration', user.id);
 
-    console.log('✅ User registered successfully:', user.id);
+    console.log('✅ User registered successfully:', {
+      userId: user.id,
+      method: email ? 'email' : phone ? 'phone' : 'wallet',
+      ip: req.ip,
+    });
+    
     sendSuccess(res, {
       token,
       userId: user.id,
@@ -192,8 +160,17 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
       phoneVerificationRequired: !!phone,
     });
   } catch (error) {
-    console.error('❌ Registration error:', error);
-    throw error;
+    console.error('❌ Registration error:', {
+      error: error.message,
+      stack: error.stack,
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      origin: req.get('Origin'),
+      timestamp: new Date().toISOString(),
+    });
+    
+    // Don't expose internal error details to client
+    sendError(res, 'Registration failed. Please try again.', StatusCodes.INTERNAL_ERROR);
   }
 });
 
@@ -202,7 +179,14 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
   try {
     const { email, phone, password, walletAddress } = req.body;
 
-    console.log('🔐 Login attempt:', { email, phone, walletAddress });
+    console.log('🔐 Login attempt:', {
+      email: email ? `${email.substring(0, 3)}***` : null,
+      phone: phone ? `${phone.substring(0, 3)}***` : null,
+      walletAddress: walletAddress ? `${walletAddress.substring(0, 6)}***` : null,
+      userAgent: req.get('User-Agent'),
+      origin: req.get('Origin'),
+      ip: req.ip,
+    });
 
     let user;
     if (email) {
@@ -234,7 +218,10 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
     }
 
     if (!user) {
-      console.log('❌ Login failed: User not found');
+      console.log('❌ Login failed: User not found', {
+        method: email ? 'email' : phone ? 'phone' : 'wallet',
+        ip: req.ip,
+      });
       if ((req as any).lockoutKey) {
         recordFailedAttempt((req as any).lockoutKey);
       }
@@ -244,7 +231,10 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
     // Verify password for email/phone login
     if ((email || phone) && password) {
       if (!user.password_hash) {
-        console.log('❌ Login failed: No password hash for user');
+        console.log('❌ Login failed: No password hash for user', {
+          userId: user.id,
+          ip: req.ip,
+        });
         if ((req as any).lockoutKey) {
           recordFailedAttempt((req as any).lockoutKey);
         }
@@ -253,7 +243,10 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
 
       const isValid = await comparePassword(password, user.password_hash);
       if (!isValid) {
-        console.log('❌ Login failed: Invalid password');
+        console.log('❌ Login failed: Invalid password', {
+          userId: user.id,
+          ip: req.ip,
+        });
         if ((req as any).lockoutKey) {
           recordFailedAttempt((req as any).lockoutKey);
         }
@@ -269,7 +262,12 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
 
     trackUserAction('login', user.id);
 
-    console.log('✅ Login successful:', user.id);
+    console.log('✅ Login successful:', {
+      userId: user.id,
+      method: email ? 'email' : phone ? 'phone' : 'wallet',
+      ip: req.ip,
+    });
+    
     sendSuccess(res, {
       token,
       userId: user.id,
@@ -277,8 +275,16 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
       phoneVerified: user.phone_verified === 1,
     });
   } catch (error) {
-    console.error('❌ Login error:', error);
-    sendError(res, ErrorMessages.LOGIN_SERVER_ERROR, StatusCodes.INTERNAL_ERROR);
+    console.error('❌ Login error:', {
+      error: error.message,
+      stack: error.stack,
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      origin: req.get('Origin'),
+      timestamp: new Date().toISOString(),
+    });
+    
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
   }
 });
 

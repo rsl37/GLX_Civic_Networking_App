@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import RealtimeManager from '../../server/realtimeManager.js';
 
-// Test server setup utility
+// Test server setup utility (Socket.IO removed for Vercel compatibility)
 export class TestServer {
   public app: express.Application;
   public server: any;
@@ -47,9 +47,26 @@ export class TestServer {
     this.app.use(express.urlencoded({ extended: true }));
   }
 
-  // Create test SSE client
-  createRealtimeClient() {
-    return new EventSource(`${this.baseUrl}/api/realtime/events`);
+  // Create mock client for HTTP polling tests
+  createHttpClient() {
+    return {
+      baseUrl: this.baseUrl,
+      // Mock HTTP client for testing polling functionality
+      poll: async (endpoint: string) => {
+        const fetch = (await import('node-fetch')).default;
+        const response = await fetch(`${this.baseUrl}${endpoint}`);
+        return response.json();
+      },
+      post: async (endpoint: string, data: any) => {
+        const fetch = (await import('node-fetch')).default;
+        const response = await fetch(`${this.baseUrl}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        return response.json();
+      }
+    };
   }
 }
 
