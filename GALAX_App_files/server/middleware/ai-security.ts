@@ -15,6 +15,7 @@ interface AISecurityConfig {
   enableModelIntegrityCheck: boolean;
   enableAuditLogging: boolean;
   allowedModelVersions: string[];
+  allowedModelHashes: string[];
   riskThreshold: number;
 }
 
@@ -447,6 +448,11 @@ export const defaultAISecurityConfig: AISecurityConfig = {
     'claude-3',
     'civic-ai-v1',
     'copilot-civic'
+  ],
+  allowedModelHashes: [
+    // These would be real hashes in a production system
+    'placeholder-hash-1',
+    'placeholder-hash-2'
   ],
   riskThreshold: 40
 };
