@@ -49,12 +49,15 @@ npm run monitor:full       # Full monitoring suite
 # Option 2: Run commands from app directory
 cd GALAX_App_files
 npm install
-npm run deployment:check   # Check deployment readiness
-npm run build              # Build the application
-npm start                  # Start development server
+
+# Development setup
+npm start
+
+# Production setup
+npm run production:setup
 
 # Build for production
-npm run build
+npm run build:production
 ```
 
 ### Testing
@@ -177,6 +180,8 @@ GALAX_App_files/
 
 - [About GALAX](ABOUT_GALAX.md) - Project overview and mission
 - [Project Structure](PROJECT_STRUCTURE.md) - Detailed directory structure
+- [Production Mode Guide](GALAX_App_files/PRODUCTION_MODE_GUIDE.md) - Production deployment setup
+- [Deployment Configuration](DEPLOYMENT.md) - Deployment troubleshooting
 - [Security Information](SECURITY.md) - Security policies and reporting
 - [Privacy & Badges](PRIVACY_AND_BADGES_IMPLEMENTATION.md) - Implementation details
 - [Workspace Guide](GALAX_Project_Workspace.md) - Development workspace setup
@@ -204,6 +209,7 @@ This project is licensed under the PolyForm Shield License 1.0.0 - see the [LICE
 
 - **Live Demo**: [galaxcivicnetwork.me](https://galaxcivicnetwork.me)
 - **Documentation**: [Project Docs](docs/)
+- **Production Guide**: [Production Setup](GALAX_App_files/PRODUCTION_MODE_GUIDE.md)
 - **Issues**: [GitHub Issues](https://github.com/rsl37/GALAX_Civic_Networking_App/issues)
 
 ---

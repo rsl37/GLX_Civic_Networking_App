@@ -249,6 +249,26 @@ export function validateEnvironmentVariables(): ValidationResult[] {
     }
   }
 
+  // Check recommended environment variables (warn if missing)
+  for (const envVar of RECOMMENDED_ENV_VARS) {
+    const value = process.env[envVar];
+    if (!value) {
+      results.push({
+        check: `Environment Variable: ${envVar}`,
+        status: 'warning',
+        message: `Recommended environment variable ${envVar} is not set. Some features may be limited.`,
+        details: { variable: envVar, recommended: true }
+      });
+    } else {
+      results.push({
+        check: `Environment Variable: ${envVar}`,
+        status: 'pass',
+        message: `Environment variable ${envVar} is properly set`,
+        details: { variable: envVar, length: value.length }
+      });
+    }
+  }
+
   // Validate JWT_SECRET strength
   const jwtSecret = process.env.JWT_SECRET;
   if (jwtSecret) {
