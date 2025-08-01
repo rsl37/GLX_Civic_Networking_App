@@ -49,12 +49,15 @@ npm run monitor:full       # Full monitoring suite
 # Option 2: Run commands from app directory
 cd GALAX_App_files
 npm install
-npm run deployment:check   # Check deployment readiness
-npm run build              # Build the application
-npm start                  # Start development server
+
+# Development setup
+npm start
+
+# Production setup
+npm run production:setup
 
 # Build for production
-npm run build
+npm run build:production
 ```
 
 ### Testing
@@ -62,12 +65,78 @@ npm run build
 # Run all tests
 npm test
 
+# Run security tests
+npm run test:security
+
 # Run E2E tests
 npm run test:e2e
 
 # Run with coverage
 npm run test:coverage
+
+# Run security audit
+npm run security:audit
+
+# Full security scan
+npm run security:scan
 ```
+
+---
+
+## 🔒 Security
+
+GALAX implements comprehensive security measures to protect against current and emerging threats, including zero-day vulnerabilities.
+
+### Security Features
+
+#### WebSocket Security
+- **WSS (WebSocket Secure)** encryption for all real-time communications
+- **Rate limiting** for connections and messages
+- **Cross-Site WebSocket Hijacking (CSWH)** protection
+- **Input validation** and sanitization for all messages
+- **Authentication tokens** for WebSocket connections
+
+#### AI/MCP Security
+- **Prompt injection detection** to prevent AI manipulation
+- **Model integrity verification** with cryptographic signatures
+- **AI audit logging** for suspicious activity monitoring
+- **Input/output sanitization** for AI interactions
+- **Rate limiting** for AI requests
+
+#### Web3 Security
+- **Smart contract validation** before deployment
+- **Transaction monitoring** for governance systems
+- **Multi-signature wallet support** for community funds
+- **Post-quantum cryptography** for future-proofing
+- **Real-time blockchain monitoring**
+
+#### Infrastructure Security
+- **JWT authentication** with secure token management
+- **Password hashing** with bcrypt
+- **Security headers** with Helmet.js
+- **CORS protection** for API endpoints
+- **Dependency scanning** with automated updates
+
+### Security Testing
+
+Run security tests to validate implementations:
+
+```bash
+# WebSocket security tests
+npm run test:security -- websocket-security
+
+# AI security tests  
+npm run test:security -- ai-security
+
+# Full security audit
+npm run security:audit
+```
+
+### Reporting Security Issues
+
+Report security vulnerabilities through [GitHub Security Advisories](https://github.com/rsl37/GALAX_Civic_Networking_App/security/advisories/new).
+
+**Please do not report security vulnerabilities in public issues.**
 
 ---
 
@@ -111,6 +180,8 @@ GALAX_App_files/
 
 - [About GALAX](ABOUT_GALAX.md) - Project overview and mission
 - [Project Structure](PROJECT_STRUCTURE.md) - Detailed directory structure
+- [Production Mode Guide](GALAX_App_files/PRODUCTION_MODE_GUIDE.md) - Production deployment setup
+- [Deployment Configuration](DEPLOYMENT.md) - Deployment troubleshooting
 - [Security Information](SECURITY.md) - Security policies and reporting
 - [Privacy & Badges](PRIVACY_AND_BADGES_IMPLEMENTATION.md) - Implementation details
 - [Workspace Guide](GALAX_Project_Workspace.md) - Development workspace setup
@@ -138,6 +209,7 @@ This project is licensed under the PolyForm Shield License 1.0.0 - see the [LICE
 
 - **Live Demo**: [galaxcivicnetwork.me](https://galaxcivicnetwork.me)
 - **Documentation**: [Project Docs](docs/)
+- **Production Guide**: [Production Setup](GALAX_App_files/PRODUCTION_MODE_GUIDE.md)
 - **Issues**: [GitHub Issues](https://github.com/rsl37/GALAX_Civic_Networking_App/issues)
 
 ---

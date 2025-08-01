@@ -96,7 +96,7 @@ describe('Deployment Configuration Tests', () => {
       // Test with minimal required environment variables
       // Use development mode to test basic functionality, not production deployment
       // Don't set DATABASE_URL to let it fall back to SQLite
-      const env = {
+      const env: Record<string, string | undefined> = {
         ...process.env,
         NODE_ENV: 'development', // Use development mode for basic functionality testing
         PORT: '3000',
