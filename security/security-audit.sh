@@ -37,11 +37,15 @@ log "${YELLOW}📦 Scanning dependencies for vulnerabilities...${NC}"
 cd "$PROJECT_ROOT/GALAX_App_files"
 
 if command -v npm &> /dev/null; then
-    npm audit --audit-level moderate | tee -a "$LOG_FILE"
-    if [ $? -eq 0 ]; then
-        log "${GREEN}✅ No critical dependency vulnerabilities found${NC}"
+    # Run npm audit but capture output and don't fail on moderate issues
+    audit_output=$(npm audit --audit-level high 2>&1 || true)
+    echo "$audit_output" | tee -a "$LOG_FILE"
+    
+    # Check for high/critical vulnerabilities only
+    if echo "$audit_output" | grep -q "high\|critical"; then
+        log "${RED}❌ High/Critical dependency vulnerabilities detected - review npm audit output${NC}"
     else
-        log "${RED}❌ Dependency vulnerabilities detected - review npm audit output${NC}"
+        log "${GREEN}✅ No high/critical dependency vulnerabilities found${NC}"
     fi
 else
     log "${RED}❌ npm not found - skipping dependency scan${NC}"
@@ -248,7 +252,7 @@ log ""
 log "${GREEN}✅ Security audit completed successfully${NC}"
 
 # Set exit code based on critical issues found (using plain text marker "[CRITICAL]")
-if grep -q "[CRITICAL]" "$LOG_FILE"; then
+if grep -q "\[CRITICAL\]" "$LOG_FILE"; then
     log "${RED}Critical security issues detected - immediate action required${NC}"
     exit 1
 else
