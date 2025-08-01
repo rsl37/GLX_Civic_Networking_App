@@ -135,13 +135,10 @@ const pusher = new Pusher({
   useTLS: true
 });
 
-// Initialize Realtime Manager
-const realtimeManager = new RealtimeManager();
-
-console.log('🔌 Pusher initialized for real-time communication');
 
 // Initialize realtime manager
 const realtimeManager = new RealtimeManager();
+
 console.log('🔌 RealtimeManager initialized');
 
 const app = express();
