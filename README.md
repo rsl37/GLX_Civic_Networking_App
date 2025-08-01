@@ -20,9 +20,34 @@
 ```bash
 # Clone the repository
 git clone https://github.com/rsl37/GALAX_Civic_Networking_App.git
-cd GALAX_Civic_Networking_App/GALAX_App_files
+cd GALAX_Civic_Networking_App
 
-# Install dependencies
+# Option 1: Run commands from root directory (recommended)
+npm run setup              # Install dependencies
+npm run setup:env          # Set up environment variables (.env files)
+npm run test:env           # Test environment configuration
+npm run deployment:check   # Check deployment readiness
+npm run build              # Build the application
+npm start                  # Start development server
+
+# Additional commands available from root:
+npm run setup:env           # Set up environment variables (.env files)
+npm run test               # Run all tests
+npm run test:api           # Run API tests
+npm run test:socket        # Run Socket.IO tests  
+npm run test:watch         # Run tests in watch mode
+npm run test:coverage      # Run tests with coverage
+npm run test:ui            # Run tests with UI
+npm run test:e2e           # Run end-to-end tests
+npm run test:env           # Test environment configuration
+npm run health:log         # Run health and location logging
+npm run branch:analyze     # Analyze branch status
+npm run logs:all           # Run all logging scripts
+npm run dashboard          # Run monitoring dashboard
+npm run monitor:full       # Full monitoring suite
+
+# Option 2: Run commands from app directory
+cd GALAX_App_files
 npm install
 
 # Development setup
@@ -80,8 +105,8 @@ GALAX_App_files/
 - **📱 Responsive Design**: Mobile-first UI with Tailwind CSS
 - **⚡ Fast Performance**: Vite build system and optimized bundles
 - **🧪 Comprehensive Testing**: Unit, integration, and E2E tests
-- **🚀 Production Ready**: Automated production setup and deployment
-- **🛡️ Security First**: Production-grade security headers and configurations
+- **🚀 CI/CD Ready**: Automated workflows and Vercel deployment
+- **🤖 MCP Integration**: GitHub Copilot integration with custom civic networking tools
 
 ---
 
@@ -94,6 +119,7 @@ GALAX_App_files/
 - [Security Information](SECURITY.md) - Security policies and reporting
 - [Privacy & Badges](PRIVACY_AND_BADGES_IMPLEMENTATION.md) - Implementation details
 - [Workspace Guide](GALAX_Project_Workspace.md) - Development workspace setup
+- [MCP Setup Guide](MCP_SETUP_GUIDE.md) - GitHub Copilot MCP configuration
 
 ---
 

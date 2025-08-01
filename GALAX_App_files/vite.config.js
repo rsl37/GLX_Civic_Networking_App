@@ -24,10 +24,19 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       // Enable compression only for production builds
-      ...(isProduction ? [compression({
-        algorithm: 'gzip',
-        threshold: 10240,
-      })] : []),
+      ...(isProduction ? [
+        compression({
+          algorithm: 'gzip',
+          threshold: 10240,
+          deleteOriginFile: false,
+        }),
+        compression({
+          algorithm: 'brotliCompress',
+          ext: '.br',
+          threshold: 10240,
+          deleteOriginFile: false,
+        })
+      ] : []),
       // Custom plugin to handle source map requests
       {
         name: 'handle-source-map-requests',
@@ -81,13 +90,12 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: path.join(process.cwd(), 'dist/public'),
       emptyOutDir: true,
-      minify: isProduction ? 'esbuild' : false, // Only minify in production
-      target: isProduction ? 'es2020' : 'es2022', // More conservative target for production
-      sourcemap: isDevelopment, // Disable sourcemaps in production for security
+      minify: isProduction ? 'esbuild' : false, // Enable minification
+      target: 'es2020', // Modern target for better optimization
       rollupOptions: {
         output: {
-          manualChunks: isProduction ? {
-            // Separate vendor chunks for better caching in production
+          manualChunks: {
+            // Separate vendor chunks for better caching
             vendor: ['react', 'react-dom'],
             router: ['react-router-dom'],
             ui: [
@@ -108,12 +116,11 @@ export default defineConfig(({ mode }) => {
             maps: ['@googlemaps/js-api-loader', 'leaflet'],
             animation: ['framer-motion'],
             analytics: ['@vercel/analytics', '@vercel/speed-insights'] // Vercel monitoring tools
-          } : undefined // No chunking in development for faster builds
+          }
         }
       },
-      chunkSizeWarningLimit: isProduction ? 500 : 1000, // Stricter limits in production
-      cssCodeSplit: isProduction, // Split CSS in production for better caching
-      assetsInlineLimit: isProduction ? ASSET_INLINE_LIMIT_BYTES : 0, // Inline small assets in production only
+      chunkSizeWarningLimit: 500, // Set more appropriate warning limit
+      sourcemap: isProduction ? false : true, // Disable sourcemaps in production
     },
     clearScreen: false,
     server: {
@@ -146,8 +153,17 @@ export default defineConfig(({ mode }) => {
     },
     // Optimize dependencies
     optimizeDeps: {
-      include: ['react', 'react-dom'],
-      exclude: ['@googlemaps/js-api-loader'], // Lazy load maps
+      include: [
+        'react', 
+        'react-dom',
+        'react-router-dom' // Pre-bundle router since it's critical
+      ],
+      exclude: [
+        '@googlemaps/js-api-loader', // Lazy load maps
+        '@vercel/analytics', // Lazy load analytics
+        '@vercel/speed-insights', // Lazy load speed insights
+        'framer-motion' // Load on demand for animations
+      ],
     },
   };
 });
