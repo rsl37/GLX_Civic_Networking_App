@@ -63,6 +63,9 @@ import {
 // Import realtime manager
 import RealtimeManager from "./realtimeManager.js";
 
+// Initialize realtime manager
+const realtimeManager = new RealtimeManager();
+
 // Import stablecoin functionality
 import stablecoinRoutes from "./stablecoin/routes.js";
 import { stablecoinService } from "./stablecoin/StablecoinService.js";
@@ -430,7 +433,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/proposals", governanceRoutes);
 app.use("/api/crisis-alerts", crisisRoutes);
 app.use("/api", miscRoutes);
-app.use("/api/help-requests", createHelpRequestRoutes(upload));
+app.use("/api/help-requests", createHelpRequestRoutes(upload, realtimeManager));
 
 // Pusher authentication endpoint
 app.post("/api/pusher/auth", authenticateToken, async (req: AuthRequest, res) => {
