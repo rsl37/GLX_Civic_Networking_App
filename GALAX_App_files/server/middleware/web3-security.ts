@@ -8,6 +8,10 @@
 
 import crypto from 'crypto';
 
+// Constants for voting power calculations
+const VOTING_POWER_MULTIPLIER = 10;
+const MAX_VOTING_POWER = 100000;
+
 interface Web3SecurityConfig {
   enableTransactionMonitoring: boolean;
   enableSmartContractValidation: boolean;

@@ -134,6 +134,9 @@ const pusher = new Pusher({
 
 console.log('🔌 Pusher initialized for real-time communication');
 
+// Initialize realtime manager
+const realtimeManager = new RealtimeManager();
+
 const app = express();
 const server = createServer(app);
 
