@@ -63,6 +63,9 @@ import {
 // Import realtime manager
 import RealtimeManager from "./realtimeManager.js";
 
+// Initialize realtime manager
+const realtimeManager = new RealtimeManager();
+
 // Import stablecoin functionality
 import stablecoinRoutes from "./stablecoin/routes.js";
 import { stablecoinService } from "./stablecoin/StablecoinService.js";
