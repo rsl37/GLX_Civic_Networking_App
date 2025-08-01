@@ -1,12 +1,11 @@
-/*
- * Copyright (c) 2025 GALAX Civic Networking App
- * 
- * This software is licensed under the PolyForm Shield License 1.0.0.
- * For the full license text, see LICENSE file in the root directory 
- * or visit https://polyformproject.org/licenses/shield/1.0.0
- */
-
 #!/usr/bin/env node
+
+/*
+ * Copyright © 2025 GALAX Civic Networking.
+ * Licensed under the PolyForm Shield License 1.0.0.
+ * "GALAX" and related concepts are inspired by Gatchaman Crowds © Tatsunoko Production.
+ * This project is unaffiliated with Tatsunoko Production or the original anime.
+ */
 
 /**
  * GALAX Social Good APIs MCP Server
