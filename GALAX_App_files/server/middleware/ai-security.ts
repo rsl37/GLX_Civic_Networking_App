@@ -15,6 +15,7 @@ interface AISecurityConfig {
   enableModelIntegrityCheck: boolean;
   enableAuditLogging: boolean;
   allowedModelVersions: string[];
+  allowedModelHashes: string[];
   riskThreshold: number;
 }
 
