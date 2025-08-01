@@ -412,15 +412,15 @@ generate_compliance_summary() {
     echo "Main License: PolyForm Shield License 1.0.0" >> "$MAIN_REPORT"
     echo "" >> "$MAIN_REPORT"
     
-    # Count violations and warnings
-    local violations=$(grep -c "❌" "$MAIN_REPORT" 2>/dev/null || echo "0")
-    local warnings=$(grep -c "⚠️" "$MAIN_REPORT" 2>/dev/null || echo "0")
-    local successes=$(grep -c "✅" "$MAIN_REPORT" 2>/dev/null || echo "0")
+    # Count violations and warnings (actual entries, not summary lines)
+    local violations=$(grep "❌.*INCOMPATIBLE\|❌.*No LICENSE file found\|❌.*License scanning failed" "$MAIN_REPORT" 2>/dev/null | wc -l | tr -d ' \n\r')
+    local warnings=$(grep "⚠️.*Review Required\|❓.*Unknown\|⚠️.*over 90 days old\|⚠️.*may not be documented" "$MAIN_REPORT" 2>/dev/null | wc -l | tr -d ' \n\r')
+    local successes=$(grep "✅.*Compatible\|✅.*exists\|✅.*Commercial use allowed\|✅.*is documented\|✅.*is up to date" "$MAIN_REPORT" 2>/dev/null | wc -l | tr -d ' \n\r')
     
-    # Ensure numeric values (strip any whitespace)
-    violations=$(echo "$violations" | tr -d ' \n\r')
-    warnings=$(echo "$warnings" | tr -d ' \n\r')
-    successes=$(echo "$successes" | tr -d ' \n\r')
+    # Default to 0 if empty
+    violations=${violations:-0}
+    warnings=${warnings:-0}
+    successes=${successes:-0}
     
     echo "Results:" >> "$MAIN_REPORT"
     echo "  ✅ Successful checks: $successes" >> "$MAIN_REPORT"
