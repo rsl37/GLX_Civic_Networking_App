@@ -33,9 +33,7 @@ jobs:
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: moderate
-          deny-licenses: GPL-2.0, GPL-3.0, AGPL-1.0, AGPL-3.0, LGPL-2.0,
-            LGPL-2.1, LGPL-3.0, EPL-1.0, EPL-2.0, MPL-1.1, MPL-2.0,
-            CDDL-1.0, CDDL-1.1
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-1.0, AGPL-3.0, LGPL-2.0, LGPL-2.1, LGPL-3.0, EPL-1.0, EPL-2.0, MPL-1.1, MPL-2.0, CDDL-1.0, CDDL-1.1
           comment-summary-in-pr: always
 
   security-analysis:
@@ -68,7 +66,6 @@ jobs:
         run: mkdir -p ./GALAX_App_files/node_modules
 
       - name: Install dependencies
-        working-directory: ./GALAX_App_files
         run: npm ci --prefer-offline --no-audit --no-fund
 
       - name: Build for analysis
@@ -100,7 +97,6 @@ jobs:
         run: mkdir -p ./GALAX_App_files/node_modules
 
       - name: Install dependencies
-        working-directory: ./GALAX_App_files
         run: npm ci --prefer-offline --no-audit --no-fund
 
       - name: Run npm audit
