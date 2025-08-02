@@ -6,7 +6,7 @@
  * or visit https://polyformproject.org/licenses/shield/1.0.0
  */
 
-import crypto from 'crypto';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 
 // Constants for voting power calculations
 const VOTING_POWER_MULTIPLIER = 10;
@@ -144,7 +144,7 @@ export class Web3SecurityMiddleware {
 
     // Log the transaction event
     const event: TransactionMonitorEvent = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       transactionHash,
       fromAddress,
       toAddress,
@@ -258,7 +258,7 @@ export class Web3SecurityMiddleware {
     // Store audit result
     const audit: SmartContractAudit = {
       contractAddress,
-      codeHash: crypto.createHash('sha256').update(contractCode).digest('hex'),
+      codeHash: createHash('sha256').update(contractCode).digest('hex'),
       auditStatus: securityScore >= 70 ? 'approved' : 'needs_review',
       vulnerabilities,
       securityScore,
@@ -443,7 +443,7 @@ export class Web3SecurityMiddleware {
    */
   private extractProposalId(functionName?: string): string {
     // Simplified extraction - in real implementation would parse call data
-    return functionName ? `proposal_${crypto.randomUUID().split('-')[0]}` : 'unknown';
+    return functionName ? `proposal_${randomUUID().split('-')[0]}` : 'unknown';
   }
 
   /**

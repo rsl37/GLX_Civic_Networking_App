@@ -50,6 +50,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  ChevronUp,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -863,6 +864,19 @@ export function HelpRequestsPage() {
 
           {/* Pagination Controls */}
           <PaginationControls />
+
+          {/* Scroll to Top Button */}
+          {helpRequests.length > 0 && (
+            <div className='fixed bottom-6 right-6 z-50'>
+              <Button
+                onClick={scrollToTop}
+                className='h-12 w-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg'
+                title='Scroll to top'
+              >
+                <ChevronUp className='h-5 w-5' />
+              </Button>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>
