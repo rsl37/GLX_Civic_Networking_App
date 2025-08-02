@@ -3,6 +3,7 @@
 ## 🚀 Pre-Deployment Checklist
 
 ### Environment Setup
+
 - [ ] Production server configured
 - [ ] Domain name configured
 - [ ] SSL certificate installed
@@ -10,6 +11,7 @@
 - [ ] Data directory created with proper permissions
 
 ### Database Setup
+
 - [ ] SQLite database file created
 - [ ] All tables and indexes created
 - [ ] Database permissions configured
@@ -17,6 +19,7 @@
 - [ ] <!-- Added 2025-07-18 21:40:07: For production scaling, consider migration to PostgreSQL/MySQL. Add migration documentation if planning to scale beyond SQLite. -->
 
 ### Security Configuration
+
 - [ ] JWT_SECRET generated (32+ characters)
 - [ ] CORS origins configured
 - [ ] File upload limits set
@@ -39,6 +42,7 @@ npx tsx scripts/deployment-check.js
 ```
 
 This script validates:
+
 - ✅ **Environment Variables**: Required and optional variables
 - ✅ **File System**: Directory structure and permissions
 - ✅ **Database**: Connectivity and table existence
@@ -109,6 +113,7 @@ The deployment check can be integrated into your CI/CD pipeline:
 ```
 
 The script exits with appropriate codes:
+
 - `0`: Ready or warnings only
 - `1`: Critical failures detected
 
@@ -143,6 +148,7 @@ FRONTEND_URL=https://galaxcivicnetwork.me
 ## 🏗️ Deployment Steps
 
 ### 1. Server Preparation
+
 ```bash
 # Create application directory
 mkdir -p /opt/galax
@@ -159,6 +165,7 @@ mkdir -p /opt/galax/logs
 ```
 
 ### 2. Code Deployment
+
 ```bash
 # Copy application files
 # (This depends on your deployment method)
@@ -169,15 +176,18 @@ npm ci --omit=dev
 # Build the application
 npm run build
 ```
+
 <!-- Added 2025-07-18 21:40:07: If using Docker or another orchestrator, document container build and deployment steps here. -->
 
 ### 3. Database Initialization
+
 ```bash
 # The database will be automatically created on first run
 # Monitor the logs to ensure successful initialization
 ```
 
 ### 4. Process Management (PM2 Example)
+
 ```bash
 # Install PM2 globally
 npm install -g pm2
@@ -208,9 +218,11 @@ pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
 ```
+
 <!-- Added 2025-07-18 21:40:07: Check that "script" path matches your actual build output. -->
 
 ### 5. Reverse Proxy (Nginx Example)
+
 ```nginx
 server {
     listen 80;
@@ -279,11 +291,13 @@ server {
     client_max_body_size 10M;
 }
 ```
+
 <!-- Added 2025-07-18 21:40:07: For scaling, consider using S3/CDN for file uploads. Add integration steps as needed. -->
 
 ## 🔍 Health Checks
 
 ### Application Health
+
 ```bash
 # Check if application is running
 curl https://galaxcivicnetwork.me/api/health
@@ -300,6 +314,7 @@ pm2 logs galax-api
 ```
 
 ### Database Health
+
 ```bash
 # Check database file exists
 ls -la /opt/galax/data/database.sqlite
@@ -311,11 +326,13 @@ sqlite3 /opt/galax/data/database.sqlite "SELECT name FROM sqlite_master WHERE ty
 ## 📊 Monitoring & Logging
 
 ### Log Files
+
 - Application logs: `/opt/galax/logs/`
 - PM2 logs: `pm2 logs galax-api`
 - Nginx logs: `/var/log/nginx/`
 
 ### Key Metrics to Monitor
+
 - Server response times
 - Database query performance
 - Memory usage
@@ -324,6 +341,7 @@ sqlite3 /opt/galax/data/database.sqlite "SELECT name FROM sqlite_master WHERE ty
 - API endpoint usage
 
 ### Monitoring Commands
+
 ```bash
 # Check server resources
 htop
@@ -336,11 +354,13 @@ pm2 monit
 # Check database size
 ls -lh /opt/galax/data/database.sqlite
 ```
+
 <!-- Added 2025-07-18 21:40:07: Consider integrating external monitoring tools (Prometheus, Grafana, Datadog) for advanced metrics and alerting. -->
 
 ## 🔒 Security Considerations
 
 ### File Permissions
+
 ```bash
 # Set proper permissions
 chown -R nodejs:nodejs /opt/galax
@@ -349,6 +369,7 @@ chmod -R 644 /opt/galax/data/*.sqlite
 ```
 
 ### Firewall Configuration
+
 ```bash
 # Only allow necessary ports
 ufw allow 22/tcp    # SSH
@@ -358,6 +379,7 @@ ufw enable
 ```
 
 ### SSL Certificate Renewal
+
 ```bash
 # If using Let's Encrypt
 certbot renew --dry-run
@@ -367,26 +389,31 @@ certbot renew --dry-run
 ```
 
 ### <!-- Added 2025-07-18 21:40:07: Add WAF (Web Application Firewall) and DDoS protection for public-facing platforms. -->
+
 - Consider solutions like Cloudflare or AWS WAF for edge security.
 
 ### <!-- Added 2025-07-18 21:40:07: Add security vulnerability scanning (npm audit, dependabot, etc), especially for web3 environments. -->
+
 - Run `npm audit` regularly and review dependabot alerts.
 - For web3, monitor smart contract vulnerabilities and node updates.
 
 ## 🔧 Maintenance Tasks
 
 ### Daily Tasks
+
 - [ ] Check application logs for errors
 - [ ] Verify disk space availability
 - [ ] Monitor memory usage
 
 ### Weekly Tasks
+
 - [ ] Database backup
 - [ ] Log rotation
 - [ ] Security updates
 - [ ] <!-- Added 2025-07-18 21:40:07: Run vulnerability scans (npm audit, dependabot etc) -->
 
 ### Monthly Tasks
+
 - [ ] Full system backup
 - [ ] Performance review
 - [ ] Dependency updates
@@ -394,6 +421,7 @@ certbot renew --dry-run
 ## 📈 Scaling Considerations
 
 ### Horizontal Scaling
+
 - Load balancer configuration
 - Session store (Redis)
 - Database clustering
@@ -401,13 +429,16 @@ certbot renew --dry-run
 - <!-- Added 2025-07-18 21:40:07: For Web3, document scaling for blockchain nodes or external services if applicable. -->
 
 ### Vertical Scaling
+
 - Increase server resources
 - Optimize database queries
 - Implement caching
 - Connection pooling
 
 ## 🔍 <!-- Added 2025-07-18 21:40:07: Rollback Steps -->
+
 ### Deployment Rollback Steps
+
 ```bash
 # If deployment fails, restore previous build
 pm2 stop galax-api
@@ -422,6 +453,7 @@ pm2 start ecosystem.config.js
 ### Common Issues
 
 **Application Won't Start**
+
 ```bash
 # Check logs
 pm2 logs galax-api
@@ -434,6 +466,7 @@ ls -la /opt/galax/data/
 ```
 
 **Database Connection Issues**
+
 ```bash
 # Check database file
 file /opt/galax/data/database.sqlite
@@ -443,6 +476,7 @@ sqlite3 /opt/galax/data/database.sqlite "PRAGMA integrity_check;"
 ```
 
 **High Memory Usage**
+
 ```bash
 # Restart application
 pm2 restart galax-api
@@ -452,6 +486,7 @@ pm2 monit
 ```
 
 **File Upload Issues**
+
 ```bash
 # Check uploads directory
 ls -la /opt/galax/data/uploads/
@@ -470,6 +505,7 @@ df -h
 ## 🎯 Success Metrics
 
 Monitor these KPIs during beta:
+
 - User registration rate
 - Help request creation rate
 - Crisis alert response time

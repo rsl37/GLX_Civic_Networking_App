@@ -12,7 +12,11 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { StablecoinContract, StablecoinConfig, DEFAULT_STABLECOIN_CONFIG } from '../StablecoinContract.js';
+import {
+  StablecoinContract,
+  StablecoinConfig,
+  DEFAULT_STABLECOIN_CONFIG,
+} from '../StablecoinContract.js';
 
 describe('StablecoinContract', () => {
   describe('Basic Functionality', () => {
@@ -32,7 +36,7 @@ describe('StablecoinContract', () => {
         price: 1.05,
         timestamp: Date.now(),
         volume: 1000,
-        confidence: 0.9
+        confidence: 0.9,
       });
 
       const currentPrice = contract.getCurrentPrice();
@@ -60,7 +64,7 @@ describe('StablecoinContract', () => {
     test('should expand when price is above peg', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
-        toleranceBand: 0.01 // 1% tolerance
+        toleranceBand: 0.01, // 1% tolerance
       };
 
       const contract = new StablecoinContract(config, 10000, 2000);
@@ -70,7 +74,7 @@ describe('StablecoinContract', () => {
         price: 1.05, // 5% above peg
         timestamp: Date.now(),
         volume: 1000,
-        confidence: 1.0
+        confidence: 1.0,
       });
 
       const adjustment = contract.calculateSupplyAdjustment();
@@ -82,7 +86,7 @@ describe('StablecoinContract', () => {
     test('should contract when price is below peg', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
-        toleranceBand: 0.01 // 1% tolerance
+        toleranceBand: 0.01, // 1% tolerance
       };
 
       const contract = new StablecoinContract(config, 10000, 2000);
@@ -92,7 +96,7 @@ describe('StablecoinContract', () => {
         price: 0.95, // 5% below peg
         timestamp: Date.now(),
         volume: 1000,
-        confidence: 1.0
+        confidence: 1.0,
       });
 
       const adjustment = contract.calculateSupplyAdjustment();
@@ -104,7 +108,7 @@ describe('StablecoinContract', () => {
     test('should take no action when price is within tolerance', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
-        toleranceBand: 0.05 // 5% tolerance
+        toleranceBand: 0.05, // 5% tolerance
       };
 
       const contract = new StablecoinContract(config, 10000, 2000);
@@ -114,7 +118,7 @@ describe('StablecoinContract', () => {
         price: 1.02, // 2% above peg, within 5% tolerance
         timestamp: Date.now(),
         volume: 1000,
-        confidence: 1.0
+        confidence: 1.0,
       });
 
       const adjustment = contract.calculateSupplyAdjustment();
@@ -125,7 +129,7 @@ describe('StablecoinContract', () => {
     test('should execute supply adjustments correctly', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
-        rebalanceInterval: 0 // Allow immediate rebalancing for testing
+        rebalanceInterval: 0, // Allow immediate rebalancing for testing
       };
 
       const contract = new StablecoinContract(config, 10000, 2000);
@@ -136,7 +140,7 @@ describe('StablecoinContract', () => {
         price: 1.1,
         timestamp: Date.now(),
         volume: 1000,
-        confidence: 1.0
+        confidence: 1.0,
       });
 
       const adjustment = contract.rebalance();
@@ -163,7 +167,7 @@ describe('StablecoinContract', () => {
           price: 1.0 + (Math.random() - 0.5) * 0.01, // Small random variation around $1
           timestamp: baseTime + i * 60000,
           volume: 1000,
-          confidence: 1.0
+          confidence: 1.0,
         });
       }
 
@@ -186,7 +190,7 @@ describe('StablecoinContract', () => {
           price,
           timestamp: baseTime + i * 60000,
           volume: 1000,
-          confidence: 1.0
+          confidence: 1.0,
         });
       });
 
@@ -222,7 +226,7 @@ describe('StablecoinContract', () => {
     test('should prevent reserve removal that violates ratio', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
-        reserveRatio: 0.3 // 30% minimum reserve ratio
+        reserveRatio: 0.3, // 30% minimum reserve ratio
       };
 
       const contract = new StablecoinContract(config, 10000, 3000); // Exactly at minimum
@@ -236,7 +240,7 @@ describe('StablecoinContract', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
         reserveRatio: 0.25, // 25% minimum
-        toleranceBand: 0.01
+        toleranceBand: 0.01,
       };
 
       const contract = new StablecoinContract(config, 10000, 2500); // Exactly at minimum
@@ -246,13 +250,13 @@ describe('StablecoinContract', () => {
         price: 0.9,
         timestamp: Date.now(),
         volume: 1000,
-        confidence: 1.0
+        confidence: 1.0,
       });
 
       const adjustment = contract.calculateSupplyAdjustment();
 
       // Should limit contraction to maintain reserve ratio
-      const wouldViolateRatio = (2500 / adjustment.newSupply) < 0.25;
+      const wouldViolateRatio = 2500 / adjustment.newSupply < 0.25;
       expect(wouldViolateRatio).toBe(false);
     });
   });
@@ -272,7 +276,7 @@ describe('StablecoinContract', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
         maxSupplyChange: 0.05, // 5% max change
-        toleranceBand: 0.01
+        toleranceBand: 0.01,
       };
 
       const contract = new StablecoinContract(config, 10000, 2000);
@@ -282,7 +286,7 @@ describe('StablecoinContract', () => {
         price: 2.0, // 100% above peg
         timestamp: Date.now(),
         volume: 1000,
-        confidence: 1.0
+        confidence: 1.0,
       });
 
       const adjustment = contract.calculateSupplyAdjustment();
@@ -318,7 +322,7 @@ describe('StablecoinContract', () => {
 
       const newConfig = {
         targetPrice: 2.0,
-        toleranceBand: 0.1
+        toleranceBand: 0.1,
       };
 
       contract.updateConfig(newConfig);

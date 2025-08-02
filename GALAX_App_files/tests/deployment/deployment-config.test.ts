@@ -5,7 +5,6 @@
  * This project is unaffiliated with Tatsunoko Production or the original anime.
  */
 
-
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
@@ -109,32 +108,32 @@ describe('Deployment Configuration Tests', () => {
         NODE_ENV: 'development', // Use development mode for basic functionality testing
         PORT: '3000',
         DATA_DIRECTORY: './data',
-        JWT_SECRET: 'test-jwt-secret-for-deployment-check-32characters-long'
+        JWT_SECRET: 'test-jwt-secret-for-deployment-check-32characters-long',
       };
 
       // Remove DATABASE_URL if it exists
       delete env.DATABASE_URL;
 
-      const result = await new Promise<{ code: number; output: string }>((resolve) => {
+      const result = await new Promise<{ code: number; output: string }>(resolve => {
         const proc = spawn('npm', ['run', 'deployment:check'], {
           env,
           stdio: 'pipe',
-          timeout: 30000
+          timeout: 30000,
         });
 
         let output = '';
-        proc.stdout?.on('data', (data) => {
+        proc.stdout?.on('data', data => {
           output += data.toString();
         });
-        proc.stderr?.on('data', (data) => {
+        proc.stderr?.on('data', data => {
           output += data.toString();
         });
 
-        proc.on('close', (code) => {
+        proc.on('close', code => {
           resolve({ code: code || 0, output });
         });
 
-        proc.on('error', (error) => {
+        proc.on('error', error => {
           resolve({ code: 1, output: `Error: ${error.message}` });
         });
       });
@@ -143,28 +142,29 @@ describe('Deployment Configuration Tests', () => {
       expect(result.output).not.toContain('Overall Status: ❌ NOT_READY');
 
       // Should show that deployment readiness completed (either WARNING or PASSED)
-      const hasWarningOrPass = result.output.includes('Overall Status: ⚠️ WARNING') ||
-                              result.output.includes('Overall Status: ✅ READY');
+      const hasWarningOrPass =
+        result.output.includes('Overall Status: ⚠️ WARNING') ||
+        result.output.includes('Overall Status: ✅ READY');
       expect(hasWarningOrPass).toBe(true);
     });
   });
 
   describe('Build Process', () => {
     it('should build successfully', async () => {
-      const result = await new Promise<{ code: number; output: string }>((resolve) => {
+      const result = await new Promise<{ code: number; output: string }>(resolve => {
         const proc = spawn('npm', ['run', 'build'], {
-          stdio: 'pipe'
+          stdio: 'pipe',
         });
 
         let output = '';
-        proc.stdout?.on('data', (data) => {
+        proc.stdout?.on('data', data => {
           output += data.toString();
         });
-        proc.stderr?.on('data', (data) => {
+        proc.stderr?.on('data', data => {
           output += data.toString();
         });
 
-        proc.on('close', (code) => {
+        proc.on('close', code => {
           resolve({ code: code || 0, output });
         });
       });

@@ -47,7 +47,7 @@ class PostQuantumCryptography {
     this.config = {
       securityLevel: 5, // 256-bit equivalent
       hybridMode: true, // Combine classical + post-quantum
-      zeroKnowledgeProofs: true
+      zeroKnowledgeProofs: true,
     };
   }
 
@@ -93,7 +93,7 @@ class PostQuantumCryptography {
 
     return {
       publicKey: crypto.randomBytes(publicKeySize),
-      secretKey: crypto.randomBytes(secretKeySize)
+      secretKey: crypto.randomBytes(secretKeySize),
     };
   }
 
@@ -108,7 +108,7 @@ class PostQuantumCryptography {
 
     return {
       publicKey: crypto.randomBytes(publicKeySize),
-      secretKey: crypto.randomBytes(secretKeySize)
+      secretKey: crypto.randomBytes(secretKeySize),
     };
   }
 
@@ -123,8 +123,7 @@ class PostQuantumCryptography {
 
     return {
       publicKey: crypto.randomBytes(publicKeySize),
-      secretKey: crypto.randomBytes(secretKeySize)
-
+      secretKey: crypto.randomBytes(secretKeySize),
     };
   }
 
@@ -197,8 +196,8 @@ class PostQuantumCryptography {
       metadata: {
         kemCiphertext: ciphertext,
         algorithm: 'AES-256-GCM + ML-KEM-1024',
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
   }
 
@@ -245,25 +244,27 @@ class PostQuantumCryptography {
           securityLevel: 5,
           nistsCompliant: true,
           status: this.keys ? 'SLH-DSA-256s (FIPS 205)' : 'Not initialized',
-        }
+        },
       },
       features: {
         keyEncapsulation: true,
         digitalSignatures: true,
         zeroKnowledgeProofs: true,
         hybridCryptography: true,
-        secureStorage: true
+        secureStorage: true,
       },
       hybridMode: this.config.hybridMode,
       zeroKnowledgeProofs: this.config.zeroKnowledgeProofs,
-      keySizes: this.keys ? {
-        mlkemPublic: this.keys.mlkem.publicKey.length,
-        mldsaPublic: this.keys.mldsa.publicKey.length,
-        slhdsaPublic: this.keys.slhdsa.publicKey.length
-      } : null,
+      keySizes: this.keys
+        ? {
+            mlkemPublic: this.keys.mlkem.publicKey.length,
+            mldsaPublic: this.keys.mldsa.publicKey.length,
+            slhdsaPublic: this.keys.slhdsa.publicKey.length,
+          }
+        : null,
       complianceLevel: 'NIST Post-Quantum Standards',
       protectionScore: this.initialized ? 130 : 0, // Quantum-safe protection score
-      lastInitialized: this.initialized ? new Date().toISOString() : null
+      lastInitialized: this.initialized ? new Date().toISOString() : null,
     };
   }
 

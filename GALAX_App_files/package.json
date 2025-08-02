@@ -28,7 +28,11 @@
     "branch:analyze": "npx tsx scripts/branch-commit-analyzer.ts",
     "logs:all": "npm run health:log && npm run branch:analyze",
     "dashboard": "npx tsx scripts/monitoring-dashboard.ts",
-    "monitor:full": "npm run logs:all && npm run dashboard"
+    "monitor:full": "npm run logs:all && npm run dashboard",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",
@@ -101,6 +105,7 @@
     "undici": "^6.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.32.0",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.54.1",
     "@testing-library/jest-dom": "^6.6.3",
@@ -111,15 +116,21 @@
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
     "@types/supertest": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
     "@vercel/node": "^5.3.8",
     "@vitejs/plugin-react": "4.7.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "autocannon": "^8.0.0",
     "autoprefixer": "10.4.21",
+    "eslint": "^9.32.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "ignore": "7.0.5",
     "jsdom": "^26.1.0",
     "postcss": "8.5.6",
+    "prettier": "^3.6.2",
     "supertest": "^7.1.4",
     "tailwindcss": "3.4.17",
     "tsx": "^4.20.3",

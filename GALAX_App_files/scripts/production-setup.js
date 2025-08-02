@@ -27,7 +27,9 @@ function generateSecureKey(length = 32) {
 // Check if we're in the right directory
 const packageJsonPath = join(process.cwd(), 'package.json');
 if (!existsSync(packageJsonPath)) {
-  console.error('❌ Error: package.json not found. Please run this script from the GALAX_App_files directory.');
+  console.error(
+    '❌ Error: package.json not found. Please run this script from the GALAX_App_files directory.'
+  );
   process.exit(1);
 }
 
@@ -44,7 +46,11 @@ const prodEnvPath = join(process.cwd(), '.env.production');
 const envPath = join(process.cwd(), '.env');
 
 if (!existsSync(prodEnvPath)) {
-  console.error('❌ Error: .env.production file not found in the current directory (' + process.cwd() + '). Please create it by copying .env.example to .env.production in this directory and updating the values for production. Refer to the documentation for more details.');
+  console.error(
+    '❌ Error: .env.production file not found in the current directory (' +
+      process.cwd() +
+      '). Please create it by copying .env.example to .env.production in this directory and updating the values for production. Refer to the documentation for more details.'
+  );
   process.exit(1);
 }
 
@@ -90,7 +96,7 @@ if (existsSync(envPath)) {
     const existingEnv = readFileSync(envPath, 'utf8');
     writeFileSync(backupPath, existingEnv);
     console.log(`📋 Backed up existing .env to ${backupPath}`);
-  } catch (error) {
+  } catch {
     console.log('⚠️  Could not create backup of existing .env file');
   }
 }

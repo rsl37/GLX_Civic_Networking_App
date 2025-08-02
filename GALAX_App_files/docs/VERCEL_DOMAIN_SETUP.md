@@ -7,6 +7,7 @@ This guide explains how to properly configure a custom domain with SSL on Vercel
 ## Issue Description
 
 When accessing the custom domain `galaxcivicnetwork.me`, users encounter:
+
 ```
 This site can't provide a secure connection
 galaxcivicnetwork.me sent an invalid response.
@@ -47,6 +48,7 @@ This error occurs when the SSL certificate is not properly configured or the dom
 ### 3. Common Issues & Solutions
 
 #### DNS Not Propagated
+
 ```bash
 # Check DNS resolution
 dig galaxcivicnetwork.me A
@@ -54,11 +56,13 @@ dig galaxcivicnetwork.me A
 ```
 
 #### SSL Certificate Pending
+
 - Wait for automatic certificate issuance
 - Check domain status in Vercel dashboard
 - May take 5-10 minutes after DNS verification
 
 #### Mixed HTTP/HTTPS Content
+
 - Ensure all resources load over HTTPS
 - Check for mixed content warnings in browser console
 
@@ -97,6 +101,7 @@ The project's `vercel.json` includes:
 ```
 
 These configurations:
+
 - Force HTTPS with HSTS headers
 - Redirect HTTP traffic to HTTPS
 - Add security headers for better SSL/TLS behavior
@@ -104,11 +109,13 @@ These configurations:
 ### 5. Verification Steps
 
 1. **Check Domain Status**
+
    ```bash
    curl -I https://galaxcivicnetwork.me
    ```
 
 2. **Verify SSL Certificate**
+
    ```bash
    openssl s_client -connect galaxcivicnetwork.me:443 -servername galaxcivicnetwork.me
    ```
@@ -148,6 +155,7 @@ These configurations:
 ## Testing
 
 After configuration, test both:
+
 - Direct Vercel URL: `https://galax-civic-networking-app.vercel.app`
 - Custom domain: `https://galaxcivicnetwork.me`
 

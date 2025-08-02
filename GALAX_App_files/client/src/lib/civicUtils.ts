@@ -42,7 +42,7 @@ const ACTION_WEIGHTS: Record<CivicActionType, number> = {
   community_organized: 15,
   governance_participated: 8,
   crisis_response: 20,
-  verification_completed: 5
+  verification_completed: 5,
 };
 
 const IMPACT_THRESHOLD = 5;
@@ -59,7 +59,7 @@ export const useCivicReputation = () => {
         const verificationMultiplier = action.verified ? 1 : 0.5;
         const impactBonus = action.impact_score > IMPACT_THRESHOLD ? 1.2 : 1;
 
-        return score + (weight * verificationMultiplier * impactBonus);
+        return score + weight * verificationMultiplier * impactBonus;
       }, 0);
     };
   }, []);
@@ -93,9 +93,10 @@ export const useCivicReputation = () => {
       }
 
       // Check if already has this type of achievement recently
-      const recentAchievement = existingAchievements.find(achievement =>
-        achievement.type === action.type &&
-        Date.now() - achievement.earned_at.getTime() < 24 * 60 * 60 * 1000 // 24 hours
+      const recentAchievement = existingAchievements.find(
+        achievement =>
+          achievement.type === action.type &&
+          Date.now() - achievement.earned_at.getTime() < 24 * 60 * 60 * 1000 // 24 hours
       );
 
       if (recentAchievement) {
@@ -108,7 +109,7 @@ export const useCivicReputation = () => {
         type: action.type,
         impact_score: action.impact_score,
         verified: true,
-        earned_at: new Date()
+        earned_at: new Date(),
       };
 
       return [...existingAchievements, newAchievement];
@@ -120,7 +121,7 @@ export const useCivicReputation = () => {
     calculateCivicMatches,
     updateUserAchievements,
     ACTION_WEIGHTS,
-    IMPACT_THRESHOLD
+    IMPACT_THRESHOLD,
   };
 };
 
@@ -132,9 +133,10 @@ export const civicDataUtils = {
    * Efficient filtering for civic data - reduce server calls
    */
   filterActiveHelpRequests: (requests: any[]) => {
-    return requests.filter(request =>
-      request.status === 'active' &&
-      new Date(request.created_at).getTime() > Date.now() - (7 * 24 * 60 * 60 * 1000) // Last 7 days
+    return requests.filter(
+      request =>
+        request.status === 'active' &&
+        new Date(request.created_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000 // Last 7 days
     );
   },
 
@@ -156,12 +158,14 @@ export const civicDataUtils = {
    */
   compressCivicData: (data: any) => {
     // Remove undefined values and compress for lean storage
-    return JSON.parse(JSON.stringify(data, (key, value) => {
-      if (value === undefined || value === null) {
-        return undefined;
-      }
-      return value;
-    }));
+    return JSON.parse(
+      JSON.stringify(data, (key, value) => {
+        if (value === undefined || value === null) {
+          return undefined;
+        }
+        return value;
+      })
+    );
   },
 
   /**
@@ -173,10 +177,10 @@ export const civicDataUtils = {
       batches.push(actions.slice(i, i + batchSize));
     }
     return batches;
-  }
+  },
 };
 
 export default {
   useCivicReputation,
-  civicDataUtils
+  civicDataUtils,
 };
