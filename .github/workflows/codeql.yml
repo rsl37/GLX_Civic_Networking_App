@@ -64,7 +64,7 @@ jobs:
         run: |
           echo "⚠️ CodeQL analysis failed. This might be because:"
           echo "1. Code scanning is not enabled in repository settings"
-          echo "2. There are no security-events permissions"
+          echo "2. The workflow is missing 'security-events: write' permissions"
           echo "3. The repository is private and doesn't have GitHub Advanced Security"
           echo ""
           echo "To fix this:"
