@@ -1,13 +1,13 @@
 ---
 title: "GALAX Documentation Standards Guide"
-description: "Comprehensive guide for maintaining documentation best practices, metadata standards, and automated validation in the GALAX project"
-lastUpdated: "2025-08-02"
+description: ""
+lastUpdated: "2025-08-03"
 nextReview: "2026-02-02"
 contentType: "guide"
 maintainer: "GALAX Development Team"
 version: "1.0.0"
-tags: ["documentation", "standards", "best-practices", "automation", "metadata"]
-relatedDocs: ["README.md", "DEVELOPMENT_ACTIVITY_HISTORY.md", ".github/workflows/documentation-validation.yml"]
+tags: []
+relatedDocs: []
 ---
 
 # GALAX Documentation Standards Guide

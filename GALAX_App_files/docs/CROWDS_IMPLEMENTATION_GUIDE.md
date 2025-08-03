@@ -1,3 +1,15 @@
+---
+title: "CROWDS Stablecoin Implementation Guide: HFT/HOFT Framework"
+description: ""
+lastUpdated: "2025-08-03"
+nextReview: "2026-02-03"
+contentType: "guide"
+maintainer: "GALAX Development Team"
+version: "1.0.0"
+tags: []
+relatedDocs: []
+---
+
 # CROWDS Stablecoin Implementation Guide: HFT/HOFT Framework
 
 ## Quick Start Guide

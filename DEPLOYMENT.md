@@ -1,7 +1,7 @@
 ---
 title: "Deployment Configuration Guide"
 description: ""
-lastUpdated: "2025-08-02"
+lastUpdated: "2025-08-03"
 nextReview: "2026-02-02"
 contentType: "deployment"
 maintainer: "GALAX Development Team"
