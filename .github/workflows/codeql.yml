@@ -31,8 +31,13 @@ jobs:
       - name: Check if Code Scanning is available
         id: code-scanning-check
         run: |
-          bash .github/scripts/check-code-scanning.sh
-
+          # Inline check for Code Scanning availability
+          if [ "${{ github.event.repository.private }}" = "false" ]; then
+            echo "code_scanning_available=true" >> $GITHUB_OUTPUT
+          else
+            # For private repos, check if Advanced Security is enabled (not directly available, so default to false)
+            echo "code_scanning_available=false" >> $GITHUB_OUTPUT
+          fi
       - name: Initialize CodeQL (if available)
         if: steps.code-scanning-check.outputs.code_scanning_available == 'true'
         uses: github/codeql-action/init@v3
