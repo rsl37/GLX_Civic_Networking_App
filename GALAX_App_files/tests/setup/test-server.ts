@@ -1,3 +1,11 @@
+/*
+ * Copyright © 2025 GALAX Civic Networking.
+ * Licensed under the PolyForm Shield License 1.0.0.
+ * "GALAX" and related concepts are inspired by Gatchaman Crowds © Tatsunoko Production.
+ * This project is unaffiliated with Tatsunoko Production or the original anime.
+ */
+
+
 import express from 'express';
 import { createServer } from 'http';
 import RealtimeManager from '../../server/realtimeManager.js';
@@ -74,7 +82,7 @@ export class TestServer {
 export const mockDb = {
   users: [] as any[],
   helpRequests: [] as any[],
-  
+
   clear() {
     this.users = [];
     this.helpRequests = [];

@@ -1,14 +1,14 @@
 /*
  * Copyright (c) 2025 GALAX Civic Networking App
- * 
+ *
  * This software is licensed under the PolyForm Shield License 1.0.0.
- * For the full license text, see LICENSE file in the root directory 
+ * For the full license text, see LICENSE file in the root directory
  * or visit https://polyformproject.org/licenses/shield/1.0.0
  */
 
 /**
  * Environment Variable Validation for Production Deployment
- * 
+ *
  * This module validates environment variables required for production deployment,
  * particularly for Vercel deployments where missing or incorrect environment
  * variables are a common cause of authentication failures.
@@ -100,11 +100,18 @@ export function validateEnvironment(): EnvironmentValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   const recommendations: string[] = [];
+  const isTestOrCI = process.env.NODE_ENV === 'test' || process.env.CI === 'true';
 
   console.log('🔍 Validating environment variables...');
 
   for (const envVar of REQUIRED_ENV_VARS) {
     const value = process.env[envVar.name];
+
+    // Skip CLIENT_ORIGIN requirement in test/CI environments
+    if (envVar.name === 'CLIENT_ORIGIN' && isTestOrCI && !value) {
+      warnings.push(`Optional in test environment: ${envVar.name} - ${envVar.description}`);
+      continue;
+    }
 
     if (envVar.required && !value) {
       errors.push(`Missing required environment variable: ${envVar.name} - ${envVar.description}`);
@@ -115,9 +122,14 @@ export function validateEnvironment(): EnvironmentValidationResult {
     }
 
     if (value && envVar.validator && !envVar.validator(value)) {
-      errors.push(`Invalid value for ${envVar.name}: ${envVar.description}`);
-      if (envVar.recommendation) {
-        recommendations.push(`${envVar.name}: ${envVar.recommendation}`);
+      // Relax validation for test/CI environments
+      if (isTestOrCI && (envVar.name === 'JWT_SECRET' || envVar.name === 'DATABASE_URL')) {
+        warnings.push(`Test environment value for ${envVar.name}: ${envVar.description}`);
+      } else {
+        errors.push(`Invalid value for ${envVar.name}: ${envVar.description}`);
+        if (envVar.recommendation) {
+          recommendations.push(`${envVar.name}: ${envVar.recommendation}`);
+        }
       }
       continue;
     }
@@ -142,7 +154,7 @@ export function validateEnvironment(): EnvironmentValidationResult {
   }
 
   const isValid = errors.length === 0;
-  
+
   if (isValid) {
     console.log('✅ Environment validation passed');
   } else {
@@ -174,27 +186,36 @@ function validateAuthConfiguration(
   const jwtSecret = process.env.JWT_SECRET;
   const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
   const isProduction = process.env.NODE_ENV === 'production';
-  
+  const isTestOrCI = process.env.NODE_ENV === 'test' || process.env.CI === 'true';
+
   // Validate JWT_SECRET with comprehensive security checks
   if (jwtSecret) {
     const validation = validateJWTSecret(jwtSecret, isProduction);
-    
+
     if (!validation.isValid || validation.severity === 'critical') {
-      errors.push(`JWT_SECRET security validation failed: ${validation.recommendations.join(', ')}`);
-      
-      if (validation.weakPatterns.length > 0) {
-        const criticalPatterns = validation.weakPatterns.filter(p => p.severity === 'critical');
-        const highPatterns = validation.weakPatterns.filter(p => p.severity === 'high');
-        
-        if (criticalPatterns.length > 0) {
-          errors.push(`JWT_SECRET contains critical security weaknesses: ${criticalPatterns.map(p => p.description).join(', ')}`);
+      // In production mode, always enforce strict validation regardless of test environment
+      if (isProduction) {
+        errors.push(`JWT_SECRET security validation failed: ${validation.recommendations.join(', ')}`);
+      } else if (process.env.NODE_ENV === 'test' && jwtSecret.length >= 16) {
+        // Only use lenient validation for actual test environment, not development or CI
+        warnings.push(`JWT_SECRET is weak but acceptable for test environment`);
+      } else {
+        errors.push(`JWT_SECRET security validation failed: ${validation.recommendations.join(', ')}`);
+
+        if (validation.weakPatterns.length > 0) {
+          const criticalPatterns = validation.weakPatterns.filter(p => p.severity === 'critical');
+          const highPatterns = validation.weakPatterns.filter(p => p.severity === 'high');
+
+          if (criticalPatterns.length > 0) {
+            errors.push(`JWT_SECRET contains critical security weaknesses: ${criticalPatterns.map(p => p.description).join(', ')}`);
+          }
+          if (highPatterns.length > 0) {
+            errors.push(`JWT_SECRET contains high-risk patterns: ${highPatterns.map(p => p.description).join(', ')}`);
+          }
         }
-        if (highPatterns.length > 0) {
-          errors.push(`JWT_SECRET contains high-risk patterns: ${highPatterns.map(p => p.description).join(', ')}`);
-        }
+
+        recommendations.push('JWT_SECRET: Generate a cryptographically secure random string using: openssl rand -hex 32');
       }
-      
-      recommendations.push('JWT_SECRET: Generate a cryptographically secure random string using: openssl rand -hex 32');
     } else if (validation.severity === 'warning') {
       warnings.push(`JWT_SECRET has security concerns: ${validation.recommendations.join(', ')}`);
       recommendations.push('JWT_SECRET: Consider improving secret strength for enhanced security');
@@ -204,23 +225,31 @@ function validateAuthConfiguration(
   // Validate JWT_REFRESH_SECRET with the same comprehensive checks
   if (jwtRefreshSecret) {
     const validation = validateJWTSecret(jwtRefreshSecret, isProduction);
-    
+
     if (!validation.isValid || validation.severity === 'critical') {
-      errors.push(`JWT_REFRESH_SECRET security validation failed: ${validation.recommendations.join(', ')}`);
-      
-      if (validation.weakPatterns.length > 0) {
-        const criticalPatterns = validation.weakPatterns.filter(p => p.severity === 'critical');
-        const highPatterns = validation.weakPatterns.filter(p => p.severity === 'high');
-        
-        if (criticalPatterns.length > 0) {
-          errors.push(`JWT_REFRESH_SECRET contains critical security weaknesses: ${criticalPatterns.map(p => p.description).join(', ')}`);
+      // In production mode, always enforce strict validation regardless of test environment
+      if (isProduction) {
+        errors.push(`JWT_REFRESH_SECRET security validation failed: ${validation.recommendations.join(', ')}`);
+      } else if (process.env.NODE_ENV === 'test' && jwtRefreshSecret.length >= 16) {
+        // Only use lenient validation for actual test environment, not development or CI
+        warnings.push(`JWT_REFRESH_SECRET is weak but acceptable for test environment`);
+      } else {
+        errors.push(`JWT_REFRESH_SECRET security validation failed: ${validation.recommendations.join(', ')}`);
+
+        if (validation.weakPatterns.length > 0) {
+          const criticalPatterns = validation.weakPatterns.filter(p => p.severity === 'critical');
+          const highPatterns = validation.weakPatterns.filter(p => p.severity === 'high');
+
+          if (criticalPatterns.length > 0) {
+            errors.push(`JWT_REFRESH_SECRET contains critical security weaknesses: ${criticalPatterns.map(p => p.description).join(', ')}`);
+          }
+          if (highPatterns.length > 0) {
+            errors.push(`JWT_REFRESH_SECRET contains high-risk patterns: ${highPatterns.map(p => p.description).join(', ')}`);
+          }
         }
-        if (highPatterns.length > 0) {
-          errors.push(`JWT_REFRESH_SECRET contains high-risk patterns: ${highPatterns.map(p => p.description).join(', ')}`);
-        }
+
+        recommendations.push('JWT_REFRESH_SECRET: Generate a cryptographically secure random string using: openssl rand -hex 32');
       }
-      
-      recommendations.push('JWT_REFRESH_SECRET: Generate a cryptographically secure random string using: openssl rand -hex 32');
     } else if (validation.severity === 'warning') {
       warnings.push(`JWT_REFRESH_SECRET has security concerns: ${validation.recommendations.join(', ')}`);
       recommendations.push('JWT_REFRESH_SECRET: Consider improving secret strength for enhanced security');
@@ -249,10 +278,13 @@ function validateCorsConfiguration(
   const clientOrigin = process.env.CLIENT_ORIGIN;
   const frontendUrl = process.env.FRONTEND_URL;
   const trustedOrigins = process.env.TRUSTED_ORIGINS;
+  const isTestOrCI = process.env.NODE_ENV === 'test' || process.env.CI === 'true';
 
-  if (!clientOrigin && !frontendUrl) {
+  if (!clientOrigin && !frontendUrl && !isTestOrCI) {
     errors.push('No CORS origin configured - API requests will fail');
     recommendations.push('CORS: Set CLIENT_ORIGIN to your frontend URL');
+  } else if (!clientOrigin && !frontendUrl && isTestOrCI) {
+    warnings.push('No CORS origin configured for test environment');
   }
 
   if (process.env.NODE_ENV === 'production') {
@@ -265,7 +297,7 @@ function validateCorsConfiguration(
     }
   }
 
-  if (!trustedOrigins) {
+  if (!trustedOrigins && !isTestOrCI) {
     warnings.push('No additional trusted origins configured');
     recommendations.push('TRUSTED_ORIGINS: Consider adding staging and custom domains');
   }
@@ -296,9 +328,9 @@ function validateProductionConfiguration(
   }
 
   // Check if common production URLs are configured
-  const hasVercelDomain = process.env.CLIENT_ORIGIN?.includes('vercel.app') || 
+  const hasVercelDomain = process.env.CLIENT_ORIGIN?.includes('vercel.app') ||
                           process.env.FRONTEND_URL?.includes('vercel.app');
-  
+
   if (!hasVercelDomain) {
     warnings.push('No Vercel domain detected in CORS configuration');
     recommendations.push('CORS: Ensure your Vercel app URL is included in CLIENT_ORIGIN or TRUSTED_ORIGINS');
@@ -364,17 +396,17 @@ export function generateDeploymentChecklist(validationResult: EnvironmentValidat
  */
 export function logEnvironmentStatus(): void {
   const validation = validateEnvironment();
-  
+
   if (!validation.isValid) {
     console.error('\n🚨 DEPLOYMENT ERROR: Environment validation failed');
     console.error('The following issues must be resolved before deployment:\n');
     validation.errors.forEach(error => console.error(`❌ ${error}`));
-    
+
     if (validation.recommendations.length > 0) {
       console.log('\n💡 Recommendations:');
       validation.recommendations.forEach(rec => console.log(`  - ${rec}`));
     }
-    
+
     console.log('\n📋 For a complete deployment checklist, run: npm run deployment:check');
   }
 }

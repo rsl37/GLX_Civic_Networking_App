@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+/*
+ * Copyright © 2025 GALAX Civic Networking.
+ * Licensed under the PolyForm Shield License 1.0.0.
+ * "GALAX" and related concepts are inspired by Gatchaman Crowds © Tatsunoko Production.
+ * This project is unaffiliated with Tatsunoko Production or the original anime.
+ */
 
 /**
  * GALAX Production Setup Script
@@ -76,7 +82,7 @@ if (existsSync(envPath)) {
   console.log('\n⚠️  WARNING: .env file already exists.');
   console.log('This script will overwrite your current .env file with production settings.');
   console.log('Make sure to backup any custom settings you want to keep.\n');
-  
+
   // In a real interactive script, you'd prompt the user here
   // For automation purposes, we'll create a backup
   const backupPath = join(process.cwd(), '.env.backup');

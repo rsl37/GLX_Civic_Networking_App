@@ -19,6 +19,7 @@
     "test:e2e": "scripts/ensure-test-dirs.sh && playwright test",
     "test:all": "npm run test && npm run test:security && npm run test:e2e",
     "test:env": "npx tsx scripts/test-env.ts",
+    "test:services": "npx tsx scripts/test-service-connectivity.ts",
     "deployment:check": "npx tsx scripts/deployment-check.ts",
     "deployment:test": "npx tsx scripts/test-deployment-validation.ts",
     "production:setup": "npx tsx scripts/production-setup.js",
@@ -28,7 +29,11 @@
     "branch:analyze": "npx tsx scripts/branch-commit-analyzer.ts",
     "logs:all": "npm run health:log && npm run branch:analyze",
     "dashboard": "npx tsx scripts/monitoring-dashboard.ts",
-    "monitor:full": "npm run logs:all && npm run dashboard"
+    "monitor:full": "npm run logs:all && npm run dashboard",
+    "vercel:validate": "node scripts/validate-vercel-env.cjs",
+    "vercel:health": "node scripts/vercel-health-check.cjs",
+    "vercel:deploy-check": "npm run vercel:validate && npm run build && npm run vercel:health",
+    "vercel:troubleshoot": "node scripts/vercel-troubleshoot.cjs"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",
@@ -71,7 +76,7 @@
     "crystals-kyber": "^5.1.0",
     "dilithium-js": "^1.8.7",
     "dotenv": "^17.2.1",
-    "esbuild": "0.25.8",
+    "esbuild": "^0.25.8",
     "express": "5.1.0",
     "express-rate-limit": "^8.0.1",
     "express-validator": "^7.2.1",
@@ -84,6 +89,7 @@
     "lucide-react": "0.535.0",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
+    "path-to-regexp": "^8.0.0",
     "pg": "^8.16.3",
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0",
@@ -96,7 +102,8 @@
     "socket.io-client": "^4.8.1",
     "speakeasy": "^2.0.0",
     "tailwind-merge": "3.3.1",
-    "tailwindcss-animate": "1.0.7"
+    "tailwindcss-animate": "1.0.7",
+    "undici": "^7.5.0"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
@@ -109,7 +116,7 @@
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
     "@types/supertest": "^6.0.3",
-    "@vercel/node": "^3.0.0",
+    "@vercel/node": "^5.3.8",
     "@vitejs/plugin-react": "4.7.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
@@ -131,6 +138,19 @@
     "inflight": "npm:@isaacs/inflight@^1.0.0",
     "glob": "^10.0.0",
     "rimraf": "^5.0.0",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "esbuild": "^0.25.8",
+    "undici": "^6.0.0",
+    "path-to-regexp": "^8.0.0",
+    "@vercel/node": {
+      "esbuild": "^0.25.8",
+      "undici": "^6.0.0",
+      "path-to-regexp": "^8.0.0"
+    }
+  },
+  "resolutions": {
+    "esbuild": "^0.25.8",
+    "undici": "^6.0.0",
+    "path-to-regexp": "^8.0.0"
   }
 }

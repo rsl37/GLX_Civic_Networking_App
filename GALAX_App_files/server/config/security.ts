@@ -1,17 +1,47 @@
 /*
  * Copyright (c) 2025 GALAX Civic Networking App
- * 
+ *
  * This software is licensed under the PolyForm Shield License 1.0.0.
- * For the full license text, see LICENSE file in the root directory 
+ * For the full license text, see LICENSE file in the root directory
  * or visit https://polyformproject.org/licenses/shield/1.0.0
  */
 
 /**
  * Security configuration for JWT secret validation
- * 
+ *
  * This file contains patterns and rules for detecting weak JWT secrets
  * that pose security risks in production environments.
  */
+
+/**
+ * WebSocket Security Configuration
+ * Ensures secure WebSocket connections using WSS protocol
+ */
+export interface WebSocketSecurityConfig {
+  protocol: 'wss' | 'ws';
+  enforceSSL: boolean;
+  corsOrigins: string[];
+  maxConnections: number;
+  heartbeatInterval: number;
+}
+
+export const DEFAULT_WEBSOCKET_CONFIG: WebSocketSecurityConfig = {
+  protocol: 'wss', // Always use secure WebSocket connections
+  enforceSSL: true,
+  corsOrigins: ['https://localhost:3000', 'https://galax-civic-networking-app.vercel.app'],
+  maxConnections: 1000,
+  heartbeatInterval: 30000
+};
+
+/**
+ * Get WebSocket connection URL with security enforcement
+ */
+export function getSecureWebSocketUrl(host: string = 'localhost:3001', path: string = '/socket.io'): string {
+  // Always use WSS for secure connections
+  const protocol = DEFAULT_WEBSOCKET_CONFIG.protocol;
+  const cleanHost = host.replace(/^https?:\/\//, '').replace(/^wss?:\/\//, '');
+  return `${protocol}://${cleanHost}${path}`;
+}
 
 export interface WeakSecretPattern {
   pattern: string | RegExp;
@@ -71,6 +101,12 @@ export const WEAK_SECRET_PATTERNS: WeakSecretPattern[] = [
     severity: 'critical'
   },
   {
+    pattern: 'password',
+    type: 'contains',
+    description: 'Contains common weak password pattern',
+    severity: 'critical'
+  },
+  {
     pattern: '123456',
     type: 'exact',
     description: 'Numeric sequence',
@@ -95,9 +131,21 @@ export const WEAK_SECRET_PATTERNS: WeakSecretPattern[] = [
     severity: 'high'
   },
   {
+    pattern: 'secret',
+    type: 'contains',
+    description: 'Contains generic secret word',
+    severity: 'high'
+  },
+  {
     pattern: 'test',
     type: 'exact',
     description: 'Test value',
+    severity: 'high'
+  },
+  {
+    pattern: 'test',
+    type: 'contains',
+    description: 'Contains test value',
     severity: 'high'
   },
   {
@@ -107,10 +155,28 @@ export const WEAK_SECRET_PATTERNS: WeakSecretPattern[] = [
     severity: 'high'
   },
   {
+    pattern: 'development',
+    type: 'contains',
+    description: 'Contains development environment value',
+    severity: 'high'
+  },
+  {
     pattern: 'dev',
     type: 'exact',
     description: 'Development environment abbreviation',
     severity: 'high'
+  },
+  {
+    pattern: 'your-secret-key',
+    type: 'contains',
+    description: 'Contains default placeholder secret pattern',
+    severity: 'critical'
+  },
+  {
+    pattern: 'your-refresh-secret-key',
+    type: 'contains',
+    description: 'Contains default refresh token secret placeholder pattern',
+    severity: 'critical'
   },
 
   // Pattern-based weak secrets

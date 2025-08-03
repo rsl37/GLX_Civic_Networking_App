@@ -1,0 +1,71 @@
+---
+name: "CodeQL"
+
+"on":
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: '30 1 * * 2'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["javascript"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        continue-on-error: true
+        id: codeql-init
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Handle CodeQL unavailable
+        if: steps.codeql-init.outcome == 'failure'
+        run: |
+          echo "⚠️ CodeQL Analysis is not available for this repository."
+          echo "This feature requires GitHub Advanced Security for private repositories."
+          echo "Consider enabling GitHub Advanced Security or making the repository public to use this feature."
+          exit 0
+
+      - name: Setup Node.js
+        if: steps.codeql-init.outcome == 'success'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: './package-lock.json'
+
+      - name: Install dependencies
+        if: steps.codeql-init.outcome == 'success'
+        working-directory: ./GALAX_App_files
+        run: |
+          if [ ! -d "node_modules" ]; then
+            npm ci --prefer-offline --no-audit --no-fund
+          fi
+
+      - name: Build application
+        if: steps.codeql-init.outcome == 'success'
+        working-directory: ./GALAX_App_files
+        run: npm run build
+
+      - name: Perform CodeQL Analysis
+        if: steps.codeql-init.outcome == 'success'
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"

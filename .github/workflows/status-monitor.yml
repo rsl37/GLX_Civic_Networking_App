@@ -5,7 +5,7 @@ name: Status Check Monitor
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_run:
-    workflows: ["CI/CD Pipeline", "Quality & Performance", "Security Scan"]
+    workflows: ["Comprehensive CI/CD Pipeline", "Security Scan"]
     types: [completed]
 
 permissions:
@@ -29,15 +29,19 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: Install dependencies
+      - name: Install dependencies for status check script
         run: |
+          mkdir -p temp-workspace
+          cd temp-workspace
+          npm init -y
           npm install @actions/core @actions/github
 
       - name: Run status check monitor
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_PATH: ./temp-workspace/node_modules
         run: |
-          node .github/scripts/check-status-updates.js
+          node .github/scripts/check-status-updates.cjs
 
       - name: Report status check issues
         if: github.event_name == 'workflow_run'
@@ -60,21 +64,21 @@ jobs:
               ref: headSha
             });
 
-            const pendingStatuses = statuses.filter(status => 
-              status.state === 'pending' && 
+            const pendingStatuses = statuses.filter(status =>
+              status.state === 'pending' &&
               (new Date() - new Date(status.created_at)) > 300000 // 5 minutes old
             );
 
             if (pendingStatuses.length > 0) {
               console.log(`⚠️ Found ${pendingStatuses.length} stuck pending status(es)`);
-              
+
               // Force update stuck pending statuses
               for (const status of pendingStatuses) {
-                const newState = conclusion === 'success' ? 'success' : 
+                const newState = conclusion === 'success' ? 'success' :
                                 conclusion === 'failure' ? 'failure' : 'error';
-                
+
                 console.log(`Updating stuck status: ${status.context}`);
-                
+
                 await github.rest.repos.createCommitStatus({
                   owner: context.repo.owner,
                   repo: context.repo.repo,

@@ -1,3 +1,11 @@
+/*
+ * Copyright © 2025 GALAX Civic Networking.
+ * Licensed under the PolyForm Shield License 1.0.0.
+ * "GALAX" and related concepts are inspired by Gatchaman Crowds © Tatsunoko Production.
+ * This project is unaffiliated with Tatsunoko Production or the original anime.
+ */
+
+
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { TestServer } from '../setup/test-server.js';
 import request from 'supertest';
@@ -8,7 +16,7 @@ describe('API Health Endpoints', () => {
   beforeAll(async () => {
     testServer = new TestServer();
     testServer.setupBasicMiddleware();
-    
+
     // Setup health endpoint
     testServer.app.get('/api/health', (req, res) => {
       res.json({
@@ -70,7 +78,7 @@ describe('API Health Endpoints', () => {
       .get('/api/health')
       .expect(200);
     const duration = Date.now() - start;
-    
+
     expect(duration).toBeLessThan(1000); // Should respond within 1 second
   });
 });

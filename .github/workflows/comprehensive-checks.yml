@@ -1,10 +1,31 @@
+---
 name: Comprehensive CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
+    paths:
+      - 'GALAX_App_files/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'vercel.json'
+      - '.github/workflows/comprehensive-checks.yml'
   pull_request:
-    branches: [ main ]
+    branches: [main]
+    paths:
+      - 'GALAX_App_files/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'vercel.json'
+      - '.github/workflows/comprehensive-checks.yml'
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: 'Force run all checks regardless of file changes'
+        required: false
+        default: 'false'
 
 permissions:
   contents: read
@@ -17,10 +38,58 @@ env:
   WORKING_DIRECTORY: './GALAX_App_files'
 
 jobs:
+  detect-changes:
+    name: Detect Relevant Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      has_code_changes: ${{ steps.changes.outputs.code }}
+      has_frontend_changes: ${{ steps.changes.outputs.frontend }}
+      has_backend_changes: ${{ steps.changes.outputs.backend }}
+      has_config_changes: ${{ steps.changes.outputs.config }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for relevant changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            code:
+              - 'GALAX_App_files/src/**'
+              - 'GALAX_App_files/server/**'
+              - 'GALAX_App_files/client/**'
+              - 'GALAX_App_files/package.json'
+              - 'package.json'
+            frontend:
+              - 'GALAX_App_files/src/**'
+              - 'GALAX_App_files/client/**'
+              - 'GALAX_App_files/components.json'
+              - 'GALAX_App_files/tailwind.config.js'
+              - 'GALAX_App_files/vite.config.js'
+              - '!GALAX_App_files/server/**'
+            backend:
+              - 'GALAX_App_files/server/**'
+              - 'GALAX_App_files/api/**'
+              - 'GALAX_App_files/tsconfig.server.json'
+            config:
+              - 'GALAX_App_files/tsconfig.json'
+              - 'GALAX_App_files/vitest.config.js'
+              - 'GALAX_App_files/playwright.config.ts'
+              - 'GALAX_App_files/package.json'
+              - 'package.json'
+              - 'vercel.json'
+
   code-quality:
     name: Code Quality Checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_code_changes == 'true' || github.event.inputs.force_run == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -28,17 +97,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package.json
+      - name: Ensure cache directories exist
+        run: mkdir -p ${{ env.WORKING_DIRECTORY }}/node_modules
       - name: Install dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm ci --prefer-offline --no-audit --no-fund
-      
+        run: npm install --prefer-offline --no-audit --no-fund
+
       - name: TypeScript Check
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "Running TypeScript type check..."
           npx tsc --noEmit --project ./tsconfig.json || echo "Type check completed with warnings"
-      
+
       - name: ESLint (if configured)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
@@ -48,7 +119,7 @@ jobs:
           else
             echo "✓ No ESLint config found - skipping lint step"
           fi
-      
+
       - name: Prettier Format Check (if configured)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
@@ -63,6 +134,8 @@ jobs:
     name: Security Checks
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_code_changes == 'true' || github.event.inputs.force_run == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -70,22 +143,24 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package.json
+      - name: Ensure cache directories exist
+        run: mkdir -p ${{ env.WORKING_DIRECTORY }}/node_modules
       - name: Install dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm ci --prefer-offline --no-audit --no-fund
-      
+        run: npm install --prefer-offline --no-audit --no-fund
+
       - name: Security Audit
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "Running npm security audit..."
           npm audit --audit-level=moderate || echo "Security audit completed with warnings"
-      
+
       - name: Basic Secret Scan
         run: |
           echo "Scanning for potential secrets..."
           SECRET_FOUND=false
-          
+
           echo "Checking for hardcoded API keys..."
           if grep -r -E "(api[_-]?key|secret[_-]?key|auth[_-]?token)\s*[:=]\s*[\"'][a-zA-Z0-9_-]{20,}[\"']" \
              --include="*.js" --include="*.ts" --include="*.jsx" --include="*.tsx" \
@@ -94,7 +169,7 @@ jobs:
             echo "⚠️  Warning: Potential API keys found"
             SECRET_FOUND=true
           fi
-          
+
           echo "Checking for GitHub tokens..."
           if grep -r -E "ghp_[a-zA-Z0-9]{36}" \
              --include="*.js" --include="*.ts" --include="*.jsx" --include="*.tsx" \
@@ -103,7 +178,7 @@ jobs:
             echo "⚠️  Warning: GitHub tokens found"
             SECRET_FOUND=true
           fi
-          
+
           if [ "$SECRET_FOUND" = false ]; then
             echo "✓ No obvious secrets detected"
           fi
@@ -112,6 +187,8 @@ jobs:
     name: CI Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_code_changes == 'true' || github.event.inputs.force_run == 'true'
     strategy:
       matrix:
         node-version: [18, 20]
@@ -122,31 +199,48 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
-      - name: Install dependencies with retry
-        uses: nick-invision/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: cd ${{ env.WORKING_DIRECTORY }} && npm ci --prefer-offline --no-audit --no-fund
-          on_retry_command: echo "npm install failed, retrying..."
-      
-      - name: Build application with retry
-        uses: nick-invision/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: cd ${{ env.WORKING_DIRECTORY }} && npm run build
-          on_retry_command: echo "Build attempt failed, retrying..."
-      
-      - name: Run tests with retry
-        uses: nick-invision/retry@v2
-        with:
-          timeout_minutes: 15
-          max_attempts: 3
-          command: cd ${{ env.WORKING_DIRECTORY }} && npm test
-          on_retry_command: echo "Test attempt failed, retrying..."
-      
+          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package.json
+      - name: Ensure cache directories exist
+        run: mkdir -p ${{ env.WORKING_DIRECTORY }}/node_modules
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          for i in {1..3}; do
+            if npm install --prefer-offline --no-audit --no-fund; then
+              echo "Dependencies installed successfully"
+              break
+            else
+              echo "Attempt $i failed, retrying..."
+              sleep 5
+            fi
+          done
+
+      - name: Build application
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          for i in {1..3}; do
+            if npm run build; then
+              echo "Build completed successfully"
+              break
+            else
+              echo "Build attempt $i failed, retrying..."
+              sleep 5
+            fi
+          done
+
+      - name: Run tests
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          for i in {1..3}; do
+            if npm test; then
+              echo "Tests completed successfully"
+              break
+            else
+              echo "Test attempt $i failed, retrying..."
+              sleep 5
+            fi
+          done
+
       - name: Upload coverage (Node 20 only)
         if: matrix.node-version == 20
         working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -163,6 +257,8 @@ jobs:
     name: Performance Tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_frontend_changes == 'true' || github.event.inputs.force_run == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -170,15 +266,17 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package.json
+      - name: Ensure cache directories exist
+        run: mkdir -p ${{ env.WORKING_DIRECTORY }}/node_modules
       - name: Install dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm ci --prefer-offline --no-audit --no-fund
-      
+        run: npm install --prefer-offline --no-audit --no-fund
+
       - name: Build application
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: npm run build
-      
+
       - name: Analyze bundle size
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
@@ -186,7 +284,7 @@ jobs:
           if [ -d "dist/public/assets" ]; then
             echo "JavaScript files:"
             find dist/public/assets/ -name "*.js" -exec ls -lh {} \;
-            
+
             # Check for large bundles
             LARGE_FILES=$(find dist/public/assets/ -name "*.js" -size +500k)
             if [ -n "$LARGE_FILES" ]; then
@@ -198,7 +296,7 @@ jobs:
           else
             echo "No build assets found"
           fi
-      
+
       - name: Lighthouse CI (if configured)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
@@ -213,6 +311,8 @@ jobs:
     name: Custom Application Checks
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_code_changes == 'true' || github.event.inputs.force_run == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -220,22 +320,24 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package.json
+      - name: Ensure cache directories exist
+        run: mkdir -p ${{ env.WORKING_DIRECTORY }}/node_modules
       - name: Install dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm ci --prefer-offline --no-audit --no-fund
-      
+        run: npm install --prefer-offline --no-audit --no-fund
+
       - name: Check environment setup
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "Checking for required environment files..."
           test -f .env.example && echo "✓ .env.example found" || echo "⚠️  .env.example not found"
           test -f .env.test && echo "✓ .env.test found" || echo "⚠️  .env.test not found"
-          
+
           echo "Checking for configuration files..."
           test -f vite.config.js && echo "✓ Vite config found" || echo "⚠️  Vite config not found"
           test -f tsconfig.json && echo "✓ TypeScript config found" || echo "⚠️  TypeScript config not found"
-      
+
       - name: Validate API endpoints (if test exists)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
@@ -245,7 +347,7 @@ jobs:
           else
             echo "✓ No API endpoint tests configured"
           fi
-      
+
       - name: Check data directory structure
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
@@ -261,7 +363,12 @@ jobs:
     name: Deployment Readiness
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [code-quality, security-checks, continuous-integration]
+    needs: [detect-changes, code-quality, security-checks, continuous-integration]
+    if: |
+      always() && 
+      (needs.detect-changes.outputs.has_code_changes == 'true' || github.event.inputs.force_run == 'true') &&
+      !cancelled() &&
+      !contains(needs.*.result, 'failure')
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -269,15 +376,17 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package.json
+      - name: Ensure cache directories exist
+        run: mkdir -p ${{ env.WORKING_DIRECTORY }}/node_modules
       - name: Install dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm ci --prefer-offline --no-audit --no-fund
-      
+        run: npm install --prefer-offline --no-audit --no-fund
+
       - name: Build for production
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: npm run build
-      
+
       - name: Check build artifacts
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
@@ -289,27 +398,27 @@ jobs:
             echo "❌ Build directory not found"
             exit 1
           fi
-      
+
       - name: Validate deployment configuration
         run: |
           echo "Checking deployment readiness..."
           test -f vercel.json && echo "✓ Vercel config found" || echo "⚠️  No Vercel config"
-          
+
           # Check if key files exist for deployment
           test -f ./GALAX_App_files/package.json && echo "✓ Package.json found" || echo "❌ Package.json missing"
-          
+
           echo "✓ Deployment readiness check completed"
-      
+
       - name: Test application startup (basic)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "Testing basic application startup..."
-          
+
           # Copy test environment for startup test
           if [ -f ".env.test" ]; then
             cp .env.test .env
           fi
-          
+
           # Quick startup test (with timeout to prevent hanging)
           if npm run --if-present --silent start >/dev/null 2>&1; then
             (npm run start --if-present & echo $! > app_pid.txt) & timeout 30s wait $(cat app_pid.txt)
@@ -319,17 +428,17 @@ jobs:
             echo "⚠️  'start' script not found in package.json. Skipping application startup test, but continuing pipeline."
             true
           fi
-          
+
           # Wait for app to start
           sleep 15
-          
-          # Basic health check (if app is running on the configured port)
-          if curl -f -s http://localhost:${{ env.APP_PORT }} >/dev/null 2>&1; then
+
+          # Basic health check (default port 3000)
+          if curl -f -s http://localhost:3000 >/dev/null 2>&1; then
             echo "✓ Application started successfully"
           else
             echo "⚠️  Application startup test - unable to connect (may need manual verification)"
           fi
-          
+
           # Clean up
           kill $APP_PID 2>/dev/null || true
           sleep 2

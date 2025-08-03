@@ -1,13 +1,19 @@
 /*
  * Copyright (c) 2025 GALAX Civic Networking App
- * 
+ *
  * This software is licensed under the PolyForm Shield License 1.0.0.
- * For the full license text, see LICENSE file in the root directory 
+ * For the full license text, see LICENSE file in the root directory
  * or visit https://polyformproject.org/licenses/shield/1.0.0
  */
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+
+// Extended interface for PerformanceEventTiming
+interface PerformanceEventTiming extends PerformanceEntry {
+  processingStart?: number;
+  processingEnd?: number;
+}
 
 interface PerformanceMetrics {
   loadTime: number;
@@ -23,7 +29,7 @@ interface PerformanceMonitorProps {
   reportToConsole?: boolean;
 }
 
-export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({ 
+export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   onMetricsUpdate,
   reportToConsole = process.env.NODE_ENV === 'development'
 }) => {
@@ -49,7 +55,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 
         setMetrics(prev => ({ ...prev, ...newMetrics }));
         onMetricsUpdate?.(newMetrics);
-        
+
         if (reportToConsole) {
           console.log('🚀 Performance Metrics:', newMetrics);
         }
@@ -69,34 +75,38 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
         const lcpObserver = new PerformanceObserver((entryList) => {
           const entries = entryList.getEntries();
           const lastEntry = entries[entries.length - 1];
-          
+
           if (lastEntry) {
             const lcpMetric = { largestContentfulPaint: lastEntry.startTime };
             setMetrics(prev => ({ ...prev, ...lcpMetric }));
             onMetricsUpdate?.(lcpMetric);
-            
+
             if (reportToConsole) {
               console.log('📊 LCP:', lastEntry.startTime.toFixed(2), 'ms');
             }
           }
         });
-        
+
         lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
 
         // Measure FID
         const fidObserver = new PerformanceObserver((entryList) => {
           const entries = entryList.getEntries();
           entries.forEach((entry) => {
-            const fidMetric = { firstInputDelay: entry.processingStart - entry.startTime };
-            setMetrics(prev => ({ ...prev, ...fidMetric }));
-            onMetricsUpdate?.(fidMetric);
-            
-            if (reportToConsole) {
-              console.log('⚡ FID:', (entry.processingStart - entry.startTime).toFixed(2), 'ms');
+            // Cast to PerformanceEventTiming for first-input entries
+            const eventEntry = entry as PerformanceEventTiming;
+            if (eventEntry.processingStart) {
+              const fidMetric = { firstInputDelay: eventEntry.processingStart - eventEntry.startTime };
+              setMetrics(prev => ({ ...prev, ...fidMetric }));
+              onMetricsUpdate?.(fidMetric);
+
+              if (reportToConsole) {
+                console.log('⚡ FID:', (eventEntry.processingStart - eventEntry.startTime).toFixed(2), 'ms');
+              }
             }
           });
         });
-        
+
         fidObserver.observe({ entryTypes: ['first-input'] });
 
         // Measure CLS
@@ -108,18 +118,18 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               clsValue += (entry as any).value;
             }
           });
-          
+
           if (clsValue > 0) {
             const clsMetric = { cumulativeLayoutShift: clsValue };
             setMetrics(prev => ({ ...prev, ...clsMetric }));
             onMetricsUpdate?.(clsMetric);
-            
+
             if (reportToConsole) {
               console.log('📐 CLS:', clsValue.toFixed(4));
             }
           }
         });
-        
+
         clsObserver.observe({ entryTypes: ['layout-shift'] });
 
         return () => {
@@ -142,14 +152,14 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     if (reportToConsole && process.env.NODE_ENV === 'development') {
       // Estimate bundle size from performance entries
       const resourceEntries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-      const jsEntries = resourceEntries.filter(entry => 
+      const jsEntries = resourceEntries.filter(entry =>
         entry.name.includes('.js') && !entry.name.includes('node_modules')
       );
-      
+
       const totalSize = jsEntries.reduce((total, entry) => {
         return total + (entry.transferSize || 0);
       }, 0);
-      
+
       if (totalSize > 0) {
         console.log('📦 Estimated Bundle Size:', (totalSize / 1024).toFixed(2), 'KB');
       }

@@ -1,3 +1,11 @@
+/*
+ * Copyright © 2025 GALAX Civic Networking.
+ * Licensed under the PolyForm Shield License 1.0.0.
+ * "GALAX" and related concepts are inspired by Gatchaman Crowds © Tatsunoko Production.
+ * This project is unaffiliated with Tatsunoko Production or the original anime.
+ */
+
+
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { TestServer, mockDb } from '../setup/test-server.js';
 import request from 'supertest';
@@ -8,11 +16,11 @@ describe('Registration Error Messages', () => {
   beforeAll(async () => {
     testServer = new TestServer();
     testServer.setupBasicMiddleware();
-    
+
     // Setup registration endpoint that matches the actual implementation
     testServer.app.post('/api/auth/register', (req, res) => {
       const { email, phone, password, username, walletAddress } = req.body;
-      
+
       // Validate required fields
       if (!username) {
         return res.status(400).json({

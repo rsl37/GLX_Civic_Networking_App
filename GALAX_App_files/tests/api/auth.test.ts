@@ -1,3 +1,11 @@
+/*
+ * Copyright © 2025 GALAX Civic Networking.
+ * Licensed under the PolyForm Shield License 1.0.0.
+ * "GALAX" and related concepts are inspired by Gatchaman Crowds © Tatsunoko Production.
+ * This project is unaffiliated with Tatsunoko Production or the original anime.
+ */
+
+
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { TestServer, mockDb } from '../setup/test-server.js';
 import request from 'supertest';
@@ -8,11 +16,11 @@ describe('Authentication API Contract', () => {
   beforeAll(async () => {
     testServer = new TestServer();
     testServer.setupBasicMiddleware();
-    
+
     // Setup authentication endpoints
     testServer.app.post('/api/auth/register', (req, res) => {
       const { email, password, firstName, lastName } = req.body;
-      
+
       // Validate required fields
       if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({
@@ -52,7 +60,7 @@ describe('Authentication API Contract', () => {
 
     testServer.app.post('/api/auth/login', (req, res) => {
       const { email, password } = req.body;
-      
+
       if (!email || !password) {
         return res.status(400).json({
           error: 'Email and password are required'
@@ -87,7 +95,7 @@ describe('Authentication API Contract', () => {
 
     testServer.app.post('/api/auth/verify-email', (req, res) => {
       const { token, email } = req.body;
-      
+
       if (!token || !email) {
         return res.status(400).json({
           error: 'Token and email are required'

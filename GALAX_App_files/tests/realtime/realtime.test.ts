@@ -1,3 +1,11 @@
+/*
+ * Copyright © 2025 GALAX Civic Networking.
+ * Licensed under the PolyForm Shield License 1.0.0.
+ * "GALAX" and related concepts are inspired by Gatchaman Crowds © Tatsunoko Production.
+ * This project is unaffiliated with Tatsunoko Production or the original anime.
+ */
+
+
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
@@ -102,7 +110,7 @@ describe('Realtime Communication Tests (Vercel Compatible)', () => {
     test('should handle message sending with mocked database', async () => {
       // Note: This test would require database setup or mocking
       // For now, we'll test the validation logic
-      
+
       const response = await request(app)
         .post('/api/realtime/send-message')
         .set('Authorization', `Bearer ${authToken}`)
@@ -126,7 +134,7 @@ describe('Realtime Communication Tests (Vercel Compatible)', () => {
 
     test('should validate message length', async () => {
       const longMessage = 'x'.repeat(1001); // Exceed 1000 char limit
-      
+
       const response = await request(app)
         .post('/api/realtime/send-message')
         .set('Authorization', `Bearer ${authToken}`)
@@ -152,7 +160,7 @@ describe('Realtime Communication Tests (Vercel Compatible)', () => {
     test('should broadcast to all connections', () => {
       const message = { type: 'test_broadcast', data: { test: true } };
       const result = realtimeManager.broadcast(message);
-      
+
       // Should broadcast to the test connection from the room management tests
       expect(result).toBeGreaterThanOrEqual(0);
     });
@@ -161,7 +169,7 @@ describe('Realtime Communication Tests (Vercel Compatible)', () => {
       const roomId = 'help_request_123';
       const message = { type: 'test_room_broadcast', data: { roomId } };
       const result = realtimeManager.broadcastToRoom(roomId, message);
-      
+
       // With no active connections, should return 0
       expect(result).toBe(0);
     });
