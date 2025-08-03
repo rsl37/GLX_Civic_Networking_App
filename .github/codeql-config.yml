@@ -38,4 +38,6 @@ packs:
 # Filter out incremental analysis issues that can cause failures
 query-filters:
   - exclude:
+      # Exclude queries tagged with 'exclude-from-incremental' because these queries are known to cause failures or unreliable results during incremental analysis.
+      # This prevents incremental analysis from breaking due to queries that are not designed to work correctly in incremental mode.
       tags: exclude-from-incremental
