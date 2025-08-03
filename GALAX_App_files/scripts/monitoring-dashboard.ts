@@ -385,7 +385,7 @@ class MonitoringDashboard {
       case 'red':
         return '🚨 CRITICAL ISSUES REQUIRE ATTENTION';
       default:
-        return '❓ UNKNOWN STATUS';
+        throw new Error(`Unexpected alert level: ${alertLevel}`);
     }
   }
 
