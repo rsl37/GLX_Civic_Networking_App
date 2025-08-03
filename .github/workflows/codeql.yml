@@ -72,4 +72,5 @@ jobs:
           echo "2. Enable 'Code scanning' and 'Secret scanning'"
           echo "3. Or contact repository admin to enable GitHub Advanced Security"
           echo ""
-          echo "CodeQL analysis completed but results could not be uploaded to GitHub."
+          echo "✅ CodeQL analysis completed successfully, but the upload of results to GitHub failed."
+          echo "You can still find the generated SARIF files locally in the workspace (typically under the 'codeql-results' directory) for manual inspection or upload."
