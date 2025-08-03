@@ -45,9 +45,9 @@ class DocumentationManager {
     // Determine content type based on path and filename
     const contentType = this.determineContentType(relativePath, fileName);
     
-    // Calculate next review date (6 months from now)
+    // Calculate next review date (2 months from now)
     const nextReview = new Date();
-    nextReview.setMonth(nextReview.getMonth() + 6);
+    nextReview.setMonth(nextReview.getMonth() + 2);
     const reviewDate = nextReview.toISOString().split('T')[0];
 
     return {
@@ -282,7 +282,7 @@ relatedDocs: []
   }
 
   /**
-   * Check if documentation is outdated (older than 6 months)
+   * Check if documentation is outdated (older than 1 month for monthly reviews)
    */
   async checkFreshness(filePath) {
     try {
@@ -294,10 +294,10 @@ relatedDocs: []
       }
       
       const lastUpdated = new Date(lastUpdatedMatch[1]);
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
       
-      if (lastUpdated < sixMonthsAgo) {
+      if (lastUpdated < oneMonthAgo) {
         const monthsOld = Math.floor((Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24 * 30));
         return { 
           isOutdated: true, 
@@ -390,7 +390,7 @@ async function main() {
 Commands:
   update [file]     - Update metadata for file or all markdown files
   validate [file]   - Validate documentation best practices
-  check-freshness   - Check for outdated documentation (>6 months)
+  check-freshness   - Check for outdated documentation (>1 month)
   list              - List all markdown files
 `);
       process.exit(1);
