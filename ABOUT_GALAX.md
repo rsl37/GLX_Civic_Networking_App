@@ -57,7 +57,9 @@ GALAX implements enterprise-grade security measures:
 
 ## 🎯 Vision
 
-Build a feature-rich, technologically advanced platform for civic engagement that can serve as a model for democratic participation in the digital age, combining cutting-edge security with user-friendly interfaces for maximum community impact.
+Build a feature-rich, technologically advanced platform for civic engagement that can serve 
+as a model for democratic participation in the digital age, combining cutting-edge security 
+with user-friendly interfaces for maximum community impact.
 
 ## 📈 Recent Achievements
 
