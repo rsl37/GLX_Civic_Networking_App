@@ -31,20 +31,7 @@ jobs:
       - name: Check if Code Scanning is available
         id: code-scanning-check
         run: |
-          # Check if code scanning is enabled for this repository
-          if curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                  -H "Accept: application/vnd.github.v3+json" \
-                  "https://api.github.com/repos/${{ github.repository }}/code-scanning/alerts" \
-                  2>/dev/null | grep -v "Advanced Security must be enabled" | grep -q "\[\]"; then
-            echo "code_scanning_available=true" >> $GITHUB_OUTPUT
-            echo "✅ Code scanning appears to be available"
-          else
-            echo "code_scanning_available=false" >> $GITHUB_OUTPUT
-            echo "⚠️  Code scanning not available for this repository"
-            echo "   CodeQL requires Code Scanning to be enabled in repository settings"
-            echo "   See: https://github.com/${{ github.repository }}/settings/security_analysis"
-            echo "   For private repositories, this requires GitHub Advanced Security"
-          fi
+          bash .github/scripts/check-code-scanning.sh
 
       - name: Initialize CodeQL (if available)
         if: steps.code-scanning-check.outputs.code_scanning_available == 'true'
