@@ -45,8 +45,8 @@ jobs:
           if [ -z "${{ secrets.PAT_TOKEN }}" ]; then
             echo "pat_available=false" >> $GITHUB_OUTPUT
             echo "⚠️  PAT_TOKEN secret is not configured"
-            echo "   To enable PAT authentication, add PAT_TOKEN to repository secrets"  # yamllint disable-line rule:line-length
-            echo "   Repository settings: https://github.com/${{ github.repository }}/settings/secrets/actions"  # yamllint disable-line rule:line-length
+            echo "   To enable PAT authentication, add PAT_TOKEN to repository secrets"
+            echo "   Repository settings: https://github.com/${{ github.repository }}/settings/secrets/actions"
           else
             echo "pat_available=true" >> $GITHUB_OUTPUT
             echo "✅ PAT_TOKEN secret is available"
@@ -77,17 +77,19 @@ jobs:
 
       - name: Verify Authentication Success
         run: |
-          if [[ "${{ steps.validate-pat.outputs.pat_available }}" == "true" && "${{ steps.pat-checkout.outcome }}" == "success" ]]; then  # yamllint disable-line rule:line-length
+          condition1="${{ steps.validate-pat.outputs.pat_available }}"
+          condition2="${{ steps.pat-checkout.outcome }}"
+          if [[ "$condition1" == "true" && "$condition2" == "success" ]]; then
             echo "✅ PAT_TOKEN authentication successful"
             echo "Repository: ${{ github.repository }}"
             echo "Branch: ${{ github.ref_name }}"
             echo "Commit: ${{ github.sha }}"
-          elif [[ "${{ steps.fallback-checkout.outcome }}" == "success" ]]; then  # yamllint disable-line rule:line-length
+          elif [[ "${{ steps.fallback-checkout.outcome }}" == "success" ]]; then
             echo "⚠️  Using GITHUB_TOKEN fallback authentication"
             echo "Repository: ${{ github.repository }}"
             echo "Branch: ${{ github.ref_name }}"
             echo "Commit: ${{ github.sha }}"
-            echo "::warning::PAT_TOKEN authentication failed or unavailable"  # yamllint disable-line rule:line-length
+            echo "::warning::PAT_TOKEN authentication failed or unavailable"
           else
             echo "❌ Both PAT_TOKEN and GITHUB_TOKEN authentication failed"
             exit 1
@@ -101,14 +103,17 @@ jobs:
           ls -la
 
           # Security: Verify no sensitive files are exposed
-          if find . -name "*.env" -not -path "./node_modules/*" | grep -v ".env.example" | head -1 | grep -q .; then  # yamllint disable-line rule:line-length
+          exclude_path="./node_modules/*"
+          env_files=$(find . -name "*.env" -not -path "$exclude_path" | grep -v ".env.example" | head -1)
+          if [ -n "$env_files" ]; then
             echo "⚠️  Warning: Environment files detected in repository"
           else
             echo "✅ No environment files found in repository root"
           fi
 
           # Security: Check for common sensitive patterns
-          if find . -name "*.key" -o -name "*.pem" -o -name "*.p12" | head -1 | grep -q .; then  # yamllint disable-line rule:line-length
+          sensitive_files=$(find . -name "*.key" -o -name "*.pem" -o -name "*.p12" | head -1)
+          if [ -n "$sensitive_files" ]; then
             echo "⚠️  Warning: Potential credential files detected"
           else
             echo "✅ No obvious credential files detected"
@@ -137,7 +142,7 @@ jobs:
     needs: secure-checkout
     if: always()
     timeout-minutes: 5
-    
+
     steps:
       - name: Audit PAT Usage
         run: |
@@ -166,8 +171,8 @@ jobs:
 
           | Metric | Status |
           |--------|--------|
-          | PAT_TOKEN Available | ${{ needs.secure-checkout.outputs.pat_available == 'true' && '✅ Yes' || '❌ No' }} |  # yamllint disable-line rule:line-length
-          | Authentication Result | ${{ needs.secure-checkout.result == 'success' && '✅ Success' || '❌ Failed' }} |  # yamllint disable-line rule:line-length
+          | PAT_TOKEN Available | ${{ needs.secure-checkout.outputs.pat_available == 'true' && '✅ Yes' || '❌ No' }} |
+          | Authentication Result | ${{ needs.secure-checkout.result == 'success' && '✅ Success' || '❌ Failed' }} |
           | Security Validation | ✅ Completed |
           | Token Exposure | ✅ None Detected |
 
@@ -198,11 +203,11 @@ jobs:
             const successful = jobs.filter(job => job.result === 'success');
 
             let status = 'success';
-            let description = `PAT security check completed (${successful.length}/${jobs.length} successful)`;  # yamllint disable-line rule:line-length
+            let description = `PAT security check completed (${successful.length}/${jobs.length} successful)`;
 
             if (failed.length > 0) {
               status = 'failure';
-              description = `${failed.length} security check(s) failed: ${failed.map(j => j.name).join(', ')}`;  # yamllint disable-line rule:line-length
+              description = `${failed.length} security check(s) failed: ${failed.map(j => j.name).join(', ')}`;
             }
 
             console.log(`PAT Security Status: ${status}`);
@@ -211,3 +216,4 @@ jobs:
             if (status === 'failure') {
               core.setFailed(description);
             }
+
