@@ -270,6 +270,11 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
     if (SECURITY_CONFIG.antiHacking.behavioralAnalysis) protectionScore += 5;
     if (SECURITY_CONFIG.antiHacking.csrfProtection) protectionScore += 5;
     
+    // Post-quantum bonus (additional 30 points for quantum-safe level)
+    if (SECURITY_CONFIG.postQuantum.enabled && postQuantumStatus.initialized) {
+      protectionScore += 30; // Quantum-safe bonus
+    }
+    
     // Post-quantum security bonus (future-proofing against quantum computers)
     if (SECURITY_CONFIG.postQuantum.enabled) protectionScore += 20;
     if (SECURITY_CONFIG.postQuantum.mlKemEnabled) protectionScore += 5;
