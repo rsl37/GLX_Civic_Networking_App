@@ -297,7 +297,7 @@ if (!fs.existsSync(dataDir)) {
 
 let sqliteDb: Database | null = null;
 try {
-  sqliteDb = new Database(path.join(dataDir, 'galax.db'), {
+  sqliteDb = new Database(path.join(dataDir, 'glx.db'), {
     verbose: process.env.NODE_ENV === 'development' ? console.log : undefined,
   });
   console.log("✅ SQLite database initialized successfully.");
@@ -327,7 +327,7 @@ if (DATABASE_URL) {
 } else {
   console.log("🗄️ SQLite database initialization...");
   console.log("📊 Using SQLite for development/lightweight operations");
-  console.log("🔗 Database file:", path.join(dataDir, 'galax.db'));
+  console.log("🔗 Database file:", path.join(dataDir, 'glx.db'));
 }
 
 // Create database instances

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 GALAX Civic Networking App
+ * Copyright (c) 2025 GLX: Connect the World - Civic Networking App
  *
  * This software is licensed under the PolyForm Shield License 1.0.0.
  * For the full license text, see LICENSE file in the root directory
@@ -77,9 +77,9 @@ export function usePageVerification(pageType: 'login' | 'register') {
     const title = document.querySelector('title')?.textContent || '';
     if (title) elements.push(title);
 
-    // Look for GALAX branding
-    const galaxText = document.body.innerText.match(/GALAX[^a-z]*/gi);
-    if (galaxText) elements.push(...galaxText);
+    // Look for GLX branding
+    const glxText = document.body.innerText.match(/GLX[^a-z]*/gi);
+    if (glxText) elements.push(...glxText);
 
     // Look for page-specific elements
     if (pageType === 'login') {
@@ -105,7 +105,7 @@ export function usePageVerification(pageType: 'login' | 'register') {
         'Email',
         'Phone',
         'Password',
-        'Join GALAX',
+        'Join GLX',
         'Create your civic network account'
       ];
 

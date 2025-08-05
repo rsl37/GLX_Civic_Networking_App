@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 GALAX Civic Networking App
+ * Copyright (c) 2025 GLX: Connect the World - Civic Networking App
  *
  * This software is licensed under the PolyForm Shield License 1.0.0.
  * For the full license text, see LICENSE file in the root directory
@@ -126,26 +126,26 @@ export async function sendPasswordResetEmail(
 
     const mailOptions = {
       from:
-        process.env.SMTP_FROM || "GALAX Support <noreply@galaxcivicnetwork.me>",
+        process.env.SMTP_FROM || "GLX Support <noreply@glxconnect.io>",
       to: email,
-      subject: "Password Reset Request - GALAX",
+      subject: "Password Reset Request - GLX: Connect the World",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #B593EE, #92A8D1); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0;">GALAX</h1>
-            <p style="color: white; margin: 5px 0;">Civic Network Platform</p>
+          <div style="background: linear-gradient(135deg, #0066CC, #00B050); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0;">GLX</h1>
+            <p style="color: white; margin: 5px 0;">Connect the World</p>
           </div>
 
           <div style="padding: 30px; background: white; border: 1px solid #e0e0e0; border-radius: 0 0 10px 10px;">
             <h2 style="color: #333; margin-bottom: 20px;">Password Reset Request</h2>
 
             <p style="color: #666; line-height: 1.6;">
-              You requested a password reset for your GALAX account. Click the button below to reset your password:
+              You requested a password reset for your GLX account. Click the button below to reset your password:
             </p>
 
             <div style="text-align: center; margin: 30px 0;">
               <a href="${resetUrl}"
-                 style="background: linear-gradient(135deg, #B593EE, #92A8D1);
+                 style="background: linear-gradient(135deg, #0066CC, #00B050);
                         color: white;
                         padding: 15px 30px;
                         text-decoration: none;
@@ -291,18 +291,18 @@ export async function sendEmailVerification(
 
     const mailOptions = {
       from:
-        process.env.SMTP_FROM || "GALAX Support <noreply@galaxcivicnetwork.me>",
+        process.env.SMTP_FROM || "GLX Support <noreply@glxconnect.io>",
       to: email,
-      subject: "Verify Your Email - GALAX",
+      subject: "Verify Your Email - GLX: Connect the World",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #B593EE, #92A8D1); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0;">GALAX</h1>
-            <p style="color: white; margin: 5px 0;">Civic Network Platform</p>
+          <div style="background: linear-gradient(135deg, #0066CC, #00B050); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0;">GLX</h1>
+            <p style="color: white; margin: 5px 0;">Connect the World</p>
           </div>
 
           <div style="padding: 30px; background: white; border: 1px solid #e0e0e0; border-radius: 0 0 10px 10px;">
-            <h2 style="color: #333; margin-bottom: 20px;">Welcome to GALAX, ${safeUsername}!</h2>
+            <h2 style="color: #333; margin-bottom: 20px;">Welcome to GLX, ${safeUsername}!</h2>
 
             <p style="color: #666; line-height: 1.6;">
               Thank you for joining our civic network platform. To complete your registration and start participating in your community, please verify your email address.
@@ -344,7 +344,7 @@ export async function sendEmailVerification(
             <p style="color: #999; font-size: 12px; line-height: 1.5;">
               This verification link will expire in 24 hours. If you didn't create this account, please ignore this email.
               <br><br>
-              Need help? Contact our support team at support@galaxcivicnetwork.me
+              Need help? Contact our support team at support@glxconnect.io
             </p>
           </div>
         </div>
