@@ -1,20 +1,20 @@
 ---
-title: "GALAX Production Mode Setup Guide"
+title: "GLX Production Mode Setup Guide"
 description: ""
 lastUpdated: "2025-08-03"
 nextReview: "2025-09-03"
 contentType: "guide"
-maintainer: "GALAX Development Team"
+maintainer: "GLX Development Team"
 version: "1.0.0"
 tags: []
 relatedDocs: []
 ---
 
-# GALAX Production Mode Setup Guide
+# GLX Production Mode Setup Guide
 
 ## 🚀 Overview
 
-This guide covers setting up the GALAX Civic Networking App for production deployment. The application is now configured with production-optimized settings, security headers, and deployment automation.
+This guide covers setting up the GLX: Connect the World Civic Networking App for production deployment. The application is now configured with production-optimized settings, security headers, and deployment automation.
 
 ## 🔧 Quick Production Setup
 
