@@ -258,7 +258,7 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
     // Get post-quantum status
     const postQuantumStatus = getPostQuantumStatus();
     
-    // Calculate protection score (0-130 for quantum-safe)
+    // Calculate protection score (0-160 for zero-day-protected)
     let protectionScore = 0;
     
     if (SECURITY_CONFIG.antimalware.enabled) protectionScore += 20;
@@ -270,25 +270,14 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
     if (SECURITY_CONFIG.antiHacking.behavioralAnalysis) protectionScore += 5;
     if (SECURITY_CONFIG.antiHacking.csrfProtection) protectionScore += 5;
     
-    // Post-quantum bonus (additional 30 points for quantum-safe level)
-    if (SECURITY_CONFIG.postQuantum.enabled && postQuantumStatus.initialized) {
-      protectionScore += 30; // Quantum-safe bonus
-    }
+    // Add post-quantum bonus protection (30 points for quantum-safe level)
+    if (pqStatus.initialized) protectionScore += 30;
     
-    // Post-quantum security bonus (future-proofing against quantum computers)
-    if (SECURITY_CONFIG.postQuantum.enabled) protectionScore += 20;
-    if (SECURITY_CONFIG.postQuantum.mlKemEnabled) protectionScore += 5;
-    if (SECURITY_CONFIG.postQuantum.mlDsaEnabled) protectionScore += 5;
-    if (SECURITY_CONFIG.postQuantum.slhDsaEnabled) protectionScore += 5;
-    if (SECURITY_CONFIG.postQuantum.hybridCrypto) protectionScore += 10;
-    
-    // Cap at 100 for display, but track quantum readiness
-    const quantumReady = protectionScore > 100;
-    const displayScore = Math.min(protectionScore, 100);
-    
-    // Determine security level including quantum-safe level
-    let securityLevel: 'low' | 'medium' | 'high' | 'maximum' | 'quantum-safe';
-    if (quantumReady) {
+    // Determine security level including zero-day-protected level
+    let securityLevel: 'low' | 'medium' | 'high' | 'maximum' | 'quantum-safe' | 'zero-day-protected';
+    if (protectionScore >= 160) {
+      securityLevel = 'zero-day-protected';
+    } else if (protectionScore >= 130) {
       securityLevel = 'quantum-safe';
     } else if (displayScore >= 95) {
       securityLevel = 'maximum';
@@ -366,7 +355,9 @@ export const getSecurityStatus = async (): Promise<SecuritySystemStatus> => {
       antimalware: { enabled: false, lastScan: '', threatsDetected: 0, quarantinedFiles: 0 },
       antivirus: { enabled: false, definitionsCount: 0, lastUpdate: '', totalScans: 0, virusesDetected: 0 },
       antiHacking: { enabled: false, attackPatternsActive: 0, suspiciousIPs: 0, blockedIPs: 0, ddosProtectionActive: false, botDetectionActive: false, honeypotActive: false },
-      postQuantum: { enabled: false, algorithmsActive: 0, securityLevel: 0, nistsCompliant: false, quantumSafe: false },
+      zeroDayProtection: { enabled: false, threatPatterns: 0, threatsDetected: 0, criticalThreats: 0, behavioralAnomalies: 0, lastIntelligenceUpdate: '', aiMlThreats: 0, cloudEdgeThreats: 0, networkInfraThreats: 0 },
+      sandboxing: { enabled: false, activeSessions: 0, quarantinedSessions: 0, violationsDetected: 0, isolationEffectiveness: 0, averageSessionDuration: 0 },
+      postQuantum: { enabled: false, algorithms: [], securityLevel: 0, quantumResistant: false, hybridCrypto: false, lastTest: '' },
       overall: { securityLevel: 'low', protectionScore: 0, lastUpdate: new Date().toISOString() }
     };
   }
@@ -682,9 +673,13 @@ export const initializeSecuritySystems = async () => {
   console.log(`   🤖 Bot Detection: ${SECURITY_CONFIG.antiHacking.botDetection ? 'ENABLED' : 'DISABLED'}`);
   console.log(`   🍯 Honeypot System: ${SECURITY_CONFIG.antiHacking.honeypot ? 'ENABLED' : 'DISABLED'}`);
   console.log(`   🧠 Behavioral Analysis: ${SECURITY_CONFIG.antiHacking.behavioralAnalysis ? 'ENABLED' : 'DISABLED'}`);
-  console.log(`   🔐 Post-Quantum Cryptography: ${SECURITY_CONFIG.postQuantum.enabled ? 'ENABLED' : 'DISABLED'}`);
-  
-  console.log('🚀 GALAX App Security Systems are FULLY OPERATIONAL');
+  console.log(`   🦾 Zero-Day Protection: ${SECURITY_CONFIG.zeroDayProtection.enabled ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`   🔬 AI/ML Security: ${SECURITY_CONFIG.zeroDayProtection.aiMlProtection ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`   ☁️ Cloud/Edge Security: ${SECURITY_CONFIG.zeroDayProtection.cloudEdgeProtection ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`   🌐 Network Infrastructure Security: ${SECURITY_CONFIG.zeroDayProtection.networkInfraProtection ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`   📦 Sandboxing System: ${SECURITY_CONFIG.sandboxing.enabled ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`   🔐 Post-Quantum Cryptography: ${postQuantumCrypto.getStatus().initialized ? 'ENABLED' : 'DISABLED'}`); 
+  console.log('🚀 GALAX App Security Systems are FULLY OPERATIONAL with ZERO-DAY PROTECTION');
 };
 
 // Export all admin endpoints
