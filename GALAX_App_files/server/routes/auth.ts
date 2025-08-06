@@ -663,13 +663,22 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
     // Check if user already exists - check each field separately for specific error messages
     const existingUser = await db
       .selectFrom('users')
+<<<<<<< HEAD
       .select(['id', 'email', 'phone', 'username', 'wallet_address'])
+=======
+      .selectAll()
+>>>>>>> origin/copilot/fix-253
       .where((eb) => {
         const conditions = [];
         if (email) conditions.push(eb('email', '=', email));
         if (phone) conditions.push(eb('phone', '=', phone));
+<<<<<<< HEAD
         conditions.push(eb('username', '=', username));
         if (walletAddress) conditions.push(eb('wallet_address', '=', walletAddress));
+=======
+        if (username) conditions.push(eb('username', '=', username));
+        if (walletAddress) conditions.push(eb('walletAddress', '=', walletAddress));
+>>>>>>> origin/copilot/fix-253
         return eb.or(conditions);
       })
       .executeTakeFirst();

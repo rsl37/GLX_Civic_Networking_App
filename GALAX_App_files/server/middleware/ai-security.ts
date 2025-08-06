@@ -260,6 +260,7 @@ export class AIMCPSecurityMiddleware {
         // Verify hash if model data is provided
         const hash = crypto.createHash('sha256').update(modelData).digest('hex');
         // Compare the computed hash against known good hashes
+<<<<<<< HEAD
         const knownGoodHashes = this.config.knownGoodHashes || [];
 
         // If we have known good hashes, check against them
@@ -274,6 +275,11 @@ export class AIMCPSecurityMiddleware {
           }
         }
 
+=======
+        const knownGoodHashes: string[] = []; // Initialize as empty array since config doesn't have allowedModelHashes
+        isValid = knownGoodHashes.includes(hash);
+        
+>>>>>>> origin/copilot/fix-253
         this.modelIntegrity.set(modelVersion, {
           version: modelVersion,
           hash,
