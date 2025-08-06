@@ -350,9 +350,12 @@ if (DATABASE_URL) {
   console.log("🗄️ SQLite database initialization...");
   console.log("📊 Using SQLite for development/lightweight operations");
   console.log("🔗 Database file:", path.join(dataDir, 'glx.db'));
+<<<<<<< HEAD
+=======
   console.log('🗄️ SQLite database initialization...');
   console.log('📊 Using SQLite for development/lightweight operations');
   console.log('🔗 Database file:', path.join(dataDir, 'galax.db'));
+>>>>>>> main
 }
 
 // Create database instances

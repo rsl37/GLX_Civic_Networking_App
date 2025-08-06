@@ -1,5 +1,5 @@
 ---
-title: "GLX Civic Network: Connect the World"
+title: "GLX: Connect the World - Web3 Civic Networking Platform"
 description: ""
 lastUpdated: "2025-08-03"
 nextReview: "2025-09-03"
@@ -10,7 +10,7 @@ tags: []
 relatedDocs: []
 ---
 
-# GLX Civic Network: Connect the World
+# GLX: Connect the World - Web3 Civic Networking Platform
 
 [![CI/CD Pipeline](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/main.yml)
 [![Security Checks](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/Security%20Scan/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/security-streamlined.yml)
@@ -18,9 +18,17 @@ relatedDocs: []
 [![Workflow Health](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/Workflow%20Health%20Monitor/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/workflow-monitor.yml)
 [![Codecov](https://codecov.io/gh/rsl37/GLX_Civic_Networking_App/branch/main/graph/badge.svg)](https://codecov.io/gh/rsl37/GLX_Civic_Networking_App)
 
+<<<<<<< HEAD
+**GLX: Connect the World** is a next-generation Web3-enabled civic networking platform that empowers communities to connect, organize, and collaborate for social good through real-time help requests, skill-based matching, and democratic governance. Currently in active development with production deployment capabilities.
+
+> **GLX** stands for **G**overnance **L**ink e**X**change - connecting communities through technology-enabled democracy.
+
+*Inspired by democratic ideals in Gatchaman Crowds while establishing GLX as an independent, legally protected civic technology platform.*
+=======
 **GLX** (Global Liquid eXchange / Global Link eXchange) is a next-generation Web3-enabled civic networking platform that empowers communities to connect, organize, and collaborate for social good through real-time help requests, skill-based matching, and democratic governance. Currently in active development with production deployment capabilities.
 
 **GLX Civic Network: Connect the World** - Building stronger communities through technology and secure civic engagement.
+>>>>>>> main
 
 ---
 
@@ -348,7 +356,11 @@ This project is licensed under the PolyForm Shield License 1.0.0 - see the [LICE
 
 ## 🔗 Links
 
+<<<<<<< HEAD
+- **Live Demo**: [glxconnect.io](https://glxconnect.io) (future domain)
+=======
 - **Live Demo**: [glxcivicnetwork.me](https://glxcivicnetwork.me)
+>>>>>>> main
 - **Documentation**: [Project Docs](docs/)
 - **Production Guide**: [Production Setup](GLX_App_files/PRODUCTION_MODE_GUIDE.md)
 - **Issues**: [GitHub Issues](https://github.com/rsl37/GLX_Civic_Networking_App/issues)

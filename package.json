@@ -1,7 +1,11 @@
 {
   "name": "glx-civic-networking-app",
   "version": "0.2.0",
+<<<<<<< HEAD
+  "description": "GLX: Connect the World - Civic Networking Application - Root Project",
+=======
   "description": "GLX Civic Network: Connect the World - Root Project",
+>>>>>>> main
   "private": true,
   "type": "module",
   "license": "PolyForm-Shield-1.0.0",
@@ -60,7 +64,10 @@
     "networking",
     "glx",
     "community",
-    "post-quantum-security"
+    "post-quantum-security",
+    "democracy",
+    "web3",
+    "governance"
   ],
   "author": "GLX Development Team",
   "engines": {
