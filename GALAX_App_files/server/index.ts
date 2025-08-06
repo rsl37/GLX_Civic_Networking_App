@@ -132,6 +132,10 @@ const pusher = new Pusher({
   useTLS: true
 });
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/copilot/fix-250
 // Initialize realtime manager
 const realtimeManager = new RealtimeManager();
 
