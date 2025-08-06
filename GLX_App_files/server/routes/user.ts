@@ -368,6 +368,9 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
+<<<<<<< HEAD
+export default router;
+=======
 export default router;/*
  * Copyright (c) 2025 GLX Civic Networking App
  *
@@ -752,3 +755,4 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 export default router;
+>>>>>>> origin/main

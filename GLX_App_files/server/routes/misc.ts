@@ -143,6 +143,9 @@ router.post('/claim', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 <<<<<<< HEAD
+export default router;
+=======
+<<<<<<< HEAD
 export default router;/*
  * Copyright (c) 2025 GLX Civic Networking App
  *
@@ -280,3 +283,4 @@ export default router;
 =======
 export default router;
 >>>>>>> origin/copilot/fix-488
+>>>>>>> origin/main

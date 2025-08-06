@@ -149,6 +149,9 @@ export function createPaginationMeta(
       prev: hasPrev ? `${basePath}?page=${currentPage - 1}&limit=${perPage}` : null,
     },
   };
+<<<<<<< HEAD
+}
+=======
 }/*
  * Copyright (c) 2025 GLX Civic Networking App
  *
@@ -345,3 +348,4 @@ export function createPaginationMeta(
     },
   };
 }
+>>>>>>> origin/main
