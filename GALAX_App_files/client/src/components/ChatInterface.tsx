@@ -53,7 +53,7 @@ export function ChatInterface({ helpRequestId, currentUser }: ChatInterfaceProps
         setMessages(prev => [...prev, message]);
       });
     }
-  }, [health?.authenticated, onMessage]);
+  }, [socket, helpRequestId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -83,6 +83,7 @@ export function ChatInterface({ helpRequestId, currentUser }: ChatInterfaceProps
     }
   };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
