@@ -81,10 +81,14 @@
     },
     {
 <<<<<<< HEAD
+<<<<<<< HEAD
       "source": "/**/*.{js,css,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,eot}",
 =======
       "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
 >>>>>>> origin/copilot/fix-151
+=======
+      "source": "/**/*.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)",
+>>>>>>> origin/copilot/fix-386
       "headers": [
         {
           "key": "Cache-Control",

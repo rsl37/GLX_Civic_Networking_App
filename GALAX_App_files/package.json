@@ -84,9 +84,12 @@
 <<<<<<< HEAD
     "dotenv": "^17.2.1",
     "esbuild": "^0.25.8",
+<<<<<<< HEAD
 =======
     "dotenv": "^16.6.1",
 >>>>>>> origin/copilot/fix-175
+=======
+>>>>>>> origin/copilot/fix-386
     "express": "5.1.0",
     "express-rate-limit": "^8.0.1",
     "express-validator": "^7.2.1",
@@ -150,6 +153,7 @@
     "uuid": "^10.0.0",
     "esbuild": "^0.25.8",
     "undici": "^6.0.0",
+<<<<<<< HEAD
     "path-to-regexp": "^8.0.0",
     "@vercel/node": {
       "esbuild": "^0.25.8",
@@ -160,6 +164,8 @@
   "resolutions": {
     "esbuild": "^0.25.8",
     "undici": "^6.0.0",
+=======
+>>>>>>> origin/copilot/fix-386
     "path-to-regexp": "^8.0.0"
   }
 }

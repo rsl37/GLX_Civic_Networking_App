@@ -133,9 +133,12 @@ const pusher = new Pusher({
 });
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> origin/copilot/fix-250
+=======
+>>>>>>> origin/copilot/fix-386
 // Initialize realtime manager
 const realtimeManager = new RealtimeManager();
 
@@ -151,9 +154,6 @@ console.log('🔗 RealtimeManager initialized');
 
 const app = express();
 const server = createServer(app);
-
-// Initialize realtime manager
-const realtimeManager = new RealtimeManager();
 
 // Configure multer for file uploads with enhanced security
 const storage = multer.diskStorage({

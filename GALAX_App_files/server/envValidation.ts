@@ -196,8 +196,12 @@ function validateAuthConfiguration(
       // In production mode, always enforce strict validation regardless of test environment
       if (isProduction) {
         errors.push(`JWT_SECRET security validation failed: ${validation.recommendations.join(', ')}`);
+<<<<<<< HEAD
       } else if (process.env.NODE_ENV === 'test' && jwtSecret.length >= 16) {
         // Only use lenient validation for actual test environment, not development or CI
+=======
+      } else if (isTestOrCI && jwtSecret.length >= 16) {
+>>>>>>> origin/copilot/fix-386
         warnings.push(`JWT_SECRET is weak but acceptable for test environment`);
       } else {
         errors.push(`JWT_SECRET security validation failed: ${validation.recommendations.join(', ')}`);

@@ -667,14 +667,20 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
 <<<<<<< HEAD
 <<<<<<< HEAD
       .select(['id', 'email', 'phone', 'username', 'wallet_address'])
+<<<<<<< HEAD
 =======
       .selectAll()
 >>>>>>> origin/copilot/fix-253
+=======
+>>>>>>> origin/copilot/fix-386
       .where((eb) => {
         const conditions = [];
         if (email) conditions.push(eb('email', '=', email));
         if (phone) conditions.push(eb('phone', '=', phone));
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/copilot/fix-386
         conditions.push(eb('username', '=', username));
         if (walletAddress) conditions.push(eb('wallet_address', '=', walletAddress));
 =======

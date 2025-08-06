@@ -269,8 +269,13 @@ export class AIMCPSecurityMiddleware {
         const hash = crypto.createHash('sha256').update(modelData).digest('hex');
         // Compare the computed hash against known good hashes
 <<<<<<< HEAD
+<<<<<<< HEAD
         const knownGoodHashes = this.config.knownGoodHashes || [];
 
+=======
+        const knownGoodHashes = this.config.knownGoodHashes || [];
+        
+>>>>>>> origin/copilot/fix-386
         // If we have known good hashes, check against them
         if (knownGoodHashes.length > 0) {
           isValid = knownGoodHashes.includes(hash);
