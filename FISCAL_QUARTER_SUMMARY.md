@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: "GALAX Fiscal Quarter Summary - Development Timeline Analysis"
 description: ""
@@ -10,6 +11,8 @@ tags: []
 relatedDocs: []
 ---
 
+=======
+>>>>>>> origin/copilot/fix-473
 # GALAX Fiscal Quarter Summary - Development Timeline Analysis
 
 **Report Date**: August 1, 2025  
@@ -254,4 +257,8 @@ The GALAX Civic Networking App demonstrates exceptional fiscal quarter performan
 
 ---
 
+<<<<<<< HEAD
 *This fiscal quarter summary provides executive-level insights for informed budget planning and strategic decision-making based on demonstrated development performance and platform capabilities.*
+=======
+*This fiscal quarter summary provides executive-level insights for informed budget planning and strategic decision-making based on demonstrated development performance and platform capabilities.*
+>>>>>>> origin/copilot/fix-473
