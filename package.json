@@ -1,7 +1,7 @@
 {
   "name": "glx-civic-networking-app",
   "version": "0.2.0",
-  "description": "GLX Civic Networking Application - Root Project",
+  "description": "GLX Civic Network: Connect the World - Root Project",
   "private": true,
   "type": "module",
   "license": "PolyForm-Shield-1.0.0",

@@ -125,7 +125,7 @@ export function LoginPage() {
               <Sparkles className="h-8 w-8 text-coral-500" />
             </motion.div>
             <CardDescription className="text-lg text-gray-600">
-              Civic Network Platform
+              Connect the World
             </CardDescription>
 
             {/* Security verification indicator */}
