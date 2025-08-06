@@ -1,5 +1,5 @@
 ---
-title: "GLX: Web3 Civic Networking Platform"
+title: "GLX Civic Network: Connect the World"
 description: ""
 lastUpdated: "2025-08-03"
 nextReview: "2025-09-03"
@@ -10,7 +10,7 @@ tags: []
 relatedDocs: []
 ---
 
-# GLX: Web3 Civic Networking Platform
+# GLX Civic Network: Connect the World
 
 [![CI/CD Pipeline](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/main.yml)
 [![Security Checks](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/Security%20Scan/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/security-streamlined.yml)
@@ -18,9 +18,9 @@ relatedDocs: []
 [![Workflow Health](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/Workflow%20Health%20Monitor/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/workflow-monitor.yml)
 [![Codecov](https://codecov.io/gh/rsl37/GLX_Civic_Networking_App/branch/main/graph/badge.svg)](https://codecov.io/gh/rsl37/GLX_Civic_Networking_App)
 
-**GLX** is a next-generation Web3-enabled civic networking platform that empowers communities to connect, organize, and collaborate for social good through real-time help requests, skill-based matching, and democratic governance. Currently in active development with production deployment capabilities.
+**GLX** (Global Liquid eXchange / Global Link eXchange) is a next-generation Web3-enabled civic networking platform that empowers communities to connect, organize, and collaborate for social good through real-time help requests, skill-based matching, and democratic governance. Currently in active development with production deployment capabilities.
 
-**GLX** is a next-generation Web3-enabled civic networking platform that empowers communities to connect, organize, and collaborate for social good through real-time help requests, skill-based matching, and democratic governance. Currently in active development with production deployment capabilities.
+**GLX Civic Network: Connect the World** - Building stronger communities through technology and secure civic engagement.
 
 ---
 
@@ -338,4 +338,4 @@ This project is licensed under the PolyForm Shield License 1.0.0 - see the [LICE
 
 ---
 
-*Building stronger communities through technology* 🌟
+*Building stronger communities through technology. Connect the World.* 🌟
