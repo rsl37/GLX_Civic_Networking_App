@@ -1,5 +1,10 @@
 /*
- * Copyright (c) 2025 GLX Civic Networking App
+<<<<<<< HEAD
+ * Copyright (c) 2025 GLX: Connect the World - Civic Networking App
+=======
+ * Copyright (c) 2025 GLX Civic Networking App: Connect the World
+ * GLX is a project focused on civic engagement and social impact.
+>>>>>>> main
  *
  * This software is licensed under the PolyForm Shield License 1.0.0.
  * For the full license text, see LICENSE file in the root directory
@@ -119,6 +124,16 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
     const mailOptions = {
 <<<<<<< HEAD:GLX_App_files/server/email.ts
       from:
+<<<<<<< HEAD
+        process.env.SMTP_FROM || "GLX Support <noreply@glxconnect.io>",
+      to: email,
+      subject: "Password Reset Request - GLX: Connect the World",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #0066CC, #00B050); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0;">GLX</h1>
+            <p style="color: white; margin: 5px 0;">Connect the World</p>
+=======
         process.env.SMTP_FROM || "GLX Support <noreply@glxcivicnetwork.me>",
       to: email,
       subject: "Password Reset Request - GLX",
@@ -130,6 +145,7 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
           <div style="background: linear-gradient(135deg, #B593EE, #92A8D1); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
             <h1 style="color: white; margin: 0;">GLX</h1>
             <p style="color: white; margin: 5px 0;">Civic Network Platform</p>
+>>>>>>> main
           </div>
 
           <div style="padding: 30px; background: white; border: 1px solid #e0e0e0; border-radius: 0 0 10px 10px;">
@@ -141,7 +157,7 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
 
             <div style="text-align: center; margin: 30px 0;">
               <a href="${resetUrl}"
-                 style="background: linear-gradient(135deg, #B593EE, #92A8D1);
+                 style="background: linear-gradient(135deg, #0066CC, #00B050);
                         color: white;
                         padding: 15px 30px;
                         text-decoration: none;
@@ -281,6 +297,16 @@ export async function sendEmailVerification(
     const mailOptions = {
 <<<<<<< HEAD:GLX_App_files/server/email.ts
       from:
+<<<<<<< HEAD
+        process.env.SMTP_FROM || "GLX Support <noreply@glxconnect.io>",
+      to: email,
+      subject: "Verify Your Email - GLX: Connect the World",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #0066CC, #00B050); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0;">GLX</h1>
+            <p style="color: white; margin: 5px 0;">Connect the World</p>
+=======
         process.env.SMTP_FROM || "GLX Support <noreply@glxcivicnetwork.me>",
       to: email,
       subject: "Verify Your Email - GLX",
@@ -292,6 +318,7 @@ export async function sendEmailVerification(
           <div style="background: linear-gradient(135deg, #B593EE, #92A8D1); padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
             <h1 style="color: white; margin: 0;">GLX</h1>
             <p style="color: white; margin: 5px 0;">Civic Network Platform</p>
+>>>>>>> main
           </div>
 
           <div style="padding: 30px; background: white; border: 1px solid #e0e0e0; border-radius: 0 0 10px 10px;">
@@ -337,7 +364,11 @@ export async function sendEmailVerification(
             <p style="color: #999; font-size: 12px; line-height: 1.5;">
               This verification link will expire in 24 hours. If you didn't create this account, please ignore this email.
               <br><br>
+<<<<<<< HEAD
+              Need help? Contact our support team at support@glxconnect.io
+=======
               Need help? Contact our support team at support@glxcivicnetwork.me
+>>>>>>> main
             </p>
           </div>
         </div>
