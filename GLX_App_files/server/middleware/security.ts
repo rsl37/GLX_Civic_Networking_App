@@ -324,7 +324,72 @@ export const corsConfig = {
     const isProduction = process.env.NODE_ENV === 'production';
     const isTest = process.env.NODE_ENV === 'test';
 
-    const allowedOrigins = getCorsAllowedOrigins();
+    const allowedOrigins = [
+      // Development origins
+      ...(isDevelopment
+        ? [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://localhost:3002',
+            'http://localhost:5173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+            'http://127.0.0.1:3002',
+            'http://127.0.0.1:5173',
+          ]
+        : []),
+
+      // Test origins - allow test URLs
+      ...(isTest
+        ? [
+            'https://galax-civic-networking.vercel.app',
+            'https://galax-civic-networking-abc123.vercel.app',
+            'https://galaxcivicnetwork.me',
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5173',
+          ]
+        : []),
+
+      // Test origins - allow test URLs
+      ...(isTest
+        ? [
+            "https://glx-civic-networking.vercel.app",
+            "https://glx-civic-networking-abc123.vercel.app",
+            "https://glxcivicnetwork.me",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+          ]
+        : []),
+
+      // Production origins - Supporting both domains
+      ...(isProduction
+        ? [
+            "https://glx-civic-networking.vercel.app",
+            "https://glxcivicnetwork.me",
+            "https://www.glxcivicnetwork.me",
+            "https://staging.glxcivicnetwork.me",
+            'https://galax-civic-networking.vercel.app',
+            'https://galaxcivicnetwork.me',
+            'https://www.galaxcivicnetwork.me',
+            'https://staging.galaxcivicnetwork.me',
+          ]
+        : []),
+
+      // Primary environment-specific origins
+      process.env.CLIENT_ORIGIN, // Primary CORS origin (new)
+      process.env.FRONTEND_URL, // Legacy support
+      process.env.PRODUCTION_FRONTEND_URL,
+      process.env.STAGING_FRONTEND_URL,
+
+      // Additional trusted origins from environment
+      ...(process.env.TRUSTED_ORIGINS
+        ? process.env.TRUSTED_ORIGINS.split(',').map(o => o.trim())
+        : []),
+    ].filter(Boolean); // Remove undefined/null values
 
     // Allow requests with no origin in development and test environments
     if (!origin && (isDevelopment || isTest)) {
@@ -345,7 +410,8 @@ export const corsConfig = {
     if (origin) {
       let isAllowed = allowedOrigins.includes(origin);
 
-      // If not in explicit list, check configurable domain patterns
+
+      // If not in explicit list, check Vercel deployment patterns in production or test
       if (!isAllowed && (isProduction || isTest)) {
         // Get custom patterns from environment, or use defaults
         const customPatterns = process.env.CORS_PATTERN_DOMAINS 
