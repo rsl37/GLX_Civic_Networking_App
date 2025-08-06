@@ -50,16 +50,22 @@
     "dashboard": "npx tsx scripts/monitoring-dashboard.ts",
     "monitor:full": "npm run logs:all && npm run dashboard",
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/copilot/fix-494
     "vercel:validate": "node scripts/validate-vercel-env.cjs",
     "vercel:health": "node scripts/vercel-health-check.cjs",
     "vercel:deploy-check": "npm run vercel:validate && npm run build && npm run vercel:health",
     "vercel:troubleshoot": "node scripts/vercel-troubleshoot.cjs"
+<<<<<<< HEAD
 =======
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
 >>>>>>> origin/copilot/fix-488
+=======
+>>>>>>> origin/copilot/fix-494
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",
