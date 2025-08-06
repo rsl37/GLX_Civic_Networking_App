@@ -1,5 +1,5 @@
 ---
-title: "GLX: Web3 Civic Networking Platform"
+title: "GLX Civic Network: Connect the World"
 description: ""
 lastUpdated: "2025-08-03"
 nextReview: "2025-09-03"
@@ -10,7 +10,7 @@ tags: []
 relatedDocs: []
 ---
 
-# GLX: Web3 Civic Networking Platform
+# GLX Civic Network: Connect the World
 
 [![CI/CD Pipeline](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/main.yml)
 [![Security Checks](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/Security%20Scan/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/security-streamlined.yml)
@@ -18,9 +18,9 @@ relatedDocs: []
 [![Workflow Health](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/Workflow%20Health%20Monitor/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/workflow-monitor.yml)
 [![Codecov](https://codecov.io/gh/rsl37/GLX_Civic_Networking_App/branch/main/graph/badge.svg)](https://codecov.io/gh/rsl37/GLX_Civic_Networking_App)
 
-**GLX** is a next-generation Web3-enabled civic networking platform that empowers communities to connect, organize, and collaborate for social good through real-time help requests, skill-based matching, and democratic governance. Currently in active development with production deployment capabilities.
+**GLX** (Global Liquid eXchange / Global Link eXchange) is a next-generation Web3-enabled civic networking platform that empowers communities to connect, organize, and collaborate for social good through real-time help requests, skill-based matching, and democratic governance. Currently in active development with production deployment capabilities.
 
-**GLX** is a next-generation Web3-enabled civic networking platform that empowers communities to connect, organize, and collaborate for social good through real-time help requests, skill-based matching, and democratic governance. Currently in active development with production deployment capabilities.
+**GLX Civic Network: Connect the World** - Building stronger communities through technology and secure civic engagement.
 
 ---
 
@@ -38,14 +38,29 @@ cd GLX_Civic_Networking_App
 
 # Option 1: Run commands from root directory (recommended)
 npm run setup              # Install dependencies
+<<<<<<< HEAD
+<<<<<<< HEAD
 npm run setup:env          # Set up environment variables (.env files)
 npm run test:env           # Test environment configuration
+=======
+>>>>>>> origin/copilot/fix-167
+=======
+npm run setup:env          # Set up environment variables (.env files)
+npm run test:env           # Test environment configuration
+>>>>>>> origin/copilot/fix-190
 npm run deployment:check   # Check deployment readiness
 npm run build              # Build the application
 npm start                  # Start development server
 
 # Additional commands available from root:
+<<<<<<< HEAD
+<<<<<<< HEAD
 npm run setup:env           # Set up environment variables (.env files)
+=======
+>>>>>>> origin/copilot/fix-167
+=======
+npm run setup:env           # Set up environment variables (.env files)
+>>>>>>> origin/copilot/fix-190
 npm run test               # Run all tests
 npm run test:api           # Run API tests
 npm run test:socket        # Run Socket.IO tests  
@@ -63,9 +78,15 @@ npm run monitor:full       # Full monitoring suite
 # Option 2: Run commands from app directory
 cd GLX_App_files
 npm install
+<<<<<<< HEAD
 
 # Development setup
 npm start
+=======
+npm run deployment:check   # Check deployment readiness
+npm run build              # Build the application
+npm start                  # Start development server
+>>>>>>> origin/copilot/fix-167
 
 # Production setup
 npm run production:setup
@@ -94,6 +115,23 @@ npm run test:ui            # Run tests with UI dashboard
 npm run deployment:check   # Check deployment readiness
 npm run production:check   # Validate production configuration
 npm run test:env           # Test environment configuration
+```
+
+### Code Quality & Linting
+```bash
+# Code linting and formatting (from GALAX_App_files directory)
+cd GALAX_App_files
+
+# Lint code for quality issues
+npm run lint              # Check for linting issues
+npm run lint:fix          # Auto-fix linting issues where possible
+
+# Format code consistently
+npm run format            # Format all files with Prettier
+npm run format:check      # Check if files are formatted correctly
+
+# Combined quality check
+npm run lint && npm run format:check
 ```
 
 ---
@@ -338,4 +376,4 @@ This project is licensed under the PolyForm Shield License 1.0.0 - see the [LICE
 
 ---
 
-*Building stronger communities through technology* 🌟
+*Building stronger communities through technology. Connect the World.* 🌟
