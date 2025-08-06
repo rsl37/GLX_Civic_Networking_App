@@ -156,6 +156,7 @@ This document outlines the comprehensive trademark filing strategy for the GLX b
 **Legal and Administrative**: $5,000-$10,000  
 **Total Program Investment**: $33,080-$53,680
 
+> **Disclaimer:** All cost estimates are provided in US Dollars (USD) and were prepared as of August 3, 2025. Legal and filing fees are subject to change over time and may vary by jurisdiction. Please consult with a legal professional for the most current information.
 ## ⏰ Implementation Timeline
 
 ### Phase 1: Immediate Filing (Weeks 1-4)
