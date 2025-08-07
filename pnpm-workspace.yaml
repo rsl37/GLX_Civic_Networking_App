@@ -1,3 +1,2 @@
 packages:
-  - 'packages/*'
-  - 'apps/*'
+  - '.'         # only the root package.json
