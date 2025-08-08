@@ -1,0 +1,163 @@
+import React, { useState } from ‘react’;
+import { Mail, Phone, Eye, EyeOff, Wallet } from ‘lucide-react’;
+
+const LoginPage = () => {
+const [loginMethod, setLoginMethod] = useState(‘email’);
+const [showPassword, setShowPassword] = useState(false);
+const [formData, setFormData] = useState({
+email: ‘’,
+password: ‘’
+});
+
+const handleInputChange = (e) => {
+setFormData({
+…formData,
+[e.target.name]: e.target.value
+});
+};
+
+const handleSubmit = (e) => {
+e.preventDefault();
+// Handle login logic here
+console.log(‘Login attempt:’, formData);
+};
+
+const handleConnectMetaMask = () => {
+// Handle MetaMask connection logic here
+console.log(‘Connecting to MetaMask…’);
+};
+
+return (
+<div className="min-h-screen bg-gradient-to-br from-purple-100 via-white to-blue-100 flex items-center justify-center p-4">
+<div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+{/* Logo and Header */}
+<div className="text-center mb-8">
+<div className="flex items-center justify-center gap-2 mb-4">
+<div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+<div className="w-4 h-4 bg-white rounded-sm"></div>
+</div>
+<h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+GALAX
+</h1>
+</div>
+<p className="text-gray-600">Civic Network Platform</p>
+</div>
+
+```
+    {/* Login Method Toggle */}
+    <div className="flex rounded-lg bg-gray-100 p-1 mb-6">
+      <button
+        type="button"
+        onClick={() => setLoginMethod('email')}
+        className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+          loginMethod === 'email'
+            ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-md'
+            : 'text-gray-600 hover:text-gray-800'
+        }`}
+      >
+        <Mail className="w-4 h-4" />
+        Email
+      </button>
+      <button
+        type="button"
+        onClick={() => setLoginMethod('phone')}
+        className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+          loginMethod === 'phone'
+            ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-md'
+            : 'text-gray-600 hover:text-gray-800'
+        }`}
+      >
+        <Phone className="w-4 h-4" />
+        Phone
+      </button>
+    </div>
+
+    <div className="space-y-4">
+      {/* Email/Phone Input */}
+      <div>
+        <div className="block text-sm font-medium text-gray-700 mb-2">
+          {loginMethod === 'email' ? 'Email' : 'Phone'}
+        </div>
+        <input
+          type={loginMethod === 'email' ? 'email' : 'tel'}
+          name="email"
+          value={formData.email}
+          onChange={handleInputChange}
+          placeholder={loginMethod === 'email' ? 'Enter your email' : 'Enter your phone number'}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+        />
+      </div>
+
+      {/* Password Input */}
+      <div>
+        <div className="block text-sm font-medium text-gray-700 mb-2">
+          Password
+        </div>
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            placeholder="Enter your password"
+            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Sign In Button */}
+      <button
+        type="button"
+        onClick={handleSubmit}
+        className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white py-3 px-4 rounded-lg font-medium transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+      >
+        Sign In
+      </button>
+    </div>
+
+    {/* Forgot Password */}
+    <div className="text-center mt-4">
+      <button className="text-purple-600 hover:text-purple-700 text-sm font-medium">
+        Forgot your password?
+      </button>
+    </div>
+
+    {/* Divider */}
+    <div className="flex items-center my-6">
+      <div className="flex-1 border-t border-gray-300"></div>
+      <span className="px-4 text-sm text-gray-500">OR</span>
+      <div className="flex-1 border-t border-gray-300"></div>
+    </div>
+
+    {/* MetaMask Connect Button */}
+    <button
+      type="button"
+      onClick={handleConnectMetaMask}
+      className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white py-3 px-4 rounded-lg font-medium transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+    >
+      <Wallet className="w-5 h-5" />
+      Connect MetaMask
+    </button>
+
+    {/* Sign Up Link */}
+    <div className="text-center mt-6">
+      <span className="text-gray-600">Don't have an account? </span>
+      <button className="text-purple-600 hover:text-purple-700 font-medium">
+        Sign up
+      </button>
+    </div>
+  </div>
+</div>
+```
+
+);
+};
+
+export default LoginPage;
