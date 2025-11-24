@@ -160,10 +160,6 @@ export function PhoneVerificationPage() {
         transition={{ duration: 0.5 }}
         className='w-full max-w-md'
       >
-        <Card className="glx-card">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4">
-              <Phone className="h-16 w-16 text-blue-500" />
         <Card className='glx-card'>
           <CardHeader className='text-center'>
             <div className='mx-auto mb-4'>
@@ -233,7 +229,7 @@ export function PhoneVerificationPage() {
                 <Button
                   onClick={sendVerificationCode}
                   disabled={!phone || isSending}
-                  className="glx-button w-full"
+
                   className='glx-button w-full'
                 >
                   {isSending ? (
@@ -269,7 +265,7 @@ export function PhoneVerificationPage() {
                   <Button
                     onClick={verifyCode}
                     disabled={code.length !== 6 || isVerifying}
-                    className="glx-button w-full"
+
                     className='glx-button w-full'
                   >
                     {isVerifying ? (

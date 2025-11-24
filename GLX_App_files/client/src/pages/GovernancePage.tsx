@@ -278,8 +278,6 @@ export function GovernancePage() {
 
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button className="glx-button">
-                <Plus className="h-4 w-4 mr-2" />
               <Button className='glx-button'>
                 <Plus className='h-4 w-4 mr-2' />
                 Create Proposal

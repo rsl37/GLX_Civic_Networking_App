@@ -195,8 +195,6 @@ export function ResetPasswordPage() {
                     type='password'
                     placeholder='Enter new password'
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="glx-input pl-10"
                     onChange={e => setPassword(e.target.value)}
                     className='glx-input pl-10'
                     required
@@ -213,8 +211,6 @@ export function ResetPasswordPage() {
                     type='password'
                     placeholder='Confirm new password'
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="glx-input pl-10"
                     onChange={e => setConfirmPassword(e.target.value)}
                     className='glx-input pl-10'
                     required
@@ -224,11 +220,6 @@ export function ResetPasswordPage() {
 
               {error && <div className='text-red-500 text-sm text-center'>{error}</div>}
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="glx-button w-full"
-              >
               <Button type='submit' disabled={isLoading} className='glx-button w-full'>
                 {isLoading ? 'Updating...' : 'Update Password'}
               </Button>
