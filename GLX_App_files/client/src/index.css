@@ -37,26 +37,26 @@
     --glx-gradient-success: linear-gradient(135deg, hsl(var(--glx-green)), hsl(var(--glx-yellow)));
 
     /* GLX Anime Theme Colors */
-    --galax-purple: 263 70% 73%;
-    --galax-blue: 210 40% 70%;
-    --galax-coral: 15 86% 61%;
-    --galax-green: 88 45% 60%;
-    --galax-pink: 330 81% 60%;
-    --galax-yellow: 48 100% 67%;
-    --galax-gradient-primary: linear-gradient(
+    --glx-purple: 263 70% 73%;
+    --glx-blue: 210 40% 70%;
+    --glx-coral: 15 86% 61%;
+    --glx-green: 88 45% 60%;
+    --glx-pink: 330 81% 60%;
+    --glx-yellow: 48 100% 67%;
+    --glx-gradient-primary: linear-gradient(
       135deg,
-      hsl(var(--galax-purple)),
-      hsl(var(--galax-blue))
+      hsl(var(--glx-purple)),
+      hsl(var(--glx-blue))
     );
-    --galax-gradient-accent: linear-gradient(
+    --glx-gradient-accent: linear-gradient(
       135deg,
-      hsl(var(--galax-coral)),
-      hsl(var(--galax-pink))
+      hsl(var(--glx-coral)),
+      hsl(var(--glx-pink))
     );
-    --galax-gradient-success: linear-gradient(
+    --glx-gradient-success: linear-gradient(
       135deg,
-      hsl(var(--galax-green)),
-      hsl(var(--galax-yellow))
+      hsl(var(--glx-green)),
+      hsl(var(--glx-yellow))
     );
   }
 
@@ -123,19 +123,19 @@
     box-shadow: 0 8px 32px rgba(181, 147, 238, 0.2);
   }
 
-  .galax-gradient-accent {
-    background: var(--galax-gradient-accent);
+  .glx-gradient-accent {
+    background: var(--glx-gradient-accent);
   }
 
-  .galax-gradient-success {
-    background: var(--galax-gradient-success);
+  .glx-gradient-success {
+    background: var(--glx-gradient-success);
   }
 
-  .galax-glow {
+  .glx-glow {
     box-shadow: 0 0 20px rgba(181, 147, 238, 0.5);
   }
 
-  .galax-card {
+  .glx-card {
     @apply rounded-2xl border-2 border-purple-200 bg-white/80 backdrop-blur-sm;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(181, 147, 238, 0.1));
     box-shadow: 0 8px 32px rgba(181, 147, 238, 0.2);
@@ -153,12 +153,12 @@
     box-shadow: 0 4px 15px rgba(181, 147, 238, 0.4);
   }
 
-  .galax-card-dark {
+  .glx-card-dark {
     @apply bg-gray-900/80 border-purple-500/30;
     background: linear-gradient(135deg, rgba(30, 30, 30, 0.9), rgba(181, 147, 238, 0.1));
   }
 
-  .galax-button {
+  .glx-button {
     @apply px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105;
     background: var(--glx-gradient-primary);
     color: white;
@@ -188,24 +188,24 @@
     color: white;
   }
 
-  .galax-button:hover {
+  .glx-button:hover {
     box-shadow: 0 6px 20px rgba(181, 147, 238, 0.6);
   }
 
-  .galax-button-accent {
-    background: var(--galax-gradient-accent);
+  .glx-button-accent {
+    background: var(--glx-gradient-accent);
     box-shadow: 0 4px 15px rgba(255, 111, 97, 0.4);
   }
 
-  .galax-button-accent:hover {
+  .glx-button-accent:hover {
     box-shadow: 0 6px 20px rgba(255, 111, 97, 0.6);
   }
 
-  .galax-input {
+  .glx-input {
     @apply rounded-xl border-2 border-purple-200 bg-white/80 backdrop-blur-sm px-4 py-3 transition-all duration-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20;
   }
 
-  .galax-badge {
+  .glx-badge {
     @apply px-3 py-1 rounded-full text-sm font-medium;
     background: var(--glx-gradient-primary);
     color: white;
@@ -219,12 +219,12 @@
     background: var(--glx-gradient-success);
   }
 
-  .galax-badge-urgent {
-    background: var(--galax-gradient-accent);
+  .glx-badge-urgent {
+    background: var(--glx-gradient-accent);
   }
 
-  .galax-badge-success {
-    background: var(--galax-gradient-success);
+  .glx-badge-success {
+    background: var(--glx-gradient-success);
   }
 
   .animate-pulse-glow {
@@ -291,16 +291,16 @@
     animation: holographic 4s ease-in-out infinite;
   }
 
-  .galax-grid {
+  .glx-grid {
     display: grid;
     gap: 8px;
   }
 
-  .galax-glass {
+  .glx-glass {
     @apply bg-white/20 backdrop-blur-md border border-white/30;
   }
 
-  .galax-holographic {
+  .glx-holographic {
     background: linear-gradient(
       45deg,
       rgba(181, 147, 238, 0.1),
@@ -357,7 +357,7 @@
   }
   
   .glx-button,
-  .galax-button {
+  .glx-button {
     @apply px-4 py-2 text-sm;
   }
 }
@@ -372,7 +372,7 @@
   }
   
   .glx-button,
-  .galax-button {
+  .glx-button {
     @apply transform-none;
   }
 }
@@ -384,7 +384,7 @@
   }
   
   .glx-button,
-  .galax-button {
+  .glx-button {
     @apply border-2 border-white;
   }
 }
