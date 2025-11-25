@@ -728,7 +728,6 @@ export const antivirusAdmin = {
 // Initialize antivirus system
 export const initializeAntivirus = () => {
 <<<<<<< HEAD:GLX_App_files/server/middleware/antivirus.ts
-  console.log("🛡️ Initializing GLX Antivirus Protection System...");
   console.log('🛡️ Initializing GLX Antivirus Protection System...');
   scheduleVirusUpdates();
   console.log('✅ Antivirus system initialized successfully');
