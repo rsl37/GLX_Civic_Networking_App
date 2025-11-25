@@ -248,7 +248,7 @@ export function TwoFactorSetupPage() {
             disabled={isLoading}
             className="glx-button w-full"
           >
-          <Button onClick={startSetup} disabled={isLoading} className='galax-button w-full'>
+          <Button onClick={startSetup} disabled={isLoading} className='glx-button w-full'>
             {isLoading ? (
               <div className='flex items-center gap-2'>
                 <RefreshCw className='h-4 w-4 animate-spin' />
@@ -325,7 +325,7 @@ export function TwoFactorSetupPage() {
         onClick={() => setStep('verify')}
         className="glx-button w-full"
       >
-      <Button onClick={() => setStep('verify')} className='galax-button w-full'>
+      <Button onClick={() => setStep('verify')} className='glx-button w-full'>
         <div className='flex items-center gap-2'>
           <Smartphone className='h-4 w-4' />
           Continue to Verification
@@ -370,7 +370,7 @@ export function TwoFactorSetupPage() {
             onClick={status.enabled ? disable2FA : verifyAndEnable}
             disabled={verificationCode.length !== 6 || isLoading}
             className={
-              status.enabled ? 'w-full bg-red-500 hover:bg-red-600' : 'galax-button w-full'
+              status.enabled ? 'w-full bg-red-500 hover:bg-red-600' : 'glx-button w-full'
             }
           >
             {isLoading ? (
@@ -424,7 +424,7 @@ export function TwoFactorSetupPage() {
           className="glx-button w-full"
         >
       <div className='space-y-3'>
-        <Button onClick={() => navigate('/dashboard')} className='galax-button w-full'>
+        <Button onClick={() => navigate('/dashboard')} className='glx-button w-full'>
           Continue to Dashboard
         </Button>
 
@@ -443,7 +443,7 @@ export function TwoFactorSetupPage() {
         transition={{ duration: 0.5 }}
         className='w-full max-w-md'
       >
-        <Card className='galax-card'>
+        <Card className='glx-card'>
           <CardHeader className='text-center'>
             <CardTitle className='text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'>
               Two-Factor Authentication
