@@ -408,11 +408,6 @@ export function GovernancePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Card className="glx-card">
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-4 items-center">
-                  <Vote className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Filter by:</span>
           <Card className='galax-card'>
             <CardContent className='p-4'>
               <div className='flex flex-wrap gap-4 items-center'>
