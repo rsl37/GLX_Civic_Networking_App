@@ -105,12 +105,6 @@ export function ResetPasswordPage() {
 
   if (isValidating) {
     return (
-<<<<<<< HEAD:GLX_App_files/client/src/pages/ResetPasswordPage.tsx
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 p-4">
-        <Card className="glx-card w-full max-w-md">
-          <CardContent className="p-8 text-center">
-            <div className="animate-spin mx-auto mb-4 h-8 w-8 border-4 border-purple-500 border-t-transparent rounded-full"></div>
-            <p className="text-gray-600">Validating reset link...</p>
       <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 p-4'>
         <Card className='galax-card w-full max-w-md'>
           <CardContent className='p-8 text-center'>
@@ -131,11 +125,6 @@ export function ResetPasswordPage() {
           transition={{ duration: 0.5 }}
           className='w-full max-w-md'
         >
-<<<<<<< HEAD:GLX_App_files/client/src/pages/ResetPasswordPage.tsx
-          <Card className="glx-card">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4">
-                <CheckCircle className="h-16 w-16 text-green-500" />
           <Card className='galax-card'>
             <CardHeader className='text-center'>
               <div className='mx-auto mb-4'>
@@ -159,12 +148,6 @@ export function ResetPasswordPage() {
 
   if (!tokenValid) {
     return (
-<<<<<<< HEAD:GLX_App_files/client/src/pages/ResetPasswordPage.tsx
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 p-4">
-        <Card className="glx-card w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4">
-              <AlertCircle className="h-16 w-16 text-red-500" />
       <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 p-4'>
         <Card className='galax-card w-full max-w-md'>
           <CardHeader className='text-center'>
@@ -177,11 +160,6 @@ export function ResetPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-<<<<<<< HEAD:GLX_App_files/client/src/pages/ResetPasswordPage.tsx
-            <Button
-              onClick={() => navigate('/forgot-password')}
-              className="glx-button w-full"
-            >
             <Button onClick={() => navigate('/forgot-password')} className='galax-button w-full'>
               Request New Reset Link
             </Button>
@@ -199,10 +177,6 @@ export function ResetPasswordPage() {
         transition={{ duration: 0.5 }}
         className='w-full max-w-md'
       >
-<<<<<<< HEAD:GLX_App_files/client/src/pages/ResetPasswordPage.tsx
-        <Card className="glx-card">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
         <Card className='galax-card'>
           <CardHeader className='text-center'>
             <CardTitle className='text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'>
@@ -221,9 +195,6 @@ export function ResetPasswordPage() {
                     type='password'
                     placeholder='Enter new password'
                     value={password}
-<<<<<<< HEAD:GLX_App_files/client/src/pages/ResetPasswordPage.tsx
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="glx-input pl-10"
                     onChange={e => setPassword(e.target.value)}
                     className='galax-input pl-10'
                     required
@@ -240,9 +211,6 @@ export function ResetPasswordPage() {
                     type='password'
                     placeholder='Confirm new password'
                     value={confirmPassword}
-<<<<<<< HEAD:GLX_App_files/client/src/pages/ResetPasswordPage.tsx
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="glx-input pl-10"
                     onChange={e => setConfirmPassword(e.target.value)}
                     className='galax-input pl-10'
                     required
@@ -252,12 +220,8 @@ export function ResetPasswordPage() {
 
               {error && <div className='text-red-500 text-sm text-center'>{error}</div>}
 
-<<<<<<< HEAD:GLX_App_files/client/src/pages/ResetPasswordPage.tsx
               <Button
                 type="submit"
-                disabled={isLoading}
-                className="glx-button w-full"
-              >
               <Button type='submit' disabled={isLoading} className='galax-button w-full'>
                 {isLoading ? 'Updating...' : 'Update Password'}
               </Button>
