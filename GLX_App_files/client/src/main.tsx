@@ -20,7 +20,6 @@ const AnalyticsWrapper = React.lazy(() =>
 );
 
 const SpeedInsightsWrapper = React.lazy(() =>
-const SpeedInsightsWrapper = React.lazy(() =>
   import('@vercel/speed-insights/react').then(module => ({
     default: () => <module.SpeedInsights />,
   }))
