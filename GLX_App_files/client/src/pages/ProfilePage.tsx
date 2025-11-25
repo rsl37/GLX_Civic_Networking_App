@@ -414,12 +414,17 @@ export function ProfilePage() {
                             placeholder='Describe your skills and expertise'
                           />
                         </div>
-                      <Button variant='outline' size='sm'>
-                        <Settings className='h-4 w-4 mr-2' />
-                        Settings
-                      </Button>
-                    }
-                  />
+                        <div className='flex justify-end gap-2 mt-4'>
+                          <Button variant='outline' onClick={() => setIsEditing(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleEditProfile} disabled={isUpdating}>
+                            {isUpdating ? 'Saving...' : 'Save Changes'}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </CardContent>
@@ -433,8 +438,7 @@ export function ProfilePage() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className='grid grid-cols-1 md:grid-cols-3 gap-4'
         >
-          className='grid grid-cols-1 md:grid-cols-2 gap-6'
-        >
+          <Card className='galax-card'>
                 <div className='text-center py-8 text-gray-500'>
                   <DollarSign className='h-12 w-12 mx-auto mb-4 opacity-50' />
                   <p>No recent transactions</p>

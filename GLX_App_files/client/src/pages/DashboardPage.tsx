@@ -169,9 +169,7 @@ export function DashboardPage() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'
         >
-            className='grid grid-cols-2 md:grid-cols-5 gap-4'
-          >
-            <Card className="glx-card">
+          <Card className='galax-card'>
               <CardContent className="p-4 text-center">
                 <Users className="h-8 w-8 mx-auto mb-2 text-blue-600" />
                 <p className="text-2xl font-bold">{stats.helpOffered}</p>
@@ -236,7 +234,6 @@ export function DashboardPage() {
               </CardContent>
             </Card>
           </motion.div>
-        )}
 
         {/* Recent Help Requests */}
         <motion.div

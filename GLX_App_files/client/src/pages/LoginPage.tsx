@@ -204,8 +204,6 @@ export function LoginPage() {
                       type='tel'
                       placeholder='Enter your phone number'
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="glx-input flex-1"
                       onChange={e => setPhone(e.target.value)}
                       className='galax-input flex-1'
                       required
@@ -217,8 +215,6 @@ export function LoginPage() {
                     type='email'
                     placeholder='Enter your email'
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="glx-input"
                     onChange={e => setEmail(e.target.value)}
                     className='galax-input'
                     required
@@ -233,8 +229,6 @@ export function LoginPage() {
                   type='password'
                   placeholder='Enter your password'
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="glx-input"
                   onChange={e => setPassword(e.target.value)}
                   className='galax-input'
                   required
@@ -253,9 +247,6 @@ export function LoginPage() {
               )}
 
               <Button
-                type="submit"
-                className="w-full glx-button"
-                disabled={isLoading || (process.env.NODE_ENV === 'production' && !verificationToken)}
                 type='submit'
                 className='w-full galax-button'
                 disabled={
@@ -292,8 +283,6 @@ export function LoginPage() {
             </div>
 
             <Button
-              variant="outline"
-              className="w-full glx-button-accent"
               variant='outline'
               className='w-full galax-button-accent'
               onClick={handleWalletLogin}

@@ -130,8 +130,6 @@ export function ForgotPasswordPage() {
                     type='email'
                     placeholder='Enter your email'
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="glx-input pl-10"
                     onChange={e => setEmail(e.target.value)}
                     className='galax-input pl-10'
                     required

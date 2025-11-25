@@ -160,10 +160,6 @@ export function ResetPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              onClick={() => navigate('/forgot-password')}
-              className="glx-button w-full"
-            >
             <Button onClick={() => navigate('/forgot-password')} className='galax-button w-full'>
               Request New Reset Link
             </Button>
@@ -199,8 +195,6 @@ export function ResetPasswordPage() {
                     type='password'
                     placeholder='Enter new password'
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="glx-input pl-10"
                     onChange={e => setPassword(e.target.value)}
                     className='galax-input pl-10'
                     required
@@ -217,8 +211,6 @@ export function ResetPasswordPage() {
                     type='password'
                     placeholder='Confirm new password'
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="glx-input pl-10"
                     onChange={e => setConfirmPassword(e.target.value)}
                     className='galax-input pl-10'
                     required
@@ -230,9 +222,6 @@ export function ResetPasswordPage() {
 
               <Button
                 type="submit"
-                disabled={isLoading}
-                className="glx-button w-full"
-              >
               <Button type='submit' disabled={isLoading} className='galax-button w-full'>
                 {isLoading ? 'Updating...' : 'Update Password'}
               </Button>

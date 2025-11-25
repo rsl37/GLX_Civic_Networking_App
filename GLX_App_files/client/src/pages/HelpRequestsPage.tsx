@@ -324,10 +324,6 @@ export function HelpRequestsPage() {
   };
 
   // Memoized help request card component
-        className="glx-card hover:shadow-lg transition-shadow h-full"
-        role="article"
-        aria-labelledby={`request-title-${request.id}`}
-        aria-describedby={`request-desc-${request.id}`}
   const HelpRequestCard = React.memo(
     ({
       request,
@@ -398,18 +394,7 @@ export function HelpRequestsPage() {
               </div>
             </div>
 
-                className="glx-button w-full"
-                disabled={request.requester_username === user?.username}
-                aria-label={`Offer help for: ${request.title}`}
-              >
-                <HandHeart className="h-4 w-4 mr-2" aria-hidden="true" />
-                Offer Help
-              </Button>
-            )}
-
-            {request.status === 'matched' && (
-                Helper: <span className="font-medium">{request.helper_username}</span>
-            {request.latitude && request.longitude && (
+            {request.status === 'pending' && user && (
               <div className='flex items-center gap-1 text-sm text-gray-500'>
                 <MapPin className='h-3 w-3' aria-hidden='true' />
                 <span>Location provided</span>

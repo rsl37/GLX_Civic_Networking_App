@@ -218,10 +218,6 @@ export function EmailVerificationPage() {
 
               <p className='text-sm text-gray-600'>Redirecting to dashboard in a few seconds...</p>
 
-              <Button
-                onClick={() => navigate('/dashboard')}
-                className="glx-button w-full"
-              >
               <Button onClick={() => navigate('/dashboard')} className='galax-button w-full'>
                 Go to Dashboard
               </Button>
@@ -316,15 +312,9 @@ export function EmailVerificationPage() {
               </Button>
             </div>
 
-            <div className="text-center text-xs text-gray-500">
-              <p>
-                Didn't receive the email? Check your spam folder or try resending.
-              </p>
-                Need help? Contact support at support@glx.app
-              </p>
             <div className='text-center text-xs text-gray-500'>
               <p>Didn't receive the email? Check your spam folder or try resending.</p>
-              <p className='mt-1'>Need help? Contact support at support@galax.app</p>
+              <p className='mt-1'>Need help? Contact support at support@glx.app</p>
             </div>
           </CardContent>
         </Card>
