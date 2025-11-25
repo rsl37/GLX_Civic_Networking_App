@@ -1,7 +1,6 @@
 /*
 <<<<<<< HEAD:GLX_App_files/client/src/lib/civicUtils.ts
  * Copyright (c) 2025 GLX Civic Networking App
- * Copyright (c) 2025 GLX Civic Networking App
  *
  * This software is licensed under the PolyForm Shield License 1.0.0.
  * For the full license text, see LICENSE file in the root directory
