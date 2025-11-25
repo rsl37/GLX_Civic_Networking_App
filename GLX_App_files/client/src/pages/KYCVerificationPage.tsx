@@ -331,8 +331,6 @@ export function KYCVerificationPage() {
           <Button
             onClick={() => setStep('upload')}
             disabled={isLoading}
-<<<<<<< HEAD:GLX_App_files/client/src/pages/KYCVerificationPage.tsx
-            className="glx-button w-full"
             className='galax-button w-full'
           >
             <div className='flex items-center gap-2'>
@@ -459,8 +457,6 @@ export function KYCVerificationPage() {
         <Button
           onClick={submitKYCDocuments}
           disabled={!selectedDocumentType || !documentNumber || !documentFile || isLoading}
-<<<<<<< HEAD:GLX_App_files/client/src/pages/KYCVerificationPage.tsx
-          className="glx-button w-full"
           className='galax-button w-full'
         >
           {isLoading ? (
@@ -506,8 +502,6 @@ export function KYCVerificationPage() {
         </ul>
       </div>
 
-<<<<<<< HEAD:GLX_App_files/client/src/pages/KYCVerificationPage.tsx
-      <div className="space-y-3">
         <Button
           onClick={() => navigate('/dashboard')}
           className="glx-button w-full"
@@ -539,10 +533,6 @@ export function KYCVerificationPage() {
         transition={{ duration: 0.5 }}
         className='w-full max-w-md'
       >
-<<<<<<< HEAD:GLX_App_files/client/src/pages/KYCVerificationPage.tsx
-        <Card className="glx-card">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
         <Card className='galax-card'>
           <CardHeader className='text-center'>
             <CardTitle className='text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'>

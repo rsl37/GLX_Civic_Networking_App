@@ -278,9 +278,6 @@ export function GovernancePage() {
 
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-<<<<<<< HEAD:GLX_App_files/client/src/pages/GovernancePage.tsx
-              <Button className="glx-button">
-                <Plus className="h-4 w-4 mr-2" />
               <Button className='galax-button'>
                 <Plus className='h-4 w-4 mr-2' />
                 Create Proposal
@@ -345,8 +342,6 @@ export function GovernancePage() {
                   </div>
                 </div>
 
-<<<<<<< HEAD:GLX_App_files/client/src/pages/GovernancePage.tsx
-                <Button onClick={handleCreateProposal} className="glx-button w-full">
                 <Button onClick={handleCreateProposal} className='galax-button w-full'>
                   Create Proposal
                 </Button>
@@ -362,11 +357,6 @@ export function GovernancePage() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className='grid grid-cols-2 md:grid-cols-4 gap-4'
         >
-<<<<<<< HEAD:GLX_App_files/client/src/pages/GovernancePage.tsx
-          <Card className="glx-card">
-            <CardContent className="p-4 text-center">
-              <Vote className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-              <p className="text-2xl font-bold text-blue-600">
           <Card className='galax-card'>
             <CardContent className='p-4 text-center'>
               <Vote className='h-8 w-8 mx-auto mb-2 text-blue-600' />
@@ -377,11 +367,6 @@ export function GovernancePage() {
             </CardContent>
           </Card>
 
-<<<<<<< HEAD:GLX_App_files/client/src/pages/GovernancePage.tsx
-          <Card className="glx-card">
-            <CardContent className="p-4 text-center">
-              <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-600" />
-              <p className="text-2xl font-bold text-green-600">
           <Card className='galax-card'>
             <CardContent className='p-4 text-center'>
               <CheckCircle className='h-8 w-8 mx-auto mb-2 text-green-600' />
@@ -392,11 +377,6 @@ export function GovernancePage() {
             </CardContent>
           </Card>
 
-<<<<<<< HEAD:GLX_App_files/client/src/pages/GovernancePage.tsx
-          <Card className="glx-card">
-            <CardContent className="p-4 text-center">
-              <Users className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-              <p className="text-2xl font-bold text-purple-600">
           <Card className='galax-card'>
             <CardContent className='p-4 text-center'>
               <Users className='h-8 w-8 mx-auto mb-2 text-purple-600' />
@@ -407,14 +387,12 @@ export function GovernancePage() {
             </CardContent>
           </Card>
 
-<<<<<<< HEAD:GLX_App_files/client/src/pages/GovernancePage.tsx
           <Card className="glx-card">
             <CardContent className="p-4 text-center">
               <TrendingUp className="h-8 w-8 mx-auto mb-2 text-orange-600" />
               <p className="text-2xl font-bold text-orange-600">
                 {user?.gov_balance || 0}
               </p>
-              <p className="text-sm text-gray-600">Voting Power</p>
           <Card className='galax-card'>
             <CardContent className='p-4 text-center'>
               <TrendingUp className='h-8 w-8 mx-auto mb-2 text-orange-600' />
@@ -430,13 +408,6 @@ export function GovernancePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-<<<<<<< HEAD:GLX_App_files/client/src/pages/GovernancePage.tsx
-          <Card className="glx-card">
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-4 items-center">
-                <div className="flex items-center gap-2">
-                  <Vote className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Filter by:</span>
           <Card className='galax-card'>
             <CardContent className='p-4'>
               <div className='flex flex-wrap gap-4 items-center'>
@@ -491,12 +462,6 @@ export function GovernancePage() {
           className='space-y-4'
         >
           {proposals.length === 0 ? (
-<<<<<<< HEAD:GLX_App_files/client/src/pages/GovernancePage.tsx
-            <Card className="glx-card">
-              <CardContent className="p-12 text-center">
-                <Vote className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">No proposals found</h3>
-                <p className="text-gray-500">Be the first to create a proposal for your community!</p>
             <Card className='galax-card'>
               <CardContent className='p-12 text-center'>
                 <Vote className='h-16 w-16 mx-auto mb-4 text-gray-400' />
@@ -519,11 +484,6 @@ export function GovernancePage() {
               const isOwnProposal = proposal.created_by === user?.id;
 
               return (
-<<<<<<< HEAD:GLX_App_files/client/src/pages/GovernancePage.tsx
-                <Card key={proposal.id} className="glx-card hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2 flex-1">
                 <Card key={proposal.id} className='galax-card hover:shadow-lg transition-shadow'>
                   <CardHeader className='pb-3'>
                     <div className='flex items-start justify-between'>
@@ -636,8 +596,6 @@ export function GovernancePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-<<<<<<< HEAD:GLX_App_files/client/src/pages/GovernancePage.tsx
-          <Card className="glx-card">
           <Card className='galax-card'>
             <CardHeader>
               <CardTitle className='flex items-center gap-2'>

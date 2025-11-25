@@ -243,7 +243,6 @@ export function TwoFactorSetupPage() {
 
       <div className='space-y-3'>
         {!status.enabled ? (
-<<<<<<< HEAD:GLX_App_files/client/src/pages/TwoFactorSetupPage.tsx
           <Button
             onClick={startSetup}
             disabled={isLoading}
@@ -322,13 +321,10 @@ export function TwoFactorSetupPage() {
         </div>
       </div>
 
-<<<<<<< HEAD:GLX_App_files/client/src/pages/TwoFactorSetupPage.tsx
       <Button
         onClick={() => setStep('verify')}
         className="glx-button w-full"
       >
-        <div className="flex items-center gap-2">
-          <Smartphone className="h-4 w-4" />
       <Button onClick={() => setStep('verify')} className='galax-button w-full'>
         <div className='flex items-center gap-2'>
           <Smartphone className='h-4 w-4' />
@@ -373,8 +369,6 @@ export function TwoFactorSetupPage() {
           <Button
             onClick={status.enabled ? disable2FA : verifyAndEnable}
             disabled={verificationCode.length !== 6 || isLoading}
-<<<<<<< HEAD:GLX_App_files/client/src/pages/TwoFactorSetupPage.tsx
-            className={status.enabled ? 'w-full bg-red-500 hover:bg-red-600' : 'glx-button w-full'}
             className={
               status.enabled ? 'w-full bg-red-500 hover:bg-red-600' : 'galax-button w-full'
             }
@@ -425,8 +419,6 @@ export function TwoFactorSetupPage() {
         </ul>
       </div>
 
-<<<<<<< HEAD:GLX_App_files/client/src/pages/TwoFactorSetupPage.tsx
-      <div className="space-y-3">
         <Button
           onClick={() => navigate('/dashboard')}
           className="glx-button w-full"
@@ -451,10 +443,6 @@ export function TwoFactorSetupPage() {
         transition={{ duration: 0.5 }}
         className='w-full max-w-md'
       >
-<<<<<<< HEAD:GLX_App_files/client/src/pages/TwoFactorSetupPage.tsx
-        <Card className="glx-card">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
         <Card className='galax-card'>
           <CardHeader className='text-center'>
             <CardTitle className='text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'>
