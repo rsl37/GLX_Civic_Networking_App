@@ -114,8 +114,6 @@ export function LoginPage() {
   };
 
   return (
-<<<<<<< HEAD:GLX_App_files/client/src/pages/LoginPage.tsx
-    <div className="min-h-screen flex items-center justify-center p-4 glx-holographic">
     <div className='min-h-screen flex items-center justify-center p-4 galax-holographic'>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -123,9 +121,6 @@ export function LoginPage() {
         transition={{ duration: 0.5 }}
         className='w-full max-w-md'
       >
-<<<<<<< HEAD:GLX_App_files/client/src/pages/LoginPage.tsx
-        <Card className="glx-card animate-pulse-glow">
-          <CardHeader className="text-center pb-8">
         <Card className='galax-card animate-pulse-glow'>
           <CardHeader className='text-center pb-8'>
             <motion.div
@@ -134,9 +129,6 @@ export function LoginPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className='flex items-center justify-center gap-2 mb-4'
             >
-<<<<<<< HEAD:GLX_App_files/client/src/pages/LoginPage.tsx
-              <Zap className="h-8 w-8 text-purple-500" />
-              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
                 GLX
               <Zap className='h-8 w-8 text-purple-500' />
               <CardTitle className='text-3xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent'>
@@ -144,8 +136,6 @@ export function LoginPage() {
               </CardTitle>
               <Sparkles className='h-8 w-8 text-coral-500' />
             </motion.div>
-<<<<<<< HEAD:GLX_App_files/client/src/pages/LoginPage.tsx
-            <CardDescription className="text-lg text-gray-600">
               Connect the World
             <CardDescription className='text-lg text-gray-600'>
               Civic Network Platform
@@ -214,7 +204,6 @@ export function LoginPage() {
                       type='tel'
                       placeholder='Enter your phone number'
                       value={phone}
-<<<<<<< HEAD:GLX_App_files/client/src/pages/LoginPage.tsx
                       onChange={(e) => setPhone(e.target.value)}
                       className="glx-input flex-1"
                       onChange={e => setPhone(e.target.value)}
@@ -228,7 +217,6 @@ export function LoginPage() {
                     type='email'
                     placeholder='Enter your email'
                     value={email}
-<<<<<<< HEAD:GLX_App_files/client/src/pages/LoginPage.tsx
                     onChange={(e) => setEmail(e.target.value)}
                     className="glx-input"
                     onChange={e => setEmail(e.target.value)}
@@ -245,7 +233,6 @@ export function LoginPage() {
                   type='password'
                   placeholder='Enter your password'
                   value={password}
-<<<<<<< HEAD:GLX_App_files/client/src/pages/LoginPage.tsx
                   onChange={(e) => setPassword(e.target.value)}
                   className="glx-input"
                   onChange={e => setPassword(e.target.value)}
@@ -266,7 +253,6 @@ export function LoginPage() {
               )}
 
               <Button
-<<<<<<< HEAD:GLX_App_files/client/src/pages/LoginPage.tsx
                 type="submit"
                 className="w-full glx-button"
                 disabled={isLoading || (process.env.NODE_ENV === 'production' && !verificationToken)}
@@ -306,7 +292,6 @@ export function LoginPage() {
             </div>
 
             <Button
-<<<<<<< HEAD:GLX_App_files/client/src/pages/LoginPage.tsx
               variant="outline"
               className="w-full glx-button-accent"
               variant='outline'
