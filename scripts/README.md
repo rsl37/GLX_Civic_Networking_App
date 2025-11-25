@@ -16,7 +16,7 @@ relatedDocs: []
 =======
 =======
 >>>>>>> origin/copilot/fix-190
-# GALAX Civic Networking App - Root Scripts
+# GLX Civic Networking App - Root Scripts
 >>>>>>> origin/all-merged
 
 This directory contains utility scripts that can be run from the repository root directory.

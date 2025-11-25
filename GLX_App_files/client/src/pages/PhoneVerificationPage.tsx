@@ -160,7 +160,7 @@ export function PhoneVerificationPage() {
         transition={{ duration: 0.5 }}
         className='w-full max-w-md'
       >
-        <Card className='galax-card'>
+        <Card className='glx-card'>
           <CardHeader className='text-center'>
             <div className='mx-auto mb-4'>
               <Phone className='h-16 w-16 text-blue-500' />
@@ -229,7 +229,7 @@ export function PhoneVerificationPage() {
                 <Button
                   onClick={sendVerificationCode}
                   disabled={!phone || isSending}
-                  className='galax-button w-full'
+                  className='glx-button w-full'
                 >
                   {isSending ? (
                     <div className='flex items-center gap-2'>
@@ -264,7 +264,7 @@ export function PhoneVerificationPage() {
                   <Button
                     onClick={verifyCode}
                     disabled={code.length !== 6 || isVerifying}
-                    className='galax-button w-full'
+                    className='glx-button w-full'
                   >
                     {isVerifying ? (
                       <div className='flex items-center gap-2'>

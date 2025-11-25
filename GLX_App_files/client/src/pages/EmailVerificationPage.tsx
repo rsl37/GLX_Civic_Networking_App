@@ -173,7 +173,7 @@ export function EmailVerificationPage() {
           transition={{ duration: 0.5 }}
           className='w-full max-w-md'
         >
-          <Card className='galax-card'>
+          <Card className='glx-card'>
             <CardContent className='p-8 text-center'>
               <div className='animate-spin mx-auto mb-4 h-12 w-12 border-4 border-purple-500 border-t-transparent rounded-full'></div>
               <h2 className='text-xl font-semibold mb-2'>Verifying Your Email</h2>
@@ -195,7 +195,7 @@ export function EmailVerificationPage() {
           transition={{ duration: 0.5 }}
           className='w-full max-w-md'
         >
-          <Card className='galax-card'>
+          <Card className='glx-card'>
             <CardHeader className='text-center'>
               <div className='mx-auto mb-4'>
                 <CheckCircle className='h-16 w-16 text-green-500' />
@@ -218,7 +218,7 @@ export function EmailVerificationPage() {
 
               <p className='text-sm text-gray-600'>Redirecting to dashboard in a few seconds...</p>
 
-              <Button onClick={() => navigate('/dashboard')} className='galax-button w-full'>
+              <Button onClick={() => navigate('/dashboard')} className='glx-button w-full'>
                 Go to Dashboard
               </Button>
             </CardContent>
@@ -237,7 +237,7 @@ export function EmailVerificationPage() {
         transition={{ duration: 0.5 }}
         className='w-full max-w-md'
       >
-        <Card className='galax-card'>
+        <Card className='glx-card'>
           <CardHeader className='text-center'>
             <div className='mx-auto mb-4'>
               <Mail className='h-16 w-16 text-blue-500' />

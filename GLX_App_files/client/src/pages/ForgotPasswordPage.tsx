@@ -58,7 +58,7 @@ export function ForgotPasswordPage() {
           transition={{ duration: 0.5 }}
           className='w-full max-w-md'
         >
-          <Card className='galax-card'>
+          <Card className='glx-card'>
             <CardHeader className='text-center'>
               <div className='mx-auto mb-4'>
                 <CheckCircle className='h-16 w-16 text-green-500' />
@@ -110,7 +110,7 @@ export function ForgotPasswordPage() {
         transition={{ duration: 0.5 }}
         className='w-full max-w-md'
       >
-        <Card className='galax-card'>
+        <Card className='glx-card'>
           <CardHeader className='text-center'>
             <CardTitle className='text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'>
               Forgot Password
@@ -131,7 +131,7 @@ export function ForgotPasswordPage() {
                     placeholder='Enter your email'
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className='galax-input pl-10'
+                    className='glx-input pl-10'
                     required
                   />
                 </div>
@@ -144,7 +144,7 @@ export function ForgotPasswordPage() {
                 disabled={isLoading}
                 className="glx-button w-full"
               >
-              <Button type='submit' disabled={isLoading} className='galax-button w-full'>
+              <Button type='submit' disabled={isLoading} className='glx-button w-full'>
                 {isLoading ? 'Sending...' : 'Send Reset Link'}
               </Button>
             </form>

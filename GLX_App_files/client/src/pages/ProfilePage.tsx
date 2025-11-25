@@ -273,7 +273,7 @@ export function ProfilePage() {
           <h1 className='text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent'>
             My Profile
           </h1>
-          <Card className='galax-card'>
+          <Card className='glx-card'>
             <CardContent className='p-6'>
               <div className='flex flex-col md:flex-row items-center md:items-start gap-6'>
                 <div className='relative'>
@@ -438,7 +438,7 @@ export function ProfilePage() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className='grid grid-cols-1 md:grid-cols-3 gap-4'
         >
-          <Card className='galax-card'>
+          <Card className='glx-card'>
                 <div className='text-center py-8 text-gray-500'>
                   <DollarSign className='h-12 w-12 mx-auto mb-4 opacity-50' />
                   <p>No recent transactions</p>
@@ -561,7 +561,7 @@ export function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
         >
-          <UserBadges user={user} className='galax-card' />
+          <UserBadges user={user} className='glx-card' />
         </motion.div>
       </div>
     </div>
