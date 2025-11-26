@@ -210,7 +210,6 @@ jobs:
               echo "❌ ESLint failed with exit code $ESLINT_EXIT_CODE (configuration or runtime error)"
               exit $ESLINT_EXIT_CODE
             fi
-            fi
           else
             echo "✅ CodeQL analysis completed without security findings"
           fi

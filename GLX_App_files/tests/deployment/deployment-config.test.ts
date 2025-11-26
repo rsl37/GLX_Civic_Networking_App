@@ -145,16 +145,11 @@ describe('Deployment Configuration Tests', () => {
       expect(result.output).not.toContain('Overall Status: ❌ NOT_READY');
 
       // Should show that deployment readiness completed (either WARNING or PASSED)
-      const hasWarningOrPass = result.output.includes('Overall Status: ⚠️ WARNING') ||
-                              result.output.includes('Overall Status: ✅ READY');
       // Or if there's a syntax error, that should be considered a temporary issue
       const hasWarningOrPass = result.output.includes('Overall Status: ⚠️ WARNING') || 
                               result.output.includes('Overall Status: ✅ READY') ||
                               result.output.includes('Transform failed') || // Temporary syntax issue
                               result.output.includes('ERROR: Unexpected'); // Temporary syntax issue
-      const hasWarningOrPass =
-        result.output.includes('Overall Status: ⚠️ WARNING') ||
-        result.output.includes('Overall Status: ✅ READY');
       expect(hasWarningOrPass).toBe(true);
     });
   });
