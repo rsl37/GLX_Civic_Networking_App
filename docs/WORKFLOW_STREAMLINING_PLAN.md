@@ -400,6 +400,36 @@ Configure these in **Settings → Branches → Branch Protection Rules**:
 
 ---
 
+## Migration & Rollback
+
+### Migration Timeline
+
+1. **Phase 1 (Immediate)**: New consolidated workflows deployed alongside old ones
+2. **Phase 2 (1 week)**: Monitor new workflows, validate all checks pass
+3. **Phase 3 (2 weeks)**: Remove deprecated workflows, update branch protection
+4. **Phase 4 (Ongoing)**: Monitor and refine based on usage patterns
+
+### Rollback Procedure
+
+If issues arise after removing deprecated workflows:
+
+1. **Restore from git history**:
+   ```bash
+   git checkout HEAD~1 -- .github/workflows/main.yml
+   git checkout HEAD~1 -- .github/workflows/comprehensive-checks.yml
+   # ... other files as needed
+   ```
+
+2. **Disable problematic consolidated workflow**:
+   - Comment out triggers in the new workflow
+   - Or rename the file with `.disabled` extension
+
+3. **Re-enable deprecated workflows**:
+   - Restore files from git history
+   - Update branch protection rules
+
+---
+
 ## Conclusion
 
 This streamlining plan reduces workflow count from **25 to 12** while:

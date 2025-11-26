@@ -40,6 +40,7 @@ env:
   NODE_VERSION: '20'
   WORKING_DIRECTORY: './GLX_App_files'
   CACHE_VERSION: v1
+  APP_PORT: '3000'
 
 jobs:
   # ==========================================================================
@@ -297,7 +298,7 @@ jobs:
           sleep 10
 
           # Basic health check
-          if curl -f http://localhost:3000 2>/dev/null; then
+          if curl -f http://localhost:${{ env.APP_PORT }} 2>/dev/null; then
             echo "✓ Application started successfully"
           else
             echo "⚠️ Application may have startup issues (expected in some CI environments)"

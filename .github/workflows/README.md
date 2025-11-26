@@ -101,6 +101,8 @@ The following workflows are superseded by the consolidated architecture:
 | `health-location-status.yml` | `ci-pipeline.yml` |
 | `summary.yml` | Removed (was disabled) |
 
+> ✅ **All deprecated workflows have been removed in this PR.**
+
 ---
 
 ## 🔧 Key Improvements
@@ -160,166 +162,71 @@ Configure these status checks in **Settings → Branches → Branch Protection R
 
 ## 🔧 Troubleshooting
 
-**If workflows still hang or stall:**
-1. Check Node.js version compatibility (must be 20.x+ for dependencies)
+**If workflows fail or stall:**
+1. Check Node.js version compatibility (must be 20.x+)
 2. Verify timeout values are appropriate for your system
-3. Review process cleanup in deployment workflows
-4. Check for network connectivity issues in health checks
+3. Check for network connectivity issues in health checks
+4. Review the workflow logs for specific error messages
 
-**Common fixes applied:**
-- Removed Node 18.x compatibility (package engine requirements)
-- Added `fail-fast: false` to prevent early matrix cancellation
-- Implemented comprehensive timeout protection
-- Optimized dependency installation with offline-first approach
+**Common fixes:**
+- All workflows have job-level and step-level timeouts
+- Dependency installation uses `--prefer-offline --no-audit --no-fund`
+- Path filtering prevents unnecessary workflow runs
 
 ## Security Configuration
 
 ### Dependabot - `.github/dependabot.yml`
-- **Weekly dependency updates** (Mondays at 4 AM UTC)
-- **Grouped updates** for production vs development dependencies
-- **Security updates** for all dependency types
-- **GitHub Actions updates** to keep workflows current
+- Weekly dependency updates (Mondays at 4 AM UTC)
+- Grouped updates for production vs development dependencies
+- Security updates for all dependency types
+- GitHub Actions updates to keep workflows current
 
 ### CodeQL Configuration - `.github/codeql-config.yml`
-- **Security and quality queries** enabled
-- **Path filtering** to focus on source code
-- **Exclusions** for build artifacts and test files
+- Security and quality queries enabled
+- Path filtering to focus on source code
+- Exclusions for build artifacts and test files
 
-## Branch Protection Configuration
+## Required Secrets
 
-To implement the full status check system, configure the following branch protection rules:
+Configure these secrets in **Settings → Secrets and variables → Actions**:
 
-### Main Branch Protection
+| Secret | Purpose | Required |
+|--------|---------|----------|
+| `VERCEL_TOKEN` | Vercel deployments | For deploy.yml |
+| `VERCEL_ORG_ID` | Vercel organization | For deploy.yml |
+| `VERCEL_PROJECT_ID` | Vercel project | For deploy.yml |
+| `PAT_TOKEN` | Cross-repo operations | For pat-security.yml |
+| `CODECOV_TOKEN` | Coverage reporting | Optional |
 
-Navigate to **Settings → Branches → Add Rule** for the `main` branch:
+## Test Framework Support
 
-#### Required Status Checks
-Enable "Require status checks to pass before merging" and select:
-
-**CI Checks:**
-- Build Application (ubuntu-latest, 18.x)
-- Build Application (ubuntu-latest, 20.x)
-- TypeScript Type Check
-
-**Code Quality:**
-- Lint and Format Check
-- Code Coverage
-
-**Security:**
-- Dependency Vulnerability Scan
-- CodeQL Security Analysis / javascript
-- Secret Scanning
-
-**Testing:**
-- Unit Tests (ubuntu-latest, 18.x)
-- Unit Tests (ubuntu-latest, 20.x)
-- Integration Tests
-- End-to-End Tests
-
-**Performance:**
-- Performance Benchmarks
-- Memory Performance Tests
-
-**Application-Specific:**
-- Database Migration Tests
-- API Contract Tests
-- Socket.IO Tests
-- Web3 Integration Tests
-
-**Deployment:**
-- Staging Deployment Verification
-- Deployment Health Checks
-- Environment Compatibility (ubuntu-latest, 18.x)
-- Environment Compatibility (ubuntu-latest, 20.x)
-- Environment Compatibility (ubuntu-latest, 22.x)
-
-#### Additional Protection Settings
-- ✅ Require branches to be up to date before merging
-- ✅ Require pull request reviews before merging (minimum 1)
-- ✅ Dismiss stale reviews when new commits are pushed
-- ✅ Require review from code owners
-- ✅ Restrict pushes that create files larger than 100MB
-- ✅ Require signed commits (recommended)
-
-### Develop Branch Protection
-
-Similar configuration with slightly relaxed requirements:
-- All status checks required
-- Pull request reviews optional for development
-- Allow force pushes for maintainers
-
-## Workflow Customization
-
-### Environment Variables
-Set these repository secrets for full functionality:
-
-```bash
-# Required for deployment testing
-STAGING_URL=https://staging.glx.app
-
-# Optional for enhanced reporting
-CODECOV_TOKEN=your_codecov_token
-LIGHTHOUSE_CI_TOKEN=your_lhci_token
-```
-
-### Performance Budgets
-Current thresholds in `performance.yml`:
-- JavaScript bundle: < 1MB
-- CSS bundle: < 100KB
-- Lighthouse scores: Performance > 70%, Accessibility > 90%
-
-### Test Framework Support
 Workflows auto-detect and support:
 - **Vitest** (preferred for Vite projects)
 - **Jest** (fallback)
 - **Playwright** (E2E testing)
-- **Supertest** (API testing)
+- **Axe-core** (Accessibility testing)
 
-## Maintenance
+## Debug Commands
 
-### Weekly Tasks
-- Review Dependabot PRs
-- Check security alert notifications
-- Monitor performance trends
-
-### Monthly Tasks
-- Review and update performance budgets
-- Audit workflow efficiency
-- Update test coverage requirements
-
-### Troubleshooting
-
-**Common Issues:**
-
-1. **Build Failures**: Check Node.js version compatibility
-2. **Test Timeouts**: Increase timeout values in workflow files
-3. **Permission Errors**: Verify repository permissions for GitHub Actions
-4. **Large Bundle Warnings**: Implement code splitting
-
-**Debug Commands:**
 ```bash
 # Local testing commands
 npm run build
 npm run test
+npm run test:coverage
 npm audit
-npx lighthouse http://localhost:3000
 ```
 
 ## Contributing
 
-When adding new workflows:
+When modifying workflows:
 1. Follow existing naming conventions
-2. Include proper error handling
-3. Add documentation updates
-4. Test locally before committing
-5. Use semantic commit messages
+2. Include proper timeout protection
+3. Add path filtering for efficiency
+4. Update this README
+5. Test locally before committing
 
-## Status Badge Integration
+---
 
-Add these badges to your README.md:
-
-```markdown
-![CI](https://github.com/rsl37/GLX_App/workflows/Continuous%20Integration/badge.svg)
-![Security](https://github.com/rsl37/GLX_App/workflows/Security%20Checks/badge.svg)
-![Tests](https://github.com/rsl37/GLX_App/workflows/Testing/badge.svg)
-```
+*Last Updated: November 2024*  
+*Architecture: 12 workflows in 3 tiers*  
+*Principle: Ashby's Law of Requisite Variety*
