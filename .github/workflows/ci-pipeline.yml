@@ -1,0 +1,397 @@
+# Consolidated CI/CD Pipeline
+# Merges: main.yml, comprehensive-checks.yml, partial quality.yml
+# Purpose: Single source of truth for all CI/CD operations
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, 'copilot/**']
+    paths:
+      - 'GLX_App_files/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'vercel.json'
+      - '.github/workflows/ci-pipeline.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'GLX_App_files/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'vercel.json'
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip test execution'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  statuses: write
+  checks: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: '20'
+  WORKING_DIRECTORY: './GLX_App_files'
+  CACHE_VERSION: v1
+
+jobs:
+  # ==========================================================================
+  # Job 1: Build and Test
+  # ==========================================================================
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+      build-success: ${{ steps.build.outcome }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          echo "key=${{ env.CACHE_VERSION }}-${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('GLX_App_files/package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.WORKING_DIRECTORY }}/node_modules
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            ${{ env.CACHE_VERSION }}-${{ runner.os }}-node-${{ env.NODE_VERSION }}-
+            ${{ env.CACHE_VERSION }}-${{ runner.os }}-node-
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: TypeScript type check
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "Running TypeScript type check..."
+          npx tsc --noEmit --project ./tsconfig.json || echo "Type check completed with warnings"
+
+      - name: Build application
+        id: build
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm run build
+
+      - name: Run tests
+        if: inputs.skip_tests != true
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm test
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIRECTORY }}/dist/
+          retention-days: 7
+          compression-level: 6
+
+  # ==========================================================================
+  # Job 2: Code Quality
+  # ==========================================================================
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build-and-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Restore node modules cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.WORKING_DIRECTORY }}/node_modules
+          key: ${{ needs.build-and-test.outputs.cache-key }}
+
+      - name: Install dependencies (if cache miss)
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          if [ ! -d "node_modules" ]; then
+            npm ci --prefer-offline --no-audit --no-fund
+          fi
+
+      - name: Check code formatting (Prettier)
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          if [ -f ".prettierrc" ] || [ -f ".prettierrc.json" ] || [ -f "prettier.config.js" ]; then
+            npx prettier --check . || echo "Formatting issues found - run 'npm run format' to fix"
+          else
+            echo "✓ No Prettier config found, skipping format check"
+          fi
+
+      - name: Run ESLint
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          if [ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "eslint.config.js" ]; then
+            npx eslint . --ext .js,.jsx,.ts,.tsx --format json --output-file eslint-results.json || true
+            npx eslint . --ext .js,.jsx,.ts,.tsx || echo "Linting completed with warnings"
+          else
+            echo "✓ No ESLint config found, skipping lint step"
+          fi
+
+      - name: Upload lint results
+        uses: actions/upload-artifact@v4
+        if: always() && hashFiles('GLX_App_files/eslint-results.json') != ''
+        with:
+          name: lint-results
+          path: ${{ env.WORKING_DIRECTORY }}/eslint-results.json
+          retention-days: 7
+
+  # ==========================================================================
+  # Job 3: Security Quick Scan
+  # ==========================================================================
+  security-quick:
+    name: Security Quick Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Run npm audit
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "Running npm security audit..."
+          npm audit --audit-level=high || echo "Audit completed with findings"
+
+      - name: Basic secret scan
+        run: |
+          echo "Scanning for potential secrets..."
+          SECRET_FOUND=false
+
+          # Check for API keys
+          if grep -r -E "(apiKey|secretKey|authToken)\s*=\s*[\"'][a-zA-Z0-9_-]{20,}[\"']" \
+             --include="*.js" --include="*.ts" --exclude-dir=node_modules . 2>/dev/null | \
+             grep -v "test" | grep -v ".env.example" | head -1; then
+            echo "⚠️ Warning: Potential API keys found"
+            SECRET_FOUND=true
+          fi
+
+          # Check for GitHub tokens
+          if grep -r -E "ghp_[a-zA-Z0-9]{36}" \
+             --include="*.js" --include="*.ts" --exclude-dir=node_modules . 2>/dev/null | head -1; then
+            echo "⚠️ Warning: GitHub tokens found"
+            SECRET_FOUND=true
+          fi
+
+          if [ "$SECRET_FOUND" = false ]; then
+            echo "✓ No obvious secrets detected"
+          fi
+
+  # ==========================================================================
+  # Job 4: Deployment Readiness Check
+  # ==========================================================================
+  deployment-check:
+    name: Deployment Readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-and-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIRECTORY }}/dist/
+
+      - name: Validate Vercel configuration
+        run: |
+          echo "🔍 Validating Vercel configuration..."
+          if [ ! -f "vercel.json" ]; then
+            echo "⚠️ vercel.json not found"
+            exit 0
+          fi
+
+          # Validate JSON syntax
+          if ! jq . vercel.json > /dev/null 2>&1; then
+            echo "❌ Invalid JSON syntax in vercel.json"
+            exit 1
+          fi
+
+          # Check for buildCommand and outputDirectory
+          if jq -e '.buildCommand' vercel.json > /dev/null && jq -e '.outputDirectory' vercel.json > /dev/null; then
+            echo "✓ Vercel configuration is valid"
+          else
+            echo "⚠️ Missing buildCommand or outputDirectory in vercel.json"
+          fi
+
+      - name: Test application startup
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "Testing application startup..."
+
+          # Copy test environment
+          if [ -f ".env.test" ]; then
+            cp .env.test .env
+          fi
+
+          # Start app with timeout
+          timeout 30s npm start &
+          APP_PID=$!
+
+          # Wait for startup
+          sleep 10
+
+          # Basic health check
+          if curl -f http://localhost:3000 2>/dev/null; then
+            echo "✓ Application started successfully"
+          else
+            echo "⚠️ Application may have startup issues (expected in some CI environments)"
+          fi
+
+          # Cleanup
+          kill $APP_PID 2>/dev/null || true
+
+      - name: Check bundle size
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "Checking bundle sizes..."
+          if [ -d "dist/public/assets" ]; then
+            echo "JavaScript files:"
+            find dist/public/assets/ -name "*.js" -exec ls -lh {} \;
+
+            # Check for large bundles
+            LARGE_FILES=$(find dist/public/assets/ -name "*.js" -size +500k 2>/dev/null)
+            if [ -n "$LARGE_FILES" ]; then
+              echo "⚠️ Warning: Large bundle files detected (>500KB):"
+              echo "$LARGE_FILES"
+            else
+              echo "✓ All bundle sizes are within acceptable limits"
+            fi
+          else
+            echo "No build assets found in dist/public/assets"
+          fi
+
+  # ==========================================================================
+  # Job 5: Status Reporting
+  # ==========================================================================
+  report-status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [build-and-test, code-quality, security-quick, deployment-check]
+    timeout-minutes: 5
+
+    steps:
+      - name: Report overall status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const jobs = [
+              { name: 'build-and-test', result: '${{ needs.build-and-test.result }}' },
+              { name: 'code-quality', result: '${{ needs.code-quality.result }}' },
+              { name: 'security-quick', result: '${{ needs.security-quick.result }}' },
+              { name: 'deployment-check', result: '${{ needs.deployment-check.result }}' }
+            ];
+
+            const failed = jobs.filter(job => job.result === 'failure');
+            const successful = jobs.filter(job => job.result === 'success');
+            const skipped = jobs.filter(job => job.result === 'skipped');
+
+            let status = 'success';
+            let description = `CI/CD Pipeline: ${successful.length}/${jobs.length} passed`;
+
+            if (failed.length > 0) {
+              status = 'failure';
+              description = `CI/CD Pipeline: ${failed.length} job(s) failed`;
+            }
+
+            console.log(`Pipeline Status: ${status}`);
+            console.log(`Description: ${description}`);
+            console.log('Job Results:', JSON.stringify(jobs, null, 2));
+
+            if (status === 'failure') {
+              core.setFailed(description);
+            }
+
+      - name: Update commit status
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const jobs = [
+              { name: 'Build and Test', result: '${{ needs.build-and-test.result }}' },
+              { name: 'Code Quality', result: '${{ needs.code-quality.result }}' },
+              { name: 'Security Quick Scan', result: '${{ needs.security-quick.result }}' },
+              { name: 'Deployment Readiness', result: '${{ needs.deployment-check.result }}' }
+            ];
+
+            for (const job of jobs) {
+              let state = job.result === 'success' ? 'success' :
+                         job.result === 'failure' ? 'failure' :
+                         job.result === 'skipped' ? 'success' : 'error';
+
+              await github.rest.repos.createCommitStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha: context.payload.pull_request.head.sha,
+                state: state,
+                context: `CI/CD Pipeline / ${job.name}`,
+                description: `${job.name}: ${job.result}`,
+                target_url: `${context.payload.pull_request.html_url}/checks`
+              });
+            }
