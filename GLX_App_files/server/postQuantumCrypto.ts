@@ -264,13 +264,16 @@ class PostQuantumCryptoService {
     const results: Record<string, boolean> = {};
     const errors: string[] = [];
 
+    // Test key generation (already performed during initialization)
+    results['keyGeneration'] = this.initialized && this.mlkemKeyPair !== null && this.mldsaKeyPair !== null;
+
     try {
       // Test ML-KEM key encapsulation
       const testData = new Uint8Array(Buffer.from('test-data-for-encryption'));
       const encrypted = await this.encapsulateKey(testData);
-      results['mlkem-encapsulation'] = encrypted.ciphertext.length > 0;
+      results['keyEncapsulation'] = encrypted.ciphertext.length > 0;
     } catch (error) {
-      results['mlkem-encapsulation'] = false;
+      results['keyEncapsulation'] = false;
       errors.push(`ML-KEM encapsulation failed: ${error}`);
     }
 
@@ -278,9 +281,9 @@ class PostQuantumCryptoService {
       // Test ML-DSA signature
       const testMessage = new Uint8Array(Buffer.from('test-message-for-signing'));
       const signature = await this.signData(testMessage);
-      results['mldsa-signature'] = signature.signature.length > 0;
+      results['digitalSignatures'] = signature.signature.length > 0;
     } catch (error) {
-      results['mldsa-signature'] = false;
+      results['digitalSignatures'] = false;
       errors.push(`ML-DSA signature failed: ${error}`);
     }
 
@@ -289,9 +292,9 @@ class PostQuantumCryptoService {
       const secretData = new Uint8Array(Buffer.from('secret'));
       const publicInputs = new Uint8Array(Buffer.from('public'));
       const zkProof = await this.generateZKProof(secretData, publicInputs);
-      results['zk-proof'] = zkProof.proof.length > 0;
+      results['zeroKnowledgeProofs'] = zkProof.proof.length > 0;
     } catch (error) {
-      results['zk-proof'] = false;
+      results['zeroKnowledgeProofs'] = false;
       errors.push(`ZK proof generation failed: ${error}`);
     }
 
@@ -299,9 +302,9 @@ class PostQuantumCryptoService {
       // Test hybrid encryption
       const testData = new Uint8Array(Buffer.from('test-hybrid-data'));
       const hybridResult = await this.hybridEncrypt(testData);
-      results['hybrid-encryption'] = hybridResult.combinedSecurity;
+      results['hybridCryptography'] = hybridResult.combinedSecurity;
     } catch (error) {
-      results['hybrid-encryption'] = false;
+      results['hybridCryptography'] = false;
       errors.push(`Hybrid encryption failed: ${error}`);
     }
 
