@@ -520,7 +520,7 @@ export class CommunicationManager {
  */
 export function loadConfigFromEnv(): HybridCommunicationConfig {
   return {
-    defaultProvider: (process.env.COMM_DEFAULT_PROVIDER as CommunicationProvider) || 'pusher',
+    defaultProvider: (process.env.COMM_DEFAULT_PROVIDER as CommunicationProvider) || 'socketio',
 
     resgrid: process.env.RESGRID_API_KEY
       ? {

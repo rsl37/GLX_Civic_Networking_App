@@ -78,15 +78,15 @@ Add the following to your `.env` file:
 
 ```bash
 # Default communication provider
-COMM_DEFAULT_PROVIDER=pusher
+COMM_DEFAULT_PROVIDER=socketio
 
 # Resgrid (Incident/Dispatch)
 RESGRID_API_KEY=your-api-key
 RESGRID_API_URL=https://api.resgrid.com/api/v1
 RESGRID_DEPARTMENT_ID=your-dept-id
 
-# Socket.io (Alternative Real-time)
-SOCKETIO_ENABLED=false
+# Socket.io (Default Real-time Provider)
+SOCKETIO_ENABLED=true
 SOCKETIO_PATH=/socket.io
 
 # Ably (Global Real-time Messaging)
@@ -185,16 +185,16 @@ const response = await fetch('/api/communications/escalate/sms', {
 To switch the default real-time provider, update the `COMM_DEFAULT_PROVIDER` environment variable:
 
 ```bash
-# Use Pusher (current default)
-COMM_DEFAULT_PROVIDER=pusher
-
-# Use Socket.io
+# Use Socket.io (default)
 COMM_DEFAULT_PROVIDER=socketio
 SOCKETIO_ENABLED=true
 
-# Use Ably (scaffold - implement when needed)
+# Use Ably (for global scaling)
 COMM_DEFAULT_PROVIDER=ably
 ABLY_API_KEY=your-api-key
+
+# Use Pusher (if needed)
+COMM_DEFAULT_PROVIDER=pusher
 ```
 
 ---

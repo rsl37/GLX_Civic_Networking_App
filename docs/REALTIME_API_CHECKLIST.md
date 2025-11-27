@@ -55,15 +55,15 @@ This document summarizes the recommended hybrid communication and dispatch archi
 
 ```bash
 # Provider Selection
-COMM_DEFAULT_PROVIDER=pusher
+COMM_DEFAULT_PROVIDER=socketio
 
 # Resgrid
 RESGRID_API_KEY=
 RESGRID_API_URL=https://api.resgrid.com/api/v1
 RESGRID_DEPARTMENT_ID=
 
-# Socket.io
-SOCKETIO_ENABLED=false
+# Socket.io (default provider)
+SOCKETIO_ENABLED=true
 SOCKETIO_PATH=/socket.io
 
 # Ably
