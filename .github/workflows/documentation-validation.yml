@@ -200,9 +200,7 @@ jobs:
 
             ## Automation
 
-            This issue was created by the documentation validation workflow via manual trigger.
-
-            - **Criteria**: Files with \`lastUpdated\` older than 6 months
+            This issue was created by the documentation validation workflow via manual trigger (workflow_dispatch with force_full_check enabled). Files with \`lastUpdated\` older than 6 months are flagged for review.
 
             /label documentation maintenance`;
 
