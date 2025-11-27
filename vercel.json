@@ -86,8 +86,7 @@
     }
   },
   "functions": {
-    "GLX_App_files/api/**/*": {
-      "runtime": "@vercel/node",
+    "api/**/*.ts": {
       "maxDuration": 10
     }
   },
