@@ -13,8 +13,8 @@
  *
  * This script tests the connectivity and configuration of essential services:
  * - SMTP (Email)
- * - Twilio (SMS)
- * - Pusher (Real-time messaging)
+ * - Vonage (SMS/Voice - replaces Twilio)
+ * - Socket.io with Ably (Real-time messaging - replaces Pusher)
  * - MetaMask/Web3 (Blockchain connectivity)
  */
 
