@@ -25,6 +25,11 @@ import http from "http";
 // Load environment variables
 dotenv.config();
 
+// Detect CI environment - missing credentials in CI should be warnings, not failures
+const isCI = process.env.CI === 'true' || 
+             process.env.GITHUB_ACTIONS === 'true' ||
+             process.env.NODE_ENV === 'test';
+
 interface ServiceTestResult {
   service: string;
   status: "✅ PASS" | "❌ FAIL" | "⚠️ WARNING";
@@ -37,10 +42,17 @@ let hasFailures = false;
 let hasWarnings = false;
 
 // Utility function to add test result
+// In CI environments, missing credentials are warnings instead of failures
 function addResult(service: string, status: ServiceTestResult["status"], message: string, details?: string) {
-  results.push({ service, status, message, details });
-  if (status === "❌ FAIL") hasFailures = true;
-  if (status === "⚠️ WARNING") hasWarnings = true;
+  // In CI, downgrade "FAIL" to "WARNING" for missing credentials
+  let finalStatus = status;
+  if (isCI && status === "❌ FAIL" && message.includes("Missing required environment variables")) {
+    finalStatus = "⚠️ WARNING";
+  }
+  
+  results.push({ service, status: finalStatus, message, details });
+  if (finalStatus === "❌ FAIL") hasFailures = true;
+  if (finalStatus === "⚠️ WARNING") hasWarnings = true;
 }
 
 // Utility function to test HTTPS connectivity
@@ -189,7 +201,55 @@ async function testTwilioConfig(): Promise<void> {
   }
 }
 
-// Test Pusher Configuration
+// Test Vonage Configuration (replaces Twilio)
+async function testVonageConfig(): Promise<void> {
+  console.log("📱 Testing Vonage Configuration...");
+
+  const vonageApiKey = process.env.VONAGE_API_KEY;
+  const vonageApiSecret = process.env.VONAGE_API_SECRET;
+  const vonageAppId = process.env.VONAGE_APPLICATION_ID;
+  const vonagePrivateKey = process.env.VONAGE_PRIVATE_KEY;
+
+  // Check if Vonage variables are set
+  if (!vonageApiKey || !vonageApiSecret) {
+    const missing = [];
+    if (!vonageApiKey) missing.push("VONAGE_API_KEY");
+    if (!vonageApiSecret) missing.push("VONAGE_API_SECRET");
+    if (!vonageAppId) missing.push("VONAGE_APPLICATION_ID (optional)");
+    if (!vonagePrivateKey) missing.push("VONAGE_PRIVATE_KEY (optional)");
+    
+    addResult("Vonage", "❌ FAIL", "Missing required environment variables", 
+      `Missing: ${missing.join(", ")}`);
+    return;
+  }
+
+  // Check for placeholder values
+  const placeholders = ["your-", "example", "placeholder", "change-this"];
+  const hasPlaceholders = placeholders.some(p => 
+    vonageApiKey.toLowerCase().includes(p) || 
+    vonageApiSecret.toLowerCase().includes(p)
+  );
+
+  if (hasPlaceholders) {
+    addResult("Vonage", "⚠️ WARNING", "Vonage configuration appears to use placeholder values",
+      "Please configure with real Vonage credentials");
+    return;
+  }
+
+  // Test Vonage API connectivity
+  try {
+    const isReachable = await testHttpsConnectivity("api.nexmo.com");
+    if (isReachable) {
+      addResult("Vonage", "✅ PASS", "Vonage configuration valid and API reachable");
+    } else {
+      addResult("Vonage", "⚠️ WARNING", "Vonage configuration valid but API connectivity test failed");
+    }
+  } catch (error) {
+    addResult("Vonage", "⚠️ WARNING", "Vonage configuration valid but connectivity test failed");
+  }
+}
+
+// Test Pusher Configuration (legacy - may be deprecated)
 async function testPusherConfig(): Promise<void> {
   console.log("🔄 Testing Pusher Configuration...");
 
@@ -245,6 +305,51 @@ async function testPusherConfig(): Promise<void> {
     }
   } catch (error) {
     addResult("Pusher", "⚠️ WARNING", "Pusher configuration valid but connectivity test failed");
+  }
+}
+
+// Test Socket.io with Ably Configuration (replaces Pusher)
+async function testSocketioAblyConfig(): Promise<void> {
+  console.log("🔄 Testing Socket.io with Ably Configuration...");
+
+  const ablyApiKey = process.env.ABLY_API_KEY;
+  const socketioEnabled = process.env.SOCKETIO_ENABLED;
+
+  // Check if Ably API key is set
+  if (!ablyApiKey) {
+    addResult("Socket.io/Ably", "❌ FAIL", "Missing required environment variables", 
+      "Missing: ABLY_API_KEY");
+    return;
+  }
+
+  // Validate Ably API key format (should contain a colon separating key name and secret)
+  if (!ablyApiKey.includes(":") && !ablyApiKey.includes(".")) {
+    addResult("Socket.io/Ably", "⚠️ WARNING", "Ably API key format may be invalid",
+      "Ably API keys typically contain ':' or '.' separator");
+  }
+
+  // Check for placeholder values
+  const placeholders = ["your-", "example", "placeholder", "change-this"];
+  const hasPlaceholders = placeholders.some(p => 
+    ablyApiKey.toLowerCase().includes(p)
+  );
+
+  if (hasPlaceholders) {
+    addResult("Socket.io/Ably", "⚠️ WARNING", "Ably configuration appears to use placeholder values",
+      "Please configure with real Ably credentials");
+    return;
+  }
+
+  // Test Ably API connectivity
+  try {
+    const isReachable = await testHttpsConnectivity("rest.ably.io");
+    if (isReachable) {
+      addResult("Socket.io/Ably", "✅ PASS", "Socket.io with Ably configuration valid and API reachable");
+    } else {
+      addResult("Socket.io/Ably", "⚠️ WARNING", "Ably configuration valid but API connectivity test failed");
+    }
+  } catch (error) {
+    addResult("Socket.io/Ably", "⚠️ WARNING", "Ably configuration valid but connectivity test failed");
   }
 }
 
@@ -305,15 +410,62 @@ async function testWeb3Config(): Promise<void> {
   }
 }
 
+// Test Resgrid Configuration (essential for emergency dispatch)
+async function testResgridConfig(): Promise<void> {
+  console.log("🚨 Testing Resgrid Configuration (Emergency Dispatch)...");
+
+  const resgridApiKey = process.env.RESGRID_API_KEY;
+  const resgridApiUrl = process.env.RESGRID_API_URL || "https://api.resgrid.com";
+
+  // Check if Resgrid API key is set
+  if (!resgridApiKey) {
+    addResult("Resgrid", "❌ FAIL", "Missing required environment variables", 
+      "Missing: RESGRID_API_KEY (essential for emergency dispatch)");
+    return;
+  }
+
+  // Check for placeholder values
+  const placeholders = ["your-", "example", "placeholder", "change-this"];
+  const hasPlaceholders = placeholders.some(p => 
+    resgridApiKey.toLowerCase().includes(p)
+  );
+
+  if (hasPlaceholders) {
+    addResult("Resgrid", "⚠️ WARNING", "Resgrid configuration appears to use placeholder values",
+      "Please configure with real Resgrid API credentials");
+    return;
+  }
+
+  // Test Resgrid API connectivity
+  try {
+    const apiHostname = new URL(resgridApiUrl).hostname;
+    const isReachable = await testHttpsConnectivity(apiHostname);
+    if (isReachable) {
+      addResult("Resgrid", "✅ PASS", "Resgrid configuration valid and API reachable",
+        "Emergency dispatch communication ready");
+    } else {
+      addResult("Resgrid", "⚠️ WARNING", "Resgrid configuration valid but API connectivity test failed",
+        "Emergency dispatch may be affected");
+    }
+  } catch (error) {
+    addResult("Resgrid", "⚠️ WARNING", "Resgrid configuration valid but connectivity test failed");
+  }
+}
+
 // Main test function
 async function runServiceTests(): Promise<void> {
   console.log("🔧 GLX Service Connectivity Tests");
-  console.log("=====================================\n");
+  console.log("=====================================");
+  if (isCI) {
+    console.log("ℹ️  Running in CI mode - missing credentials treated as warnings");
+  }
+  console.log("");
 
   try {
     await testSMTPConfig();
-    await testTwilioConfig();
-    await testPusherConfig();
+    await testResgridConfig();  // Essential for emergency dispatch
+    await testVonageConfig();   // Replaces Twilio
+    await testSocketioAblyConfig();  // Replaces Pusher
     await testWeb3Config();
 
     console.log("\n📊 Test Results Summary:");
@@ -334,6 +486,9 @@ async function runServiceTests(): Promise<void> {
       process.exit(1);
     } else if (hasWarnings) {
       console.log("⚠️ WARNINGS - Some services have configuration warnings");
+      if (isCI) {
+        console.log("   Note: Warnings in CI are expected when credentials are not configured");
+      }
       console.log("   Consider reviewing the warnings for optimal functionality");
       process.exit(0);
     } else {
@@ -352,4 +507,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   runServiceTests();
 }
 
-export { runServiceTests, testSMTPConfig, testTwilioConfig, testPusherConfig, testWeb3Config };
+export { 
+  runServiceTests, 
+  testSMTPConfig, 
+  testResgridConfig,
+  testVonageConfig,
+  testSocketioAblyConfig,
+  testTwilioConfig,  // Legacy - kept for backwards compatibility
+  testPusherConfig,  // Legacy - kept for backwards compatibility
+  testWeb3Config 
+};
