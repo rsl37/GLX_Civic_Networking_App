@@ -85,6 +85,7 @@
       "production": true
     }
   },
+  "ignoreCommand": "if [[ \"$VERCEL_GIT_COMMIT_REF\" =~ ^copilot/ ]]; then exit 1; fi; exit 0",
   "functions": {
     "api/**/*.ts": {
       "maxDuration": 10
