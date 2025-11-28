@@ -431,6 +431,7 @@ app.post('/api/socketio/auth', authenticateToken, async (req: AuthRequest, res) 
   try {
     const { socket_id, channel_name } = req.body;
 
+    // socket_id is required for Socket.io client authentication flow
     if (!socket_id || !channel_name) {
       return sendError(res, 'Socket ID and channel name are required', 400);
     }
@@ -440,19 +441,22 @@ app.post('/api/socketio/auth', authenticateToken, async (req: AuthRequest, res) 
       // User can access their own notification channel
       res.json({
         auth: 'authorized',
+        socket_id, // Include socket_id in response for client tracking
         user_id: req.userId!.toString(),
         user_info: {
           username: req.username,
         },
       });
     } else if (channel_name.startsWith('private-help-request-')) {
-      // Extract help request ID and verify user has access
+      // Extract help request ID for potential authorization check
       const helpRequestId = channel_name.replace('private-help-request-', '');
+      console.log(`User ${req.userId} requesting access to help request ${helpRequestId}`);
 
       // TODO: Add proper authorization check for help requests
       // For now, allow all authenticated users
       res.json({
         auth: 'authorized',
+        socket_id,
         user_id: req.userId!.toString(),
         user_info: {
           username: req.username,
