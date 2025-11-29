@@ -230,7 +230,7 @@ export function ChatInterface({ helpRequestId, currentUser }: ChatInterfaceProps
           </Button>
         </form>
 
-        {/* Pusher Status */}
+        {/* Socket.io/Ably Status */}
         <div className='text-xs text-gray-500 text-center'>
           Real-time via SSE • {health?.connected ? 'Connected' : 'Connecting...'}
         </div>

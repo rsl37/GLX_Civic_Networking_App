@@ -1,23 +1,16 @@
-<<<<<<< HEAD
 ---
 title: "GLX Civic Networking App - Root Scripts"
-description: ""
-lastUpdated: "2025-08-03"
-nextReview: "2025-09-03"
+description: "Utility scripts for setup and maintenance"
+lastUpdated: "2025-11-29"
+nextReview: "2025-12-29"
 contentType: "overview"
 maintainer: "GLX Development Team"
 version: "1.0.0"
-tags: []
+tags: ["scripts", "setup"]
 relatedDocs: []
 ---
 
-<<<<<<< HEAD
 # GLX Civic Networking App - Root Scripts
-=======
-=======
->>>>>>> origin/copilot/fix-190
-# GLX Civic Networking App - Root Scripts
->>>>>>> origin/all-merged
 
 This directory contains utility scripts that can be run from the repository root directory.
 
@@ -46,7 +39,7 @@ npm run setup:env
 - Sets up all required application directories (data, uploads, logs, quarantine, etc.)
 - Sets proper permissions for security-sensitive directories
 - Provides interactive prompts for overwriting existing files
-- Shows clear guidance for essential service configuration (Pusher, SMTP, Twilio)
+- Shows clear guidance for essential service configuration (Socket.io, Ably, SMTP, Vonage)
 
 #### `ensure-test-dirs.sh`
 **Purpose**: Creates test artifact directories for CI/CD workflows.
@@ -92,8 +85,4 @@ The root `package.json` includes convenience commands:
 - `npm run setup:env:root` - Runs setup from root directory
 - `npm run setup:env` - Original command (runs from GLX_App_files)
 
-<<<<<<< HEAD
 This provides flexibility for different development workflows and CI/CD environments.
-=======
-This provides flexibility for different development workflows and CI/CD environments.
->>>>>>> origin/copilot/fix-190
