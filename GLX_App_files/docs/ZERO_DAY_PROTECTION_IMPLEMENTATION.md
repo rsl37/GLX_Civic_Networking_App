@@ -347,6 +347,4 @@ const SECURITY_CONFIG = {
 **Protection Level**: ZERO-DAY-PROTECTED (160/160 points)
 **All Modern Threat Categories**: ✅ PROTECTED
 
-<<<<<<< HEAD:GLX_App_files/docs/ZERO_DAY_PROTECTION_IMPLEMENTATION.md
-*The GLX app is now equipped with industry-leading zero-day vulnerability protection, ensuring security against both known and emerging threats.*
 *The GLX app is now equipped with industry-leading zero-day vulnerability protection, ensuring security against both known and emerging threats.*

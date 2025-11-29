@@ -1,18 +1,3 @@
-<<<<<<< HEAD
----
-title: "GitHub Actions Status Check Fix Implementation"
-description: ""
-lastUpdated: "2025-08-03"
-nextReview: "2025-09-03"
-contentType: "documentation"
-maintainer: "GLX Development Team"
-version: "1.0.0"
-tags: []
-relatedDocs: []
----
-
-=======
->>>>>>> origin/copilot/fix-175
 # GitHub Actions Status Check Fix Implementation
 
 ## Problem
@@ -152,8 +137,4 @@ All 6 workflow files pass YAML validation:
 - ✅ `workflow-monitor.yml` (3 jobs)
 - ✅ `status-monitor.yml` (1 job)
 
-<<<<<<< HEAD
 **Total: 20 jobs across 6 workflows** providing comprehensive CI/CD status monitoring and reporting.
-=======
-**Total: 20 jobs across 6 workflows** providing comprehensive CI/CD status monitoring and reporting.
->>>>>>> origin/copilot/fix-175
