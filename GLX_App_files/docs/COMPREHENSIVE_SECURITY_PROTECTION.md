@@ -11,7 +11,6 @@ relatedDocs: []
 ---
 
 # GLX App - Comprehensive Security Protection System
-# GLX App - Comprehensive Security Protection System
 
 ## Added 2025-01-13 21:59:45 UTC
 
