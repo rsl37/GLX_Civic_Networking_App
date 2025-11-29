@@ -19,7 +19,6 @@ This guide explains how to properly configure a custom domain with SSL on Vercel
 ## Issue Description
 
 When accessing the custom domain `glxcivicnetwork.me`, users encounter:
-When accessing the custom domain `galaxcivicnetwork.me`, users encounter:
 
 ```
 This site can't provide a secure connection
@@ -170,9 +169,6 @@ These configurations:
 After configuration, test both:
 - Direct Vercel URL: `https://glx-civic-networking-app.vercel.app`
 - Custom domain: `https://glxcivicnetwork.me`
-
-- Direct Vercel URL: `https://glx-civic-networking-app.vercel.app`
-- Custom domain: `https://galaxcivicnetwork.me`
 
 Both should work without SSL errors.
 

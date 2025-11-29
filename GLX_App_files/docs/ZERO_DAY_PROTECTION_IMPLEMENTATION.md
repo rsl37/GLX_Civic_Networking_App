@@ -348,4 +348,3 @@ const SECURITY_CONFIG = {
 **All Modern Threat Categories**: ✅ PROTECTED
 
 *The GLX app is now equipped with industry-leading zero-day vulnerability protection, ensuring security against both known and emerging threats.*
-*The GLX app is now equipped with industry-leading zero-day vulnerability protection, ensuring security against both known and emerging threats.*
