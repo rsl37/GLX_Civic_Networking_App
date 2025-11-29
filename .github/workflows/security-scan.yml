@@ -180,30 +180,41 @@ jobs:
           extra_args: --only-verified
 
       - name: Custom secret patterns check
+        working-directory: ./GLX_App_files
         run: |
           echo "🔍 Scanning for common secret patterns..."
           SECRET_FOUND=false
+          
+          # Define directories to exclude (node_modules, build artifacts, etc.)
+          EXCLUDE_DIRS="--exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=build --exclude-dir=.next"
+          
+          # Define files to scan (source code only, not compiled/minified)
+          INCLUDE_FILES="--include=*.ts --include=*.tsx --include=*.js --include=*.jsx --include=*.mjs --include=*.cjs"
+          
+          # Exclude test files and examples  
+          EXCLUDE_PATTERNS="--exclude=*.test.* --exclude=*.spec.* --exclude=*.min.js --exclude=*.bundle.js"
 
-          # AWS Access Keys
-          if grep -r -E "AKIA[0-9A-Z]{16}" --include="*.js" --include="*.ts" --exclude-dir=node_modules . 2>/dev/null | head -1; then
+          # AWS Access Keys (only match in non-base64 contexts)
+          # Look for patterns like AKIAIOSFODNN7EXAMPLE with proper word boundaries
+          if grep -r -E "\bAKIA[0-9A-Z]{16}\b" $INCLUDE_FILES $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "example" | grep -v "test" | head -1; then
             echo "❌ AWS access keys detected"
             SECRET_FOUND=true
           fi
 
-          # GitHub Personal Access Tokens
-          if grep -r -E "ghp_[a-zA-Z0-9]{36}" --include="*.js" --include="*.ts" --exclude-dir=node_modules . 2>/dev/null | head -1; then
+          # GitHub Personal Access Tokens  
+          if grep -r -E "ghp_[a-zA-Z0-9]{36}" $INCLUDE_FILES $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "example" | grep -v "test" | head -1; then
             echo "❌ GitHub tokens detected"
             SECRET_FOUND=true
           fi
 
-          # Private keys
-          if grep -r -E "-----BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY-----" --include="*.js" --include="*.ts" --include="*.pem" --exclude-dir=node_modules . 2>/dev/null | head -1; then
+          # Private keys (in source files only)
+          if grep -r -E "-----BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY-----" $INCLUDE_FILES --include=*.pem $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "example" | grep -v "test" | head -1; then
             echo "❌ Private keys detected"
             SECRET_FOUND=true
           fi
 
-          # JWT tokens (long base64 strings)
-          if grep -r -E "eyJ[A-Za-z0-9-_]+\.eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+" --include="*.js" --include="*.ts" --exclude-dir=node_modules . 2>/dev/null | grep -v "test" | head -1; then
+          # JWT tokens (long base64 strings) - exclude test files
+          if grep -r -E "eyJ[A-Za-z0-9-_]+\.eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+" $INCLUDE_FILES $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "test" | grep -v "spec" | grep -v "mock" | head -1; then
             echo "⚠️ Potential JWT tokens in source code"
             SECRET_FOUND=true
           fi

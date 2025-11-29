@@ -4,12 +4,13 @@ This document describes the service connectivity checks implemented for the GLX 
 
 ## Overview
 
-The service connectivity checks validate four essential services:
+The service connectivity checks validate essential services:
 
 - 📧 **SMTP** - Email functionality (password reset, notifications)
-- 📱 **Twilio** - SMS/phone verification 
-- 🔄 **Pusher** - Real-time messaging and notifications
+- 📱 **Vonage** - SMS/Voice communications
+- 🔄 **Socket.io/Ably** - Real-time messaging and notifications
 - 🌐 **MetaMask/Web3** - Blockchain connectivity and post-quantum cryptography
+- 🚨 **Resgrid** - Emergency dispatch communications
 
 ## Files Added
 
@@ -42,7 +43,7 @@ npm run test:services
 The workflow runs automatically on:
 - Push to `main` or `develop` branches
 - Pull requests to `main` branch
-- Daily at 6 AM UTC (scheduled check)
+<!-- - Daily at 12 AM GMT-6 (scheduled check) - Currently disabled, PR scans only -->
 - Manual dispatch (workflow_dispatch)
 
 ## Environment Variables Required
@@ -56,19 +57,20 @@ SMTP_PASS=your-app-password       # SMTP password (use app passwords for Gmail)
 SMTP_FROM=noreply@yourapp.com     # From email address
 ```
 
-### Twilio Configuration
+### Vonage Configuration
 ```bash
-TWILIO_SID=AC...                  # Twilio Account SID (34 characters, starts with AC)
-TWILIO_AUTH_TOKEN=your-token      # Twilio Auth Token
-TWILIO_PHONE_NUMBER=+1234567890   # Twilio phone number with country code
+VONAGE_API_KEY=your-api-key       # Vonage API Key
+VONAGE_API_SECRET=your-secret     # Vonage API Secret
 ```
 
-### Pusher Configuration
+### Ably Configuration (Optional)
 ```bash
-PUSHER_APP_ID=123456              # Pusher App ID (numeric)
-PUSHER_KEY=your-pusher-key        # Pusher application key
-PUSHER_SECRET=your-pusher-secret  # Pusher application secret
-PUSHER_CLUSTER=us2                # Pusher cluster (us2, us3, eu, ap1, etc.)
+ABLY_API_KEY=your-ably-api-key    # Ably API Key
+```
+
+### Socket.io Configuration (Optional)
+```bash
+SOCKET_IO_URL=http://localhost:3000  # Socket.io server URL
 ```
 
 ### Web3/MetaMask
@@ -92,16 +94,18 @@ The script provides detailed feedback on each service:
 =====================================
 
 📧 Testing SMTP Configuration...
-📱 Testing Twilio Configuration...
-🔄 Testing Pusher Configuration...
+📱 Testing Vonage Configuration...
+🔄 Testing Ably Configuration...
+🔌 Testing Socket.io Configuration...
 🌐 Testing MetaMask/Web3 Configuration...
 
 📊 Test Results Summary:
 ========================
 
 ✅ PASS SMTP: SMTP configuration valid and host reachable
-✅ PASS Twilio: Twilio configuration valid and API reachable
-✅ PASS Pusher: Pusher configuration valid and API reachable
+✅ PASS Vonage: Vonage configuration valid and API reachable
+✅ PASS Ably: Ably configuration valid and API reachable
+✅ PASS Socket.io: Socket.io libraries detected: socket.io, socket.io-client
 ✅ PASS Web3/MetaMask: Web3 libraries detected: @noble/post-quantum, crystals-kyber, dilithium-js
 ✅ PASS Web3 Providers: Web3 providers reachable: 3/3
 
@@ -117,17 +121,19 @@ The script provides detailed feedback on each service:
 - Detects placeholder values
 - Tests host connectivity
 
-### Twilio Validation
-- Validates SID format (AC + 32 characters)
-- Checks phone number format (+country code)
-- Tests Twilio API connectivity
+### Vonage Validation
+- Checks for API Key and Secret
+- Tests Vonage API connectivity
 - Detects placeholder values
 
-### Pusher Validation
-- Validates App ID is numeric
-- Tests cluster-specific API endpoints
+### Ably Validation
+- Validates API key format
+- Tests Ably REST API connectivity
 - Checks for placeholder values
-- Verifies configuration completeness
+
+### Socket.io Validation
+- Checks for Socket.io libraries in dependencies
+- Tests server connectivity if URL is configured
 
 ### Web3/MetaMask Validation
 - Checks for Web3 libraries in dependencies
@@ -172,9 +178,8 @@ The GitHub Actions workflow:
    - Check firewall settings for outbound connections
 
 4. **Invalid Credential Formats**
-   - Twilio SID must start with "AC" and be 34 characters
-   - Phone numbers should include country code (+1234567890)
    - Email addresses must be valid format
+   - API keys should not contain placeholder values
 
 ### Getting Service Credentials
 
@@ -183,15 +188,14 @@ The GitHub Actions workflow:
 2. Generate an App Password
 3. Use the App Password as SMTP_PASS
 
-#### Twilio
-1. Sign up at https://twilio.com
-2. Get Account SID and Auth Token from dashboard
-3. Purchase a phone number
+#### Vonage
+1. Sign up at https://vonage.com
+2. Get API Key and Secret from dashboard
 
-#### Pusher
-1. Sign up at https://pusher.com
+#### Ably
+1. Sign up at https://ably.com
 2. Create a new app
-3. Copy App ID, Key, Secret, and Cluster from app settings
+3. Copy API Key from app settings
 
 ## Support
 
