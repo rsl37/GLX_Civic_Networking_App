@@ -196,25 +196,33 @@ jobs:
 
           # AWS Access Keys (only match in non-base64 contexts)
           # Look for patterns like AKIAIOSFODNN7EXAMPLE with proper word boundaries
-          if grep -r -E "\bAKIA[0-9A-Z]{16}\b" $INCLUDE_FILES $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "example" | grep -v "test" | head -1; then
+          AWS_RESULT=$(grep -r -E "\bAKIA[0-9A-Z]{16}\b" $INCLUDE_FILES $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "example" | grep -v "test" | head -1)
+          if [ -n "$AWS_RESULT" ]; then
+            echo "$AWS_RESULT"
             echo "❌ AWS access keys detected"
             SECRET_FOUND=true
           fi
 
           # GitHub Personal Access Tokens  
-          if grep -r -E "ghp_[a-zA-Z0-9]{36}" $INCLUDE_FILES $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "example" | grep -v "test" | head -1; then
+          GHP_RESULT=$(grep -r -E "ghp_[a-zA-Z0-9]{36}" $INCLUDE_FILES $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "example" | grep -v "test" | head -1)
+          if [ -n "$GHP_RESULT" ]; then
+            echo "$GHP_RESULT"
             echo "❌ GitHub tokens detected"
             SECRET_FOUND=true
           fi
 
           # Private keys (in source files only)
-          if grep -r -E "-----BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY-----" $INCLUDE_FILES --include=*.pem $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "example" | grep -v "test" | head -1; then
+          KEY_RESULT=$(grep -r -E "-----BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY-----" $INCLUDE_FILES --include=*.pem $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "example" | grep -v "test" | head -1)
+          if [ -n "$KEY_RESULT" ]; then
+            echo "$KEY_RESULT"
             echo "❌ Private keys detected"
             SECRET_FOUND=true
           fi
 
           # JWT tokens (long base64 strings) - exclude test files
-          if grep -r -E "eyJ[A-Za-z0-9-_]+\.eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+" $INCLUDE_FILES $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "test" | grep -v "spec" | grep -v "mock" | head -1; then
+          JWT_RESULT=$(grep -r -E "eyJ[A-Za-z0-9-_]+\.eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+" $INCLUDE_FILES $EXCLUDE_DIRS $EXCLUDE_PATTERNS . 2>/dev/null | grep -v "node_modules" | grep -v "test" | grep -v "spec" | grep -v "mock" | head -1)
+          if [ -n "$JWT_RESULT" ]; then
+            echo "$JWT_RESULT"
             echo "⚠️ Potential JWT tokens in source code"
             SECRET_FOUND=true
           fi
