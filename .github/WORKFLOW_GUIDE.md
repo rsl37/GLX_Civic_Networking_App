@@ -43,7 +43,7 @@ The workflow system was recently refactored to:
 - **Quantum-Safe Configuration**: Custom CodeQL config for advanced security
 
 #### Security Streamlined (`security-streamlined.yml`)
-**Triggers:** Push/PR to main/develop, daily schedule (2 AM UTC)
+**Triggers:** Push/PR to main/develop, daily schedule (8 PM GMT-6)
 **Duration:** ~15-20 minutes
 
 **Jobs:**
@@ -104,7 +104,7 @@ The workflow system was recently refactored to:
 - Health checks and rollback capability
 
 ### 6. 🔍 Workflow Health Monitor (`workflow-monitor.yml`)
-**Triggers:** Daily schedule (6 AM UTC), workflow completions
+**Triggers:** Daily schedule (12 AM GMT-6), workflow completions
 **Duration:** ~5 minutes
 
 **Jobs:**

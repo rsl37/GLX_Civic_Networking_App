@@ -22,7 +22,7 @@ These are essential workflows that maintain code and deployment integrity.
 #### 2. **Security Scan** - `security-scan.yml`
 **Purpose**: Comprehensive security vulnerability detection  
 **Jobs**: CodeQL Analysis, Dependency Scan, Secret Detection, njsscan  
-**Triggers**: Push to main/develop, Pull Requests, Daily schedule (2 AM UTC)
+**Triggers**: Push to main/develop, Pull Requests, Daily schedule (8 PM GMT-6)
 
 #### 3. **Deploy** - `deploy.yml`
 **Purpose**: Preview and production deployments  
@@ -176,7 +176,7 @@ Configure these status checks in **Settings → Branches → Branch Protection R
 ## Security Configuration
 
 ### Dependabot - `.github/dependabot.yml`
-- Weekly dependency updates (Mondays at 4 AM UTC)
+- Weekly dependency updates (Sundays at 10 PM GMT-6)
 - Grouped updates for production vs development dependencies
 - Security updates for all dependency types
 - GitHub Actions updates to keep workflows current
