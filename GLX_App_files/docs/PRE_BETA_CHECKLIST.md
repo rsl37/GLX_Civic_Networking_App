@@ -13,7 +13,6 @@ relatedDocs: []
 # GLX Civic Platform - Pre-Beta Checklist
 
 ## 🚀 Overview
-<<<<<<< HEAD:GLX_App_files/docs/PRE_BETA_CHECKLIST.md
 This document provides a comprehensive review of the GLX civic platform build status and readiness for beta phases.
 
 This document provides a comprehensive review of the GLX civic platform build status and readiness for beta phases.
@@ -131,7 +130,6 @@ This document provides a comprehensive review of the GLX civic platform build st
 - ✅ **Error States** - User-friendly error messages
 
 ### Visual Design
-<<<<<<< HEAD:GLX_App_files/docs/PRE_BETA_CHECKLIST.md
 - ✅ **GLX Theme** - Custom anime-inspired design system
 
 - ✅ **GLX Theme** - Custom anime-inspired design system

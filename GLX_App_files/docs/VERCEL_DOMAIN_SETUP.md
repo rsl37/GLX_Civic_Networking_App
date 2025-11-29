@@ -18,7 +18,6 @@ This guide explains how to properly configure a custom domain with SSL on Vercel
 
 ## Issue Description
 
-<<<<<<< HEAD:GLX_App_files/docs/VERCEL_DOMAIN_SETUP.md
 When accessing the custom domain `glxcivicnetwork.me`, users encounter:
 When accessing the custom domain `galaxcivicnetwork.me`, users encounter:
 
@@ -169,7 +168,6 @@ These configurations:
 ## Testing
 
 After configuration, test both:
-<<<<<<< HEAD:GLX_App_files/docs/VERCEL_DOMAIN_SETUP.md
 - Direct Vercel URL: `https://glx-civic-networking-app.vercel.app`
 - Custom domain: `https://glxcivicnetwork.me`
 

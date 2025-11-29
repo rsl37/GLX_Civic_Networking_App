@@ -13,7 +13,6 @@ relatedDocs: []
 # 🔴 URGENT: "Request Failed" Error - Fix Implementation Guide
 
 ## Overview
-<<<<<<< HEAD:GLX_App_files/VERCEL_DEPLOYMENT_FIX_GUIDE.md
 This document provides the complete solution for the "! Request failed" error with circle icon during account creation in the Vercel production deployment of the GLX Civic Networking App.
 
 This document provides the complete solution for the "! Request failed" error with circle icon during account creation in the Vercel production deployment of the GLX Civic Networking App.

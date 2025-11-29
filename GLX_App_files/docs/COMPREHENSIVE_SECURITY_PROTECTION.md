@@ -10,7 +10,6 @@ tags: []
 relatedDocs: []
 ---
 
-<<<<<<< HEAD:GLX_App_files/docs/COMPREHENSIVE_SECURITY_PROTECTION.md
 # GLX App - Comprehensive Security Protection System
 # GLX App - Comprehensive Security Protection System
 
