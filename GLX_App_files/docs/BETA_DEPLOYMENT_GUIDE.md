@@ -336,7 +336,6 @@ sqlite3 /opt/glx/data/database.sqlite "SELECT name FROM sqlite_master WHERE type
 ## 📊 Monitoring & Logging
 
 ### Log Files
-<<<<<<< HEAD:GLX_App_files/docs/BETA_DEPLOYMENT_GUIDE.md
 - Application logs: `/opt/glx/logs/`
 - PM2 logs: `pm2 logs glx-api`
 
