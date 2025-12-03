@@ -346,7 +346,7 @@ router.delete(
         .where('id', '=', parseInt(id))
         .execute();
 
-      console.log(`✅ Deleted community link: ${id}`);
+      console.log(`✅ Deleted community link: ${String(id).replace(/\r?\n|\r/g, '')}`);
 
       sendSuccess(res, { message: 'Community link deleted' });
     } catch (error) {
