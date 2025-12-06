@@ -93,13 +93,17 @@ export interface HelpRequestMatch {
 
 /**
  * Parse skills from JSON string safely
+ * Only accepts string values in the array to prevent unexpected type coercion
  */
 function parseSkills(skillsJson: string | null): string[] {
   if (!skillsJson) return [];
   try {
     const parsed = JSON.parse(skillsJson);
     if (Array.isArray(parsed)) {
-      return parsed.map(s => String(s).toLowerCase().trim()).filter(Boolean);
+      return parsed
+        .filter(s => typeof s === 'string')
+        .map(s => s.toLowerCase().trim())
+        .filter(Boolean);
     }
     return [];
   } catch {
