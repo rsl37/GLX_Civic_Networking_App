@@ -38,6 +38,11 @@ import { db } from '../database.js';
 const router = Router();
 
 /**
+ * Maximum number of skills a user can have
+ */
+const MAX_USER_SKILLS = 50;
+
+/**
  * GET /api/skills/categories
  * Get all skill categories
  */
@@ -250,9 +255,10 @@ router.put('/user', authenticateToken, apiLimiter, async (req: AuthRequest, res)
 
     // Validate and normalize skills
     const normalizedSkills = skills
-      .map(s => String(s).toLowerCase().trim())
+      .filter(s => typeof s === 'string')
+      .map(s => s.toLowerCase().trim())
       .filter(Boolean)
-      .slice(0, 50); // Limit to 50 skills
+      .slice(0, MAX_USER_SKILLS); // Limit to maximum allowed skills
 
     console.log('📝 Updating skills for user:', userId);
 

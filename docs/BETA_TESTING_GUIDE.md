@@ -341,7 +341,7 @@ A: No, during beta the CROWDS stablecoin system is in view-only mode.
 ## Contact & Support
 
 - **Email**: beta@glxcivicnetwork.me
-- **Discord**: [GLX Community Discord](#) (link provided separately)
+- **Discord**: Link will be provided via email to registered beta testers
 - **Documentation**: [docs.glxcivicnetwork.me](https://docs.glxcivicnetwork.me)
 - **GitHub Issues**: [github.com/rsl37/GLX_Civic_Networking_App/issues](https://github.com/rsl37/GLX_Civic_Networking_App/issues)
 
