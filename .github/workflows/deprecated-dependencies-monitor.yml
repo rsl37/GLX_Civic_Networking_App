@@ -35,12 +35,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
           
       - name: Install dependencies
         run: |
           cd GLX_App_files
-          npm ci
+          pnpm install --frozen-lockfile
           
       - name: Run deprecated dependencies check
         id: check
@@ -73,13 +91,24 @@ jobs:
             echo "vercel_fun_uses_path_match=false" >> $GITHUB_OUTPUT
           fi
           
-          # Check for vulnerabilities in path-match
+          # Check for vulnerabilities in path-match (with fallback if jq not available)
           VULN_CHECK=$(curl -s "https://api.osv.dev/v1/query" \
             -H "Content-Type: application/json" \
-            -d '{"package":{"name":"path-match","ecosystem":"npm"},"version":"1.2.4"}' | \
-            jq -r '.vulns // []' 2>/dev/null || echo "[]")
+            -d '{"package":{"name":"path-match","ecosystem":"npm"},"version":"1.2.4"}')
           
-          if [ "$VULN_CHECK" != "[]" ]; then
+          # Try to parse with jq, fall back to grep if jq unavailable
+          if command -v jq &> /dev/null; then
+            VULNS=$(echo "$VULN_CHECK" | jq -r '.vulns // []' 2>/dev/null || echo "[]")
+          else
+            # Fallback: check if response contains "vulns" field with content
+            if echo "$VULN_CHECK" | grep -q '"vulns":\[.\+\]'; then
+              VULNS="true"
+            else
+              VULNS="[]"
+            fi
+          fi
+          
+          if [ "$VULNS" != "[]" ] && [ "$VULNS" != "false" ]; then
             echo "path_match_has_vulns=true" >> $GITHUB_OUTPUT
           else
             echo "path_match_has_vulns=false" >> $GITHUB_OUTPUT

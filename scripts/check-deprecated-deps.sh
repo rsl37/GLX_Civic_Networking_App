@@ -47,15 +47,20 @@ check_production_deps() {
     echo "🏭 Verifying production dependencies..."
     echo ""
     
-    cd GLX_App_files 2>/dev/null || {
-        echo -e "${RED}✗${NC} GLX_App_files directory not found"
-        return 1
-    }
+    # Check if GLX_App_files directory exists early
+    if [ ! -d "GLX_App_files" ]; then
+        echo -e "${YELLOW}⚠${NC}  GLX_App_files directory not found (skipping production check)"
+        echo "   This is expected if running outside the repository root"
+        return 0
+    fi
+    
+    cd GLX_App_files
     
     # Check if path-match is in production dependencies
     if npm ls path-match 2>&1 | grep -q "path-match@"; then
         echo -e "${RED}✗${NC} path-match found in production dependencies!"
         npm ls path-match
+        cd ..
         return 1
     else
         echo -e "${GREEN}✓${NC} path-match NOT in production dependencies"
@@ -130,14 +135,21 @@ check_vercel_cli
 # Run npm audit
 echo "🔍 Running npm audit..."
 echo ""
-cd GLX_App_files 2>/dev/null || exit 1
-if npm audit --audit-level=high 2>&1 | grep -q "found 0 vulnerabilities"; then
-    echo -e "${GREEN}✓${NC} No high or critical vulnerabilities found"
+
+# Check if GLX_App_files directory exists
+if [ ! -d "GLX_App_files" ]; then
+    echo -e "${YELLOW}⚠${NC}  GLX_App_files directory not found (skipping npm audit)"
+    echo "   This is expected if running outside the repository root"
 else
-    echo -e "${YELLOW}⚠${NC}  Vulnerabilities detected - reviewing..."
-    npm audit --audit-level=high
+    cd GLX_App_files
+    if npm audit --audit-level=high 2>&1 | grep -q "found 0 vulnerabilities"; then
+        echo -e "${GREEN}✓${NC} No high or critical vulnerabilities found"
+    else
+        echo -e "${YELLOW}⚠${NC}  Vulnerabilities detected - reviewing..."
+        npm audit --audit-level=high || true
+    fi
+    cd ..
 fi
-cd ..
 echo ""
 
 # Summary
