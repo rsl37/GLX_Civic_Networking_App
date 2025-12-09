@@ -96,5 +96,10 @@
   "trailingSlash": false,
   "env": {
     "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NODE_VERSION": "24.x"
+    }
   }
 }
