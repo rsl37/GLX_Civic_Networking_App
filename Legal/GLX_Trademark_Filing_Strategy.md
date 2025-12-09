@@ -4,7 +4,7 @@ description: "Comprehensive trademark strategy for GLX brand protection"
 lastUpdated: "2025-12-09"
 nextReview: "2026-01-09"
 contentType: "legal-strategy"
-maintainer: "GLX Development Team"
+maintainer: "rsl37"
 version: "1.0.0"
 tags: ["trademark", "ip-strategy", "legal-filing"]
 relatedDocs: ["GLX_Brand_Migration_Legal_Framework.md", "GLX_Attribution_Statement.md"]
