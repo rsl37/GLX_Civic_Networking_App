@@ -190,7 +190,7 @@ Example .env file:
   TRUSTED_ORIGINS=https://glxcivicnetwork.me,https://glx-civic-networking.vercel.app
   SMTP_HOST=smtp.gmail.com
   SMTP_PORT=587
-  SMTP_USER=roselleroberts@pm.me
+  SMTP_USER=your-email@gmail.com
   SMTP_PASS=your-app-password
   SMTP_FROM=GLX Support <noreply@glxcivicnetwork.me>
 
