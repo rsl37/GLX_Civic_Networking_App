@@ -45,9 +45,9 @@ JWT_SECRET=your-64-character-secure-random-string
 **RECOMMENDED** - For full functionality:
 
 ```bash
-CLIENT_ORIGIN=https://your-app-name.vercel.app
-FRONTEND_URL=https://your-app-name.vercel.app
-TRUSTED_ORIGINS=https://your-app-name.vercel.app,https://glxcivicnetwork.me
+CLIENT_ORIGIN=https://glxcivicnetworkingapp.vercel.app
+FRONTEND_URL=https://glxcivicnetworkingapp.vercel.app
+TRUSTED_ORIGINS=https://glxcivicnetworkingapp.vercel.app,https://glxcivicnetwork.me
 REALTIME_PATH=/api/realtime
 ```
 
