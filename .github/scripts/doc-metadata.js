@@ -71,7 +71,7 @@ class DocumentationManager {
       nextReview: reviewDate,
       contentType,
       path: relativePath,
-      maintainer: 'GLX Development Team',
+      maintainer: 'rsl37',
       version: '1.0.0'
     };
   }
@@ -203,6 +203,10 @@ relatedDocs: ${formatValue(metadata.relatedDocs || [])}
           const nextReview = new Date();
           nextReview.setMonth(nextReview.getMonth() + 1);
           metadata.nextReview = nextReview.toISOString().split('T')[0];
+          
+          // Force update maintainer to current value from generateMetadata
+          const freshMetadata = this.generateMetadata(filePath, bodyContent);
+          metadata.maintainer = freshMetadata.maintainer;
         } else {
           metadata = this.generateMetadata(filePath, content);
         }

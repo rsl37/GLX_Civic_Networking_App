@@ -4,7 +4,7 @@ description: "4-Week actionable roadmap to bridge current codebase to production
 lastUpdated: "2025-12-09"
 nextReview: "2026-01-09"
 contentType: "planning"
-maintainer: "GLX Development Team"
+maintainer: "rsl37"
 version: "1.1.0"
 tags: ["roadmap", "beta", "launch", "planning"]
 relatedDocs: ["DEVELOPMENT_ACTIVITY_HISTORY.md", "MONTHLY_DEVELOPMENT_METRICS.md", "FISCAL_QUARTER_SUMMARY.md"]
