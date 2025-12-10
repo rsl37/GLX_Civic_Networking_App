@@ -22,7 +22,16 @@ import {
   StatusCodes,
   ErrorMessages,
 } from '../utils/responseHelpers.js';
-import { hashPassword, comparePassword, generateToken, authenticateToken, blacklistToken } from '../auth.js';
+import { 
+  hashPassword, 
+  comparePassword, 
+  generateToken, 
+  generateRefreshToken,
+  verifyRefreshToken,
+  rotateRefreshToken,
+  authenticateToken, 
+  blacklistToken 
+} from '../auth.js';
 import {
   generatePasswordResetToken,
   sendPasswordResetEmail,
@@ -148,11 +157,13 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
     }
 
     const token = generateToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
     trackUserAction('registration', user.id);
 
     console.log('✅ User registered successfully:', user.id);
     sendSuccess(res, {
       token,
+      refreshToken,
       userId: user.id,
       emailVerificationRequired: !!email,
       phoneVerificationRequired: !!phone,
@@ -228,6 +239,7 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
     }
 
     const token = generateToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
 
     if ((req as any).lockoutKey) {
       recordSuccessfulAttempt((req as any).lockoutKey);
@@ -238,6 +250,7 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
     console.log('✅ Login successful:', user.id);
     sendSuccess(res, {
       token,
+      refreshToken,
       userId: user.id,
       emailVerified: user.email_verified === 1,
       phoneVerified: user.phone_verified === 1,
@@ -278,6 +291,54 @@ router.post('/logout', authenticateToken, async (req: AuthRequest, res) => {
       return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
     }
     sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Refresh token endpoint - get a new access token using a refresh token
+router.post('/refresh', authLimiter, async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return sendError(res, 'Refresh token is required', StatusCodes.BAD_REQUEST);
+    }
+
+    console.log('🔄 Token refresh request');
+
+    // Verify the refresh token
+    const userId = await verifyRefreshToken(refreshToken);
+
+    if (!userId) {
+      return sendError(res, 'Invalid or expired refresh token', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Generate new access token
+    const newAccessToken = generateToken(userId);
+    
+    // Rotate refresh token for enhanced security
+    const newRefreshToken = await rotateRefreshToken(refreshToken, userId);
+
+    if (!newRefreshToken) {
+      // If rotation fails, still return new access token with old refresh token
+      console.log('⚠️ Refresh token rotation failed, returning new access token only');
+      return sendSuccess(res, {
+        token: newAccessToken,
+        refreshToken: refreshToken, // Return original if rotation failed
+        message: 'Access token refreshed',
+      });
+    }
+
+    trackUserAction('token_refresh', userId);
+
+    console.log('✅ Tokens refreshed successfully for user:', userId);
+    sendSuccess(res, {
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
+      message: 'Tokens refreshed successfully',
+    });
+  } catch (error) {
+    console.error('❌ Token refresh error:', error);
+    sendError(res, 'Failed to refresh token', StatusCodes.INTERNAL_ERROR);
   }
 });
 
