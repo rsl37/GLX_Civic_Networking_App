@@ -15,7 +15,7 @@
  */
 
 /**
- * @file mcp-servers/auth-server-hardened.js
+ * @file mcp-servers/auth-server.js
  * Hardened JWT Authentication Server for MCP
  *
  * Provides secure token generation, validation, and permission management.
