@@ -243,12 +243,16 @@ export function extractDeviceInfo(userAgent?: string): string {
     return 'Mobile Device';
   }
 
+  // Browser detection (check specific browsers before generic ones)
+  if (userAgent.includes('Brave')) return 'Brave Browser';
+  if (userAgent.includes('Firefox')) return 'Firefox Browser';
+  if (userAgent.includes('Chrome')) return 'Chrome Browser';
+  if (userAgent.includes('Safari')) return 'Safari Browser';
+  
+  // OS detection
   if (userAgent.includes('Windows')) return 'Windows PC';
   if (userAgent.includes('Mac')) return 'Mac';
   if (userAgent.includes('Linux')) return 'Linux PC';
-  if (userAgent.includes('Chrome')) return 'Chrome Browser';
-  if (userAgent.includes('Firefox')) return 'Firefox Browser';
-  if (userAgent.includes('Safari')) return 'Safari Browser';
 
   return 'Unknown Device';
 }
