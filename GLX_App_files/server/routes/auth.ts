@@ -51,7 +51,7 @@ import {
   markPhoneAsVerified,
   sendPhoneVerification,
 } from '../phone.js';
-import { generate2FASecret, enable2FA, disable2FA, verify2FACode, get2FAStatus } from '../twofa.js';
+import { generate2FASecret, enable2FA, disable2FA, verify2FACode, get2FAStatus, is2FAEnabled } from '../twofa.js';
 import {
   authLimiter,
   emailLimiter,
@@ -101,6 +101,13 @@ import {
   getUserSessionStats,
   extractDeviceInfo,
 } from '../session.js';
+import {
+  trustDevice,
+  isDeviceTrusted,
+  revokeTrustedDevice,
+  getUserTrustedDevices,
+  revokeAllTrustedDevices,
+} from '../trustedDevices.js';
 import { db } from '../database.js';
 
 const router = Router();
@@ -275,6 +282,26 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
       }
     }
 
+    // Check if user has 2FA enabled
+    const has2FA = await is2FAEnabled(user.id);
+    
+    if (has2FA) {
+      // Check if device is trusted
+      const deviceTrust = isDeviceTrusted(user.id, req.headers['user-agent'], req.ip);
+      
+      if (!deviceTrust.trusted) {
+        // 2FA is required - return a special response indicating 2FA is needed
+        console.log('🔐 2FA required for user:', user.id);
+        return sendSuccess(res, {
+          requires2FA: true,
+          userId: user.id,
+          message: '2FA verification required',
+        });
+      }
+      
+      console.log('✅ Device is trusted, skipping 2FA');
+    }
+
     const token = generateToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
     
@@ -299,6 +326,7 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
       userId: user.id,
       emailVerified: user.email_verified === 1,
       phoneVerified: user.phone_verified === 1,
+      has2FA,
     });
   } catch (error) {
     console.error('❌ Login error:', error);
@@ -637,8 +665,43 @@ router.post('/2fa/enable', authenticateToken, async (req: AuthRequest, res) => {
       return sendError(res, 'Invalid verification code. Please try again.', StatusCodes.BAD_REQUEST);
     }
 
+    // Award 2FA security badge
+    try {
+      const user = await db
+        .selectFrom('users')
+        .select('badges')
+        .where('id', '=', userId)
+        .executeTakeFirst();
+
+      if (user) {
+        const badges = JSON.parse(user.badges || '[]');
+        
+        // Add 2FA badge if not already present
+        if (!badges.includes('2fa_security')) {
+          badges.push('2fa_security');
+          
+          await db
+            .updateTable('users')
+            .set({
+              badges: JSON.stringify(badges),
+              updated_at: new Date().toISOString(),
+            })
+            .where('id', '=', userId)
+            .execute();
+          
+          console.log('🏆 Awarded 2FA Security badge to user:', userId);
+        }
+      }
+    } catch (badgeError) {
+      console.error('⚠️ Failed to award 2FA badge (non-critical):', badgeError);
+      // Continue even if badge fails - it's not critical
+    }
+
     console.log('✅ 2FA enabled successfully for user:', userId);
-    sendSuccess(res, { message: 'Two-factor authentication enabled successfully' });
+    sendSuccess(res, { 
+      message: 'Two-factor authentication enabled successfully',
+      badgeAwarded: true,
+    });
   } catch (error) {
     console.error('❌ 2FA enable error:', error);
     if (error.message === ErrorMessages.INVALID_TOKEN) {
@@ -672,6 +735,64 @@ router.post('/2fa/disable', authenticateToken, async (req: AuthRequest, res) => 
     if (error.message === ErrorMessages.INVALID_TOKEN) {
       return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
     }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// 2FA verification during login with optional device trust
+router.post('/2fa/verify-login', authLimiter, async (req, res) => {
+  try {
+    const { userId, code, trustDevice: shouldTrustDevice } = req.body;
+
+    console.log('🔍 2FA login verification request from user:', userId);
+
+    if (!userId || !code) {
+      return sendError(res, 'User ID and verification code are required', StatusCodes.BAD_REQUEST);
+    }
+
+    if (typeof code !== 'string' || code.length !== 6 || !/^\d{6}$/.test(code)) {
+      return sendError(res, 'Please provide a valid 6-digit numeric verification code', StatusCodes.BAD_REQUEST);
+    }
+
+    // Verify the 2FA code
+    const isValid = await verify2FACode(userId, code);
+
+    if (!isValid) {
+      return sendError(res, 'Invalid verification code. Please try again.', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Generate tokens after successful 2FA verification
+    const token = generateToken(userId);
+    const refreshToken = generateRefreshToken(userId);
+    
+    // Create session
+    const sessionId = createSession(userId, token, refreshToken, {
+      deviceInfo: extractDeviceInfo(req.headers['user-agent']),
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    // Trust device for 7 days if requested
+    let trustedDeviceId;
+    if (shouldTrustDevice) {
+      trustedDeviceId = trustDevice(userId, req.headers['user-agent'], req.ip);
+      console.log('✅ Device trusted for 7 days');
+    }
+
+    trackUserAction('2fa_login', userId);
+
+    console.log('✅ 2FA login verification successful for user:', userId);
+    sendSuccess(res, {
+      token,
+      refreshToken,
+      sessionId,
+      userId,
+      trustedDevice: shouldTrustDevice,
+      trustedDeviceId,
+      message: '2FA verification successful',
+    });
+  } catch (error) {
+    console.error('❌ 2FA login verification error:', error);
     sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
   }
 });
@@ -1153,6 +1274,87 @@ router.post('/sessions/revoke-all', authenticateToken, async (req: AuthRequest, 
     });
   } catch (error) {
     console.error('❌ All sessions revocation error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Trusted devices management endpoints
+
+// Get all trusted devices for the current user
+router.get('/trusted-devices', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const devices = getUserTrustedDevices(userId);
+    
+    // Sanitize device data before sending
+    const sanitizedDevices = devices.map(device => ({
+      deviceId: device.deviceId,
+      deviceName: device.deviceName,
+      ipAddress: device.ipAddress,
+      trustedUntil: new Date(device.trustedUntil).toISOString(),
+      createdAt: new Date(device.createdAt).toISOString(),
+      lastUsed: new Date(device.lastUsed).toISOString(),
+    }));
+
+    sendSuccess(res, { devices: sanitizedDevices });
+  } catch (error) {
+    console.error('❌ Error fetching trusted devices:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Revoke a specific trusted device
+router.delete('/trusted-devices/:deviceId', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const { deviceId } = req.params;
+
+    if (!deviceId) {
+      return sendError(res, 'Device ID is required', StatusCodes.BAD_REQUEST);
+    }
+
+    const success = revokeTrustedDevice(userId, deviceId);
+
+    if (!success) {
+      return sendError(res, 'Trusted device not found', StatusCodes.NOT_FOUND);
+    }
+
+    trackUserAction('trusted_device_revoked', userId);
+
+    console.log('✅ Trusted device revoked for user:', userId);
+    sendSuccess(res, { message: 'Trusted device revoked successfully' });
+  } catch (error) {
+    console.error('❌ Trusted device revocation error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Revoke all trusted devices
+router.post('/trusted-devices/revoke-all', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const revokedCount = revokeAllTrustedDevices(userId);
+
+    trackUserAction('all_trusted_devices_revoked', userId);
+
+    console.log(`✅ Revoked ${revokedCount} trusted devices for user:`, userId);
+    sendSuccess(res, {
+      message: `${revokedCount} trusted device(s) revoked successfully`,
+      revokedCount,
+    });
+  } catch (error) {
+    console.error('❌ All trusted devices revocation error:', error);
     if (error.message === ErrorMessages.INVALID_TOKEN) {
       return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
     }
