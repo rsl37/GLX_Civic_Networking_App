@@ -49,7 +49,7 @@ permissions:
   pull-requests: write
 
 env:
-  NODE_VERSION: 20.x
+  NODE_VERSION: 24.x
 
 jobs:
   validate-submodules:

@@ -52,7 +52,7 @@ permissions:
   pull-requests: write
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
   WORKING_DIRECTORY: './GLX_App_files'
   CACHE_VERSION: v1
   APP_PORT: '3000'
