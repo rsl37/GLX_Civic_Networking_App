@@ -168,6 +168,55 @@ export async function cleanupExpiredBlacklistedTokens(): Promise<number> {
   }
 }
 
+/**
+ * Verify and validate a refresh token
+ */
+export async function verifyRefreshToken(token: string): Promise<number | null> {
+  try {
+    // Check if token is blacklisted
+    const blacklisted = await isTokenBlacklisted(token);
+    if (blacklisted) {
+      console.log('❌ Refresh token is blacklisted');
+      return null;
+    }
+
+    const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as { userId: number; type: string };
+    
+    // Verify it's actually a refresh token
+    if (decoded.type !== 'refresh') {
+      console.log('❌ Token is not a refresh token');
+      return null;
+    }
+
+    return decoded.userId;
+  } catch (error) {
+    console.log('❌ Invalid refresh token:', error);
+    return null;
+  }
+}
+
+/**
+ * Rotate refresh token - blacklist old one and generate new one
+ */
+export async function rotateRefreshToken(
+  oldToken: string,
+  userId: number
+): Promise<string | null> {
+  try {
+    // Blacklist the old refresh token
+    await blacklistToken(oldToken, userId, 'refresh_rotation');
+    
+    // Generate new refresh token
+    const newToken = generateRefreshToken(userId);
+    
+    console.log('✅ Refresh token rotated successfully for user:', userId);
+    return newToken;
+  } catch (error) {
+    console.error('❌ Failed to rotate refresh token:', error);
+    return null;
+  }
+}
+
 export async function authenticateToken(
   req: AuthRequest,
   res: Response,

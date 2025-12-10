@@ -22,7 +22,16 @@ import {
   StatusCodes,
   ErrorMessages,
 } from '../utils/responseHelpers.js';
-import { hashPassword, comparePassword, generateToken, authenticateToken, blacklistToken } from '../auth.js';
+import { 
+  hashPassword, 
+  comparePassword, 
+  generateToken, 
+  generateRefreshToken,
+  verifyRefreshToken,
+  rotateRefreshToken,
+  authenticateToken, 
+  blacklistToken 
+} from '../auth.js';
 import {
   generatePasswordResetToken,
   sendPasswordResetEmail,
@@ -42,7 +51,7 @@ import {
   markPhoneAsVerified,
   sendPhoneVerification,
 } from '../phone.js';
-import { generate2FASecret, enable2FA, disable2FA, verify2FACode, get2FAStatus } from '../twofa.js';
+import { generate2FASecret, enable2FA, disable2FA, verify2FACode, get2FAStatus, is2FAEnabled } from '../twofa.js';
 import {
   authLimiter,
   emailLimiter,
@@ -64,6 +73,41 @@ import {
   recordSuccessfulAttempt,
 } from '../middleware/accountLockout.js';
 import { trackUserAction } from '../middleware/monitoring.js';
+import {
+  createOrLinkOAuthUser,
+  getUserOAuthAccounts,
+  unlinkOAuthAccount,
+  generateOAuthState,
+  storeOAuthState,
+  validateOAuthState,
+  type OAuthProvider,
+  type OAuthAccountData,
+} from '../oauth.js';
+import {
+  generateChallenge,
+  storeChallenge,
+  validateChallenge,
+  registerPasskey,
+  getUserPasskeys,
+  deletePasskey,
+  renamePasskey,
+  verifyPasskeyAuthentication,
+} from '../passkey.js';
+import {
+  createSession,
+  getUserSessions,
+  revokeSession,
+  revokeAllUserSessions,
+  getUserSessionStats,
+  extractDeviceInfo,
+} from '../session.js';
+import {
+  trustDevice,
+  isDeviceTrusted,
+  revokeTrustedDevice,
+  getUserTrustedDevices,
+  revokeAllTrustedDevices,
+} from '../trustedDevices.js';
 import { db } from '../database.js';
 
 const router = Router();
@@ -148,11 +192,22 @@ router.post('/register', authLimiter, validateRegistration, async (req, res) => 
     }
 
     const token = generateToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+    
+    // Create session
+    const sessionId = createSession(user.id, token, refreshToken, {
+      deviceInfo: extractDeviceInfo(req.headers['user-agent']),
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+    
     trackUserAction('registration', user.id);
 
     console.log('✅ User registered successfully:', user.id);
     sendSuccess(res, {
       token,
+      refreshToken,
+      sessionId,
       userId: user.id,
       emailVerificationRequired: !!email,
       phoneVerificationRequired: !!phone,
@@ -227,7 +282,35 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
       }
     }
 
+    // Check if user has 2FA enabled
+    const has2FA = await is2FAEnabled(user.id);
+    
+    if (has2FA) {
+      // Check if device is trusted
+      const deviceTrust = isDeviceTrusted(user.id, req.headers['user-agent'], req.ip);
+      
+      if (!deviceTrust.trusted) {
+        // 2FA is required - return a special response indicating 2FA is needed
+        console.log('🔐 2FA required for user:', user.id);
+        return sendSuccess(res, {
+          requires2FA: true,
+          userId: user.id,
+          message: '2FA verification required',
+        });
+      }
+      
+      console.log('✅ Device is trusted, skipping 2FA');
+    }
+
     const token = generateToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+    
+    // Create session
+    const sessionId = createSession(user.id, token, refreshToken, {
+      deviceInfo: extractDeviceInfo(req.headers['user-agent']),
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
 
     if ((req as any).lockoutKey) {
       recordSuccessfulAttempt((req as any).lockoutKey);
@@ -238,9 +321,12 @@ router.post('/login', authLimiter, accountLockoutMiddleware, validateLogin, asyn
     console.log('✅ Login successful:', user.id);
     sendSuccess(res, {
       token,
+      refreshToken,
+      sessionId,
       userId: user.id,
       emailVerified: user.email_verified === 1,
       phoneVerified: user.phone_verified === 1,
+      has2FA,
     });
   } catch (error) {
     console.error('❌ Login error:', error);
@@ -278,6 +364,54 @@ router.post('/logout', authenticateToken, async (req: AuthRequest, res) => {
       return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
     }
     sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Refresh token endpoint - get a new access token using a refresh token
+router.post('/refresh', authLimiter, async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return sendError(res, 'Refresh token is required', StatusCodes.BAD_REQUEST);
+    }
+
+    console.log('🔄 Token refresh request');
+
+    // Verify the refresh token
+    const userId = await verifyRefreshToken(refreshToken);
+
+    if (!userId) {
+      return sendError(res, 'Invalid or expired refresh token', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Generate new access token
+    const newAccessToken = generateToken(userId);
+    
+    // Rotate refresh token for enhanced security
+    const newRefreshToken = await rotateRefreshToken(refreshToken, userId);
+
+    if (!newRefreshToken) {
+      // If rotation fails, still return new access token with old refresh token
+      console.log('⚠️ Refresh token rotation failed, returning new access token only');
+      return sendSuccess(res, {
+        token: newAccessToken,
+        refreshToken: refreshToken, // Return original if rotation failed
+        message: 'Access token refreshed',
+      });
+    }
+
+    trackUserAction('token_refresh', userId);
+
+    console.log('✅ Tokens refreshed successfully for user:', userId);
+    sendSuccess(res, {
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
+      message: 'Tokens refreshed successfully',
+    });
+  } catch (error) {
+    console.error('❌ Token refresh error:', error);
+    sendError(res, 'Failed to refresh token', StatusCodes.INTERNAL_ERROR);
   }
 });
 
@@ -531,8 +665,43 @@ router.post('/2fa/enable', authenticateToken, async (req: AuthRequest, res) => {
       return sendError(res, 'Invalid verification code. Please try again.', StatusCodes.BAD_REQUEST);
     }
 
+    // Award 2FA security badge
+    try {
+      const user = await db
+        .selectFrom('users')
+        .select('badges')
+        .where('id', '=', userId)
+        .executeTakeFirst();
+
+      if (user) {
+        const badges = JSON.parse(user.badges || '[]');
+        
+        // Add 2FA badge if not already present
+        if (!badges.includes('2fa_security')) {
+          badges.push('2fa_security');
+          
+          await db
+            .updateTable('users')
+            .set({
+              badges: JSON.stringify(badges),
+              updated_at: new Date().toISOString(),
+            })
+            .where('id', '=', userId)
+            .execute();
+          
+          console.log('🏆 Awarded 2FA Security badge to user:', userId);
+        }
+      }
+    } catch (badgeError) {
+      console.error('⚠️ Failed to award 2FA badge (non-critical):', badgeError);
+      // Continue even if badge fails - it's not critical
+    }
+
     console.log('✅ 2FA enabled successfully for user:', userId);
-    sendSuccess(res, { message: 'Two-factor authentication enabled successfully' });
+    sendSuccess(res, { 
+      message: 'Two-factor authentication enabled successfully',
+      badgeAwarded: true,
+    });
   } catch (error) {
     console.error('❌ 2FA enable error:', error);
     if (error.message === ErrorMessages.INVALID_TOKEN) {
@@ -566,6 +735,64 @@ router.post('/2fa/disable', authenticateToken, async (req: AuthRequest, res) => 
     if (error.message === ErrorMessages.INVALID_TOKEN) {
       return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
     }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// 2FA verification during login with optional device trust
+router.post('/2fa/verify-login', authLimiter, async (req, res) => {
+  try {
+    const { userId, code, trustDevice: shouldTrustDevice } = req.body;
+
+    console.log('🔍 2FA login verification request from user:', userId);
+
+    if (!userId || !code) {
+      return sendError(res, 'User ID and verification code are required', StatusCodes.BAD_REQUEST);
+    }
+
+    if (typeof code !== 'string' || code.length !== 6 || !/^\d{6}$/.test(code)) {
+      return sendError(res, 'Please provide a valid 6-digit numeric verification code', StatusCodes.BAD_REQUEST);
+    }
+
+    // Verify the 2FA code
+    const isValid = await verify2FACode(userId, code);
+
+    if (!isValid) {
+      return sendError(res, 'Invalid verification code. Please try again.', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Generate tokens after successful 2FA verification
+    const token = generateToken(userId);
+    const refreshToken = generateRefreshToken(userId);
+    
+    // Create session
+    const sessionId = createSession(userId, token, refreshToken, {
+      deviceInfo: extractDeviceInfo(req.headers['user-agent']),
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    // Trust device for 7 days if requested
+    let trustedDeviceId;
+    if (shouldTrustDevice) {
+      trustedDeviceId = trustDevice(userId, req.headers['user-agent'], req.ip);
+      console.log('✅ Device trusted for 7 days');
+    }
+
+    trackUserAction('2fa_login', userId);
+
+    console.log('✅ 2FA login verification successful for user:', userId);
+    sendSuccess(res, {
+      token,
+      refreshToken,
+      sessionId,
+      userId,
+      trustedDevice: shouldTrustDevice,
+      trustedDeviceId,
+      message: '2FA verification successful',
+    });
+  } catch (error) {
+    console.error('❌ 2FA login verification error:', error);
     sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
   }
 });
@@ -605,6 +832,529 @@ router.get('/2fa/status', authenticateToken, async (req: AuthRequest, res) => {
     sendSuccess(res, status);
   } catch (error) {
     console.error('❌ 2FA status error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// OAuth endpoints
+
+// Initiate OAuth login - generates state and returns authorization URL
+router.post('/oauth/init', authLimiter, async (req, res) => {
+  try {
+    const { provider } = req.body as { provider: OAuthProvider };
+
+    if (!provider || !['google', 'github', 'facebook', 'twitter'].includes(provider)) {
+      return sendError(res, 'Invalid OAuth provider', StatusCodes.BAD_REQUEST);
+    }
+
+    // Generate and store OAuth state for CSRF protection
+    const state = generateOAuthState();
+    storeOAuthState(state);
+
+    console.log(`🔐 OAuth init request for provider: ${provider}`);
+
+    // Return state for client to use in OAuth flow
+    // Client will construct the OAuth URL with appropriate provider configuration
+    sendSuccess(res, {
+      state,
+      provider,
+      message: `OAuth state generated for ${provider}`,
+    });
+  } catch (error) {
+    console.error('❌ OAuth init error:', error);
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// OAuth callback - handles the OAuth provider callback
+router.post('/oauth/callback', authLimiter, async (req, res) => {
+  try {
+    const { provider, code, state, providerData } = req.body as {
+      provider: OAuthProvider;
+      code?: string;
+      state: string;
+      providerData: OAuthAccountData;
+    };
+
+    console.log(`🔐 OAuth callback from provider: ${provider}`);
+
+    // Validate state to prevent CSRF
+    const stateValidation = validateOAuthState(state);
+    if (!stateValidation.valid) {
+      return sendError(res, 'Invalid OAuth state - possible CSRF attack', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Validate provider
+    if (!provider || !['google', 'github', 'facebook', 'twitter'].includes(provider)) {
+      return sendError(res, 'Invalid OAuth provider', StatusCodes.BAD_REQUEST);
+    }
+
+    // Validate provider data
+    if (!providerData || !providerData.providerId) {
+      return sendError(res, 'Missing OAuth provider data', StatusCodes.BAD_REQUEST);
+    }
+
+    // Create or link user from OAuth data
+    const result = await createOrLinkOAuthUser(providerData);
+
+    if (!result) {
+      return sendError(res, 'Failed to authenticate with OAuth provider', StatusCodes.INTERNAL_ERROR);
+    }
+
+    // Generate tokens for the user
+    const token = generateToken(result.userId);
+    const refreshToken = generateRefreshToken(result.userId);
+
+    trackUserAction(result.isNewUser ? 'oauth_registration' : 'oauth_login', result.userId);
+
+    console.log(`✅ OAuth ${result.isNewUser ? 'registration' : 'login'} successful for user:`, result.userId);
+
+    sendSuccess(res, {
+      token,
+      refreshToken,
+      userId: result.userId,
+      isNewUser: result.isNewUser,
+      provider,
+    });
+  } catch (error) {
+    console.error('❌ OAuth callback error:', error);
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Get user's linked OAuth accounts
+router.get('/oauth/accounts', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const accounts = await getUserOAuthAccounts(userId);
+
+    sendSuccess(res, { accounts });
+  } catch (error) {
+    console.error('❌ Error fetching OAuth accounts:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Unlink an OAuth account
+router.delete('/oauth/:provider', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const provider = req.params.provider as OAuthProvider;
+
+    if (!provider || !['google', 'github', 'facebook', 'twitter'].includes(provider)) {
+      return sendError(res, 'Invalid OAuth provider', StatusCodes.BAD_REQUEST);
+    }
+
+    const success = await unlinkOAuthAccount(userId, provider);
+
+    if (!success) {
+      return sendError(res, `No ${provider} account linked to this user`, StatusCodes.NOT_FOUND);
+    }
+
+    trackUserAction('oauth_unlink', userId);
+
+    console.log(`✅ Unlinked ${provider} account for user:`, userId);
+    sendSuccess(res, { message: `${provider} account unlinked successfully` });
+  } catch (error) {
+    console.error('❌ OAuth unlink error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Passkey/WebAuthn endpoints
+
+// Generate registration challenge for passkey
+router.post('/passkey/register/challenge', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const challenge = generateChallenge();
+    storeChallenge(challenge, { challenge, userId, timestamp: Date.now() });
+
+    console.log('🔐 Passkey registration challenge generated for user:', userId);
+
+    sendSuccess(res, { challenge });
+  } catch (error) {
+    console.error('❌ Passkey challenge generation error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Complete passkey registration
+router.post('/passkey/register', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const { challenge, credentialId, publicKey, deviceName } = req.body;
+
+    if (!challenge || !credentialId || !publicKey) {
+      return sendError(res, 'Missing required passkey data', StatusCodes.BAD_REQUEST);
+    }
+
+    // Validate challenge
+    const storedChallenge = validateChallenge(challenge);
+    if (!storedChallenge) {
+      return sendError(res, 'Invalid or expired challenge', StatusCodes.UNAUTHORIZED);
+    }
+    
+    // Type guard to check if it's a registration challenge
+    if (!('userId' in storedChallenge) || storedChallenge.userId !== userId) {
+      return sendError(res, 'Invalid or expired challenge', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Register the passkey
+    const success = await registerPasskey(userId, credentialId, publicKey, deviceName);
+
+    if (!success) {
+      return sendError(res, 'Failed to register passkey', StatusCodes.INTERNAL_ERROR);
+    }
+
+    trackUserAction('passkey_registered', userId);
+
+    console.log('✅ Passkey registered successfully for user:', userId);
+    sendSuccess(res, { message: 'Passkey registered successfully' });
+  } catch (error) {
+    console.error('❌ Passkey registration error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Generate authentication challenge for passkey login
+router.post('/passkey/login/challenge', async (req, res) => {
+  try {
+    const challenge = generateChallenge();
+    storeChallenge(challenge, { challenge, timestamp: Date.now() });
+
+    console.log('🔐 Passkey login challenge generated');
+
+    sendSuccess(res, { challenge });
+  } catch (error) {
+    console.error('❌ Passkey login challenge error:', error);
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Authenticate with passkey
+router.post('/passkey/login', authLimiter, async (req, res) => {
+  try {
+    const { challenge, credentialId, counter } = req.body;
+
+    if (!challenge || !credentialId || counter === undefined) {
+      return sendError(res, 'Missing required passkey authentication data', StatusCodes.BAD_REQUEST);
+    }
+
+    // Validate challenge
+    const storedChallenge = validateChallenge(challenge);
+    if (!storedChallenge) {
+      return sendError(res, 'Invalid or expired challenge', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Verify passkey authentication
+    const result = await verifyPasskeyAuthentication(credentialId, counter);
+
+    if (!result.valid || !result.userId) {
+      return sendError(res, 'Invalid passkey authentication', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Generate tokens
+    const token = generateToken(result.userId);
+    const refreshToken = generateRefreshToken(result.userId);
+
+    trackUserAction('passkey_login', result.userId);
+
+    console.log('✅ Passkey login successful for user:', result.userId);
+    sendSuccess(res, {
+      token,
+      refreshToken,
+      userId: result.userId,
+    });
+  } catch (error) {
+    console.error('❌ Passkey login error:', error);
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Get user's passkeys
+router.get('/passkey/list', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const passkeys = await getUserPasskeys(userId);
+
+    // Don't send sensitive data like public keys
+    const sanitizedPasskeys = passkeys.map(pk => ({
+      id: pk.id,
+      credentialId: pk.credentialId,
+      deviceName: pk.deviceName,
+      createdAt: pk.createdAt,
+      lastUsedAt: pk.lastUsedAt,
+    }));
+
+    sendSuccess(res, { passkeys: sanitizedPasskeys });
+  } catch (error) {
+    console.error('❌ Error fetching passkeys:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Delete a passkey
+router.delete('/passkey/:credentialId', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const { credentialId } = req.params;
+
+    if (!credentialId) {
+      return sendError(res, 'Credential ID is required', StatusCodes.BAD_REQUEST);
+    }
+
+    const success = await deletePasskey(userId, credentialId);
+
+    if (!success) {
+      return sendError(res, 'Passkey not found', StatusCodes.NOT_FOUND);
+    }
+
+    trackUserAction('passkey_deleted', userId);
+
+    console.log('✅ Passkey deleted for user:', userId);
+    sendSuccess(res, { message: 'Passkey deleted successfully' });
+  } catch (error) {
+    console.error('❌ Passkey deletion error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Rename a passkey
+router.patch('/passkey/:credentialId', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const { credentialId } = req.params;
+    const { deviceName } = req.body;
+
+    if (!credentialId || !deviceName) {
+      return sendError(res, 'Credential ID and device name are required', StatusCodes.BAD_REQUEST);
+    }
+
+    const success = await renamePasskey(userId, credentialId, deviceName);
+
+    if (!success) {
+      return sendError(res, 'Passkey not found', StatusCodes.NOT_FOUND);
+    }
+
+    console.log('✅ Passkey renamed for user:', userId);
+    sendSuccess(res, { message: 'Passkey renamed successfully' });
+  } catch (error) {
+    console.error('❌ Passkey rename error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Session management endpoints
+
+// Get all active sessions for the current user
+router.get('/sessions', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const sessions = getUserSessions(userId);
+    
+    // Sanitize session data before sending
+    const sanitizedSessions = sessions.map(session => ({
+      sessionId: session.sessionId,
+      deviceInfo: session.deviceInfo,
+      ipAddress: session.ipAddress,
+      lastActivity: new Date(session.lastActivity).toISOString(),
+      createdAt: new Date(session.createdAt).toISOString(),
+    }));
+
+    sendSuccess(res, { sessions: sanitizedSessions });
+  } catch (error) {
+    console.error('❌ Error fetching sessions:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Get session statistics
+router.get('/sessions/stats', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const stats = getUserSessionStats(userId);
+
+    sendSuccess(res, {
+      ...stats,
+      lastActivity: new Date(stats.lastActivity).toISOString(),
+    });
+  } catch (error) {
+    console.error('❌ Error fetching session stats:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Revoke a specific session
+router.delete('/sessions/:sessionId', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const { sessionId } = req.params;
+
+    if (!sessionId) {
+      return sendError(res, 'Session ID is required', StatusCodes.BAD_REQUEST);
+    }
+
+    // Verify the session belongs to the user
+    const sessions = getUserSessions(userId);
+    const sessionExists = sessions.some(s => s.sessionId === sessionId);
+
+    if (!sessionExists) {
+      return sendError(res, 'Session not found or does not belong to you', StatusCodes.NOT_FOUND);
+    }
+
+    const success = await revokeSession(sessionId);
+
+    if (!success) {
+      return sendError(res, 'Failed to revoke session', StatusCodes.INTERNAL_ERROR);
+    }
+
+    trackUserAction('session_revoked', userId);
+
+    console.log('✅ Session revoked for user:', userId);
+    sendSuccess(res, { message: 'Session revoked successfully' });
+  } catch (error) {
+    console.error('❌ Session revocation error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Revoke all sessions except the current one
+router.post('/sessions/revoke-all', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const { currentSessionId } = req.body;
+
+    const revokedCount = await revokeAllUserSessions(userId, currentSessionId);
+
+    trackUserAction('all_sessions_revoked', userId);
+
+    console.log(`✅ Revoked ${revokedCount} sessions for user:`, userId);
+    sendSuccess(res, {
+      message: `${revokedCount} session(s) revoked successfully`,
+      revokedCount,
+    });
+  } catch (error) {
+    console.error('❌ All sessions revocation error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Trusted devices management endpoints
+
+// Get all trusted devices for the current user
+router.get('/trusted-devices', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const devices = getUserTrustedDevices(userId);
+    
+    // Sanitize device data before sending
+    const sanitizedDevices = devices.map(device => ({
+      deviceId: device.deviceId,
+      deviceName: device.deviceName,
+      ipAddress: device.ipAddress,
+      trustedUntil: new Date(device.trustedUntil).toISOString(),
+      createdAt: new Date(device.createdAt).toISOString(),
+      lastUsed: new Date(device.lastUsed).toISOString(),
+    }));
+
+    sendSuccess(res, { devices: sanitizedDevices });
+  } catch (error) {
+    console.error('❌ Error fetching trusted devices:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Revoke a specific trusted device
+router.delete('/trusted-devices/:deviceId', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const { deviceId } = req.params;
+
+    if (!deviceId) {
+      return sendError(res, 'Device ID is required', StatusCodes.BAD_REQUEST);
+    }
+
+    const success = revokeTrustedDevice(userId, deviceId);
+
+    if (!success) {
+      return sendError(res, 'Trusted device not found', StatusCodes.NOT_FOUND);
+    }
+
+    trackUserAction('trusted_device_revoked', userId);
+
+    console.log('✅ Trusted device revoked for user:', userId);
+    sendSuccess(res, { message: 'Trusted device revoked successfully' });
+  } catch (error) {
+    console.error('❌ Trusted device revocation error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Revoke all trusted devices
+router.post('/trusted-devices/revoke-all', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const revokedCount = revokeAllTrustedDevices(userId);
+
+    trackUserAction('all_trusted_devices_revoked', userId);
+
+    console.log(`✅ Revoked ${revokedCount} trusted devices for user:`, userId);
+    sendSuccess(res, {
+      message: `${revokedCount} trusted device(s) revoked successfully`,
+      revokedCount,
+    });
+  } catch (error) {
+    console.error('❌ All trusted devices revocation error:', error);
     if (error.message === ErrorMessages.INVALID_TOKEN) {
       return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
     }
