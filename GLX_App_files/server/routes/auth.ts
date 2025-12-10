@@ -83,6 +83,16 @@ import {
   type OAuthProvider,
   type OAuthAccountData,
 } from '../oauth.js';
+import {
+  generateChallenge,
+  storeChallenge,
+  validateChallenge,
+  registerPasskey,
+  getUserPasskeys,
+  deletePasskey,
+  renamePasskey,
+  verifyPasskeyAuthentication,
+} from '../passkey.js';
 import { db } from '../database.js';
 
 const router = Router();
@@ -808,6 +818,202 @@ router.delete('/oauth/:provider', authenticateToken, async (req: AuthRequest, re
     sendSuccess(res, { message: `${provider} account unlinked successfully` });
   } catch (error) {
     console.error('❌ OAuth unlink error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Passkey/WebAuthn endpoints
+
+// Generate registration challenge for passkey
+router.post('/passkey/register/challenge', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const challenge = generateChallenge();
+    storeChallenge(challenge, { challenge, userId, timestamp: Date.now() });
+
+    console.log('🔐 Passkey registration challenge generated for user:', userId);
+
+    sendSuccess(res, { challenge });
+  } catch (error) {
+    console.error('❌ Passkey challenge generation error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Complete passkey registration
+router.post('/passkey/register', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const { challenge, credentialId, publicKey, deviceName } = req.body;
+
+    if (!challenge || !credentialId || !publicKey) {
+      return sendError(res, 'Missing required passkey data', StatusCodes.BAD_REQUEST);
+    }
+
+    // Validate challenge
+    const storedChallenge = validateChallenge(challenge);
+    if (!storedChallenge || (storedChallenge as any).userId !== userId) {
+      return sendError(res, 'Invalid or expired challenge', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Register the passkey
+    const success = await registerPasskey(userId, credentialId, publicKey, deviceName);
+
+    if (!success) {
+      return sendError(res, 'Failed to register passkey', StatusCodes.INTERNAL_ERROR);
+    }
+
+    trackUserAction('passkey_registered', userId);
+
+    console.log('✅ Passkey registered successfully for user:', userId);
+    sendSuccess(res, { message: 'Passkey registered successfully' });
+  } catch (error) {
+    console.error('❌ Passkey registration error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Generate authentication challenge for passkey login
+router.post('/passkey/login/challenge', async (req, res) => {
+  try {
+    const challenge = generateChallenge();
+    storeChallenge(challenge, { challenge, timestamp: Date.now() });
+
+    console.log('🔐 Passkey login challenge generated');
+
+    sendSuccess(res, { challenge });
+  } catch (error) {
+    console.error('❌ Passkey login challenge error:', error);
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Authenticate with passkey
+router.post('/passkey/login', authLimiter, async (req, res) => {
+  try {
+    const { challenge, credentialId, counter } = req.body;
+
+    if (!challenge || !credentialId || counter === undefined) {
+      return sendError(res, 'Missing required passkey authentication data', StatusCodes.BAD_REQUEST);
+    }
+
+    // Validate challenge
+    const storedChallenge = validateChallenge(challenge);
+    if (!storedChallenge) {
+      return sendError(res, 'Invalid or expired challenge', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Verify passkey authentication
+    const result = await verifyPasskeyAuthentication(credentialId, counter);
+
+    if (!result.valid || !result.userId) {
+      return sendError(res, 'Invalid passkey authentication', StatusCodes.UNAUTHORIZED);
+    }
+
+    // Generate tokens
+    const token = generateToken(result.userId);
+    const refreshToken = generateRefreshToken(result.userId);
+
+    trackUserAction('passkey_login', result.userId);
+
+    console.log('✅ Passkey login successful for user:', result.userId);
+    sendSuccess(res, {
+      token,
+      refreshToken,
+      userId: result.userId,
+    });
+  } catch (error) {
+    console.error('❌ Passkey login error:', error);
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Get user's passkeys
+router.get('/passkey/list', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+
+    const passkeys = await getUserPasskeys(userId);
+
+    // Don't send sensitive data like public keys
+    const sanitizedPasskeys = passkeys.map(pk => ({
+      id: pk.id,
+      credentialId: pk.credentialId,
+      deviceName: pk.deviceName,
+      createdAt: pk.createdAt,
+      lastUsedAt: pk.lastUsedAt,
+    }));
+
+    sendSuccess(res, { passkeys: sanitizedPasskeys });
+  } catch (error) {
+    console.error('❌ Error fetching passkeys:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Delete a passkey
+router.delete('/passkey/:credentialId', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const { credentialId } = req.params;
+
+    if (!credentialId) {
+      return sendError(res, 'Credential ID is required', StatusCodes.BAD_REQUEST);
+    }
+
+    const success = await deletePasskey(userId, credentialId);
+
+    if (!success) {
+      return sendError(res, 'Passkey not found', StatusCodes.NOT_FOUND);
+    }
+
+    trackUserAction('passkey_deleted', userId);
+
+    console.log('✅ Passkey deleted for user:', userId);
+    sendSuccess(res, { message: 'Passkey deleted successfully' });
+  } catch (error) {
+    console.error('❌ Passkey deletion error:', error);
+    if (error.message === ErrorMessages.INVALID_TOKEN) {
+      return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
+    }
+    sendError(res, ErrorMessages.INTERNAL_ERROR, StatusCodes.INTERNAL_ERROR);
+  }
+});
+
+// Rename a passkey
+router.patch('/passkey/:credentialId', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = validateAuthUser(req.userId);
+    const { credentialId } = req.params;
+    const { deviceName } = req.body;
+
+    if (!credentialId || !deviceName) {
+      return sendError(res, 'Credential ID and device name are required', StatusCodes.BAD_REQUEST);
+    }
+
+    const success = await renamePasskey(userId, credentialId, deviceName);
+
+    if (!success) {
+      return sendError(res, 'Passkey not found', StatusCodes.NOT_FOUND);
+    }
+
+    console.log('✅ Passkey renamed for user:', userId);
+    sendSuccess(res, { message: 'Passkey renamed successfully' });
+  } catch (error) {
+    console.error('❌ Passkey rename error:', error);
     if (error.message === ErrorMessages.INVALID_TOKEN) {
       return sendError(res, ErrorMessages.INVALID_TOKEN, StatusCodes.UNAUTHORIZED);
     }
