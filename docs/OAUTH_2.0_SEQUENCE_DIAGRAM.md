@@ -170,8 +170,8 @@ CREATE TABLE oauth_accounts (
   provider_id TEXT NOT NULL, -- Unique ID from OAuth provider
   provider_email TEXT, -- Email from OAuth provider
   provider_name TEXT, -- Display name from OAuth provider
-  access_token TEXT, -- OAuth access token (encrypted)
-  refresh_token TEXT, -- OAuth refresh token (encrypted)
+  access_token TEXT, -- OAuth access token
+  refresh_token TEXT, -- OAuth refresh token
   expires_at TEXT, -- Token expiration timestamp
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -220,8 +220,7 @@ For production with multiple instances, migrate to **Redis** or **database stora
 ```typescript
 // Redis implementation example
 await redis.setex(`oauth:state:${state}`, 600, JSON.stringify({ 
-  timestamp: Date.now(), 
-  userId 
+  timestamp: Date.now()
 }));
 ```
 
