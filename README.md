@@ -1,10 +1,10 @@
 ---
 title: "GLX: Connect the World - Web3 Civic Networking Platform"
 description: ""
-lastUpdated: "2025-08-03"
-nextReview: "2025-09-03"
+lastUpdated: "2025-12-09"
+nextReview: "2026-01-09"
 contentType: "overview"
-maintainer: "GLX Development Team"
+maintainer: "rsl37"
 version: "1.0.0"
 tags: []
 relatedDocs: []
@@ -26,11 +26,32 @@ relatedDocs: []
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### GitHub Codespaces (Recommended)
+The easiest way to get started is using GitHub Codespaces. The repository includes a pre-configured development container that automatically sets up your environment with all required tools:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/codespaces)
+
+**What's included:**
+- Node.js 20.x pre-installed
+- pnpm package manager configured
+- Vercel CLI ready to use
+- VS Code extensions (ESLint, Prettier, GitHub Copilot)
+- Automatic port forwarding for development
+
+Once the Codespace is created, you can immediately start using:
+```bash
+vercel --prod    # Deploy to production
+npm run build    # Build the application
+npm start        # Start development server
+```
+
+### Local Development
+
+#### Prerequisites
 - Node.js 20.x or later
 - npm or yarn package manager
 
-### Installation
+#### Installation
 ```bash
 # Clone the repository
 git clone https://github.com/rsl37/GLX_Civic_Networking_App.git
@@ -318,6 +339,7 @@ This repository uses secure PAT_TOKEN authentication for enhanced workflow capab
 - [Production Mode Guide](GLX_App_files/PRODUCTION_MODE_GUIDE.md) - Production deployment setup
 - [Deployment Configuration](DEPLOYMENT.md) - Deployment troubleshooting
 - [Security Information](SECURITY.md) - Security policies and reporting
+- [Deprecated Dependencies](DEPRECATED_DEPENDENCIES.md) - Analysis of deprecated dependencies and security verification
 - [PAT Security Guide](docs/PAT_SECURITY_GUIDE.md) - PAT_TOKEN authentication and security
 - [Privacy & Badges](PRIVACY_AND_BADGES_IMPLEMENTATION.md) - Implementation details
 - [Workspace Guide](GLX_Project_Workspace.md) - Development workspace setup

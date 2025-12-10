@@ -1,7 +1,7 @@
 # /**
 #  * GLX: Connect the World - Civic Networking Platform
 #  * 
-#  * Copyright (c) 2025 [Your Name/Company]
+#  * Copyright (c) 2025 rsl37
 #  * Licensed under PolyForm Shield License 1.0.0
 #  * 
 #  * ⚠️  TERMS:
@@ -55,7 +55,7 @@ permissions:
   statuses: write
 
 env:
-  NODE_VERSION: '20.x'
+  NODE_VERSION: '24.x'
   WORKING_DIRECTORY: './GLX_App_files'
 
 concurrency:

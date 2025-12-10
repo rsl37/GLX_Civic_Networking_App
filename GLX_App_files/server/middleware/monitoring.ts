@@ -1,7 +1,7 @@
 /**
  * GLX: Connect the World - Civic Networking Platform
  * 
- * Copyright (c) 2025 [Your Name/Company]
+ * Copyright (c) 2025 rsl37
  * Licensed under PolyForm Shield License 1.0.0
  * 
  * ⚠️  TERMS:
@@ -10,7 +10,7 @@
  * - Violations subject to legal action and damages
  * 
  * See LICENSE file in repository root for full terms.
- * Contact: [your-email@example.com] for licensing inquiries
+ * Contact: roselleroberts@pm.me for licensing inquiries
  */
 
 import { Request, Response, NextFunction } from 'express';
@@ -233,10 +233,28 @@ export const trackFeatureUsage = (
 };
 
 // User action tracking
-export const trackUserAction = (action: 'registration' | 'login' | 'logout', userId?: number): void => {
-  if (action === 'registration') {
+export const trackUserAction = (
+  action: 
+    | 'registration' 
+    | 'login' 
+    | 'logout' 
+    | 'token_refresh' 
+    | '2fa_login'
+    | 'oauth_registration'
+    | 'oauth_login'
+    | 'oauth_unlink'
+    | 'passkey_registered'
+    | 'passkey_login'
+    | 'passkey_deleted'
+    | 'session_revoked'
+    | 'all_sessions_revoked'
+    | 'trusted_device_revoked'
+    | 'all_trusted_devices_revoked',
+  userId?: number
+): void => {
+  if (action === 'registration' || action === 'oauth_registration') {
     metrics.users.registrations_today++;
-  } else if (action === 'login') {
+  } else if (action === 'login' || action === '2fa_login' || action === 'oauth_login' || action === 'passkey_login') {
     metrics.users.logins_today++;
     if (userId) {
       metrics.users.active_sessions.add(userId);
@@ -246,6 +264,9 @@ export const trackUserAction = (action: 'registration' | 'login' | 'logout', use
       metrics.users.active_sessions.delete(userId);
     }
   }
+  
+  // Log all actions for monitoring
+  console.log(`📊 User action: ${action} (User: ${userId || 'anonymous'})`);
 };
 
 // Analytics endpoints

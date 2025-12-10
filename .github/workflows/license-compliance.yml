@@ -1,7 +1,7 @@
 # /**
 #  * GLX: Connect the World - Civic Networking Platform
 #  * 
-#  * Copyright (c) 2025 [Your Name/Company]
+#  * Copyright (c) 2025 rsl37
 #  * Licensed under PolyForm Shield License 1.0.0
 #  * 
 #  * ⚠️  TERMS:
@@ -42,7 +42,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '24.x'
           cache: 'npm'
           cache-dependency-path: |
             package-lock.json
