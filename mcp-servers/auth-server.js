@@ -388,8 +388,13 @@ class JwtAuthServer {
       // Mark as used
       stored.used = true;
 
-      // Generate new access token
-      return this.generateAccessToken(payload.sub, payload.scopes || []);
+      // Generate new access token and new refresh token (rotation)
+      const newRefreshToken = this.generateRefreshToken(payload.sub);
+      return {
+        ...this.generateAccessToken(payload.sub, payload.scopes || []),
+        refreshToken: newRefreshToken.refreshToken,
+        refreshTokenExpiresIn: newRefreshToken.expiresIn,
+      };
     } catch (err) {
       this.logger.warn('Refresh token validation failed', {
         error: err.message,
