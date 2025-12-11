@@ -167,7 +167,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build-output
           path: ${{ env.WORKING_DIRECTORY }}/dist/
@@ -299,7 +299,7 @@ jobs:
           cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build-output
           path: ${{ env.WORKING_DIRECTORY }}/dist/
