@@ -87,8 +87,34 @@ export function generateToken(userId: number): string {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
 }
 
-export function generateRefreshToken(userId: number): string {
-  return jwt.sign({ userId, type: 'refresh' }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
+export async function generateRefreshToken(userId: number): Promise<string> {
+  const token = jwt.sign({ userId, type: 'refresh' }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
+  
+  // Store refresh token in database for server-side validation
+  try {
+    const decoded = jwt.decode(token) as { exp?: number } | null;
+    if (!decoded || !decoded.exp) {
+      throw new Error('Invalid token expiry');
+    }
+    
+    const expiresAt = new Date(decoded.exp * 1000).toISOString();
+    
+    await db
+      .insertInto('refresh_tokens')
+      .values({
+        user_id: userId,
+        token,
+        expires_at: expiresAt,
+      })
+      .execute();
+    
+    console.log('✅ Refresh token stored in database for user:', userId);
+  } catch (error) {
+    console.error('❌ Failed to store refresh token in database:', error);
+    throw error;
+  }
+  
+  return token;
 }
 
 export interface AuthRequest extends Request {
@@ -169,17 +195,75 @@ export async function cleanupExpiredBlacklistedTokens(): Promise<number> {
 }
 
 /**
- * Verify and validate a refresh token
+ * Revoke a refresh token by marking it as revoked in the database
+ */
+export async function revokeRefreshToken(token: string, userId: number): Promise<boolean> {
+  try {
+    const result = await db
+      .updateTable('refresh_tokens')
+      .set({ revoked: 1 })
+      .where('token', '=', token)
+      .where('user_id', '=', userId)
+      .execute();
+
+    console.log('✅ Refresh token revoked for user:', userId);
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to revoke refresh token:', error);
+    return false;
+  }
+}
+
+/**
+ * Revoke all refresh tokens for a user
+ */
+export async function revokeAllRefreshTokensForUser(userId: number): Promise<number> {
+  try {
+    const result = await db
+      .updateTable('refresh_tokens')
+      .set({ revoked: 1 })
+      .where('user_id', '=', userId)
+      .where('revoked', '=', 0)
+      .execute();
+
+    const revokedCount = result.reduce((acc, r) => acc + Number(r.numUpdatedRows || r.numChangedRows || 0), 0);
+    if (revokedCount > 0) {
+      console.log(`✅ Revoked ${revokedCount} refresh tokens for user:`, userId);
+    }
+    return revokedCount;
+  } catch (error) {
+    console.error('❌ Failed to revoke all refresh tokens:', error);
+    return 0;
+  }
+}
+
+/**
+ * Clean up expired refresh tokens (should be run periodically)
+ */
+export async function cleanupExpiredRefreshTokens(): Promise<number> {
+  try {
+    const result = await db
+      .deleteFrom('refresh_tokens')
+      .where('expires_at', '<', new Date().toISOString())
+      .execute();
+
+    const deletedCount = result.reduce((acc, r) => acc + Number(r.numDeletedRows || 0), 0);
+    if (deletedCount > 0) {
+      console.log(`🧹 Cleaned up ${deletedCount} expired refresh tokens`);
+    }
+    return deletedCount;
+  } catch (error) {
+    console.error('❌ Error cleaning up expired refresh tokens:', error);
+    return 0;
+  }
+}
+
+/**
+ * Verify and validate a refresh token against server-side storage
  */
 export async function verifyRefreshToken(token: string): Promise<number | null> {
   try {
-    // Check if token is blacklisted
-    const blacklisted = await isTokenBlacklisted(token);
-    if (blacklisted) {
-      console.log('❌ Refresh token is blacklisted');
-      return null;
-    }
-
+    // First verify JWT signature and decode
     const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as { userId: number; type: string };
     
     // Verify it's actually a refresh token
@@ -187,6 +271,33 @@ export async function verifyRefreshToken(token: string): Promise<number | null> 
       console.log('❌ Token is not a refresh token');
       return null;
     }
+
+    // Check if token exists in database and is not revoked
+    const storedToken = await db
+      .selectFrom('refresh_tokens')
+      .select(['user_id', 'expires_at', 'revoked'])
+      .where('token', '=', token)
+      .where('revoked', '=', 0)
+      .where('expires_at', '>', new Date().toISOString())
+      .executeTakeFirst();
+
+    if (!storedToken) {
+      console.log('❌ Refresh token not found in database or has been revoked');
+      return null;
+    }
+
+    // Verify user ID matches
+    if (storedToken.user_id !== decoded.userId) {
+      console.log('❌ Token user ID mismatch');
+      return null;
+    }
+
+    // Update last_used_at timestamp
+    await db
+      .updateTable('refresh_tokens')
+      .set({ last_used_at: new Date().toISOString() })
+      .where('token', '=', token)
+      .execute();
 
     return decoded.userId;
   } catch (error) {
@@ -196,18 +307,23 @@ export async function verifyRefreshToken(token: string): Promise<number | null> 
 }
 
 /**
- * Rotate refresh token - blacklist old one and generate new one
+ * Rotate refresh token - revoke old one in database and generate new one
  */
 export async function rotateRefreshToken(
   oldToken: string,
   userId: number
 ): Promise<string | null> {
   try {
-    // Blacklist the old refresh token
-    await blacklistToken(oldToken, userId, 'refresh_rotation');
+    // Revoke the old refresh token in the database
+    await db
+      .updateTable('refresh_tokens')
+      .set({ revoked: 1 })
+      .where('token', '=', oldToken)
+      .where('user_id', '=', userId)
+      .execute();
     
-    // Generate new refresh token
-    const newToken = generateRefreshToken(userId);
+    // Generate new refresh token (this will store it in the database)
+    const newToken = await generateRefreshToken(userId);
     
     console.log('✅ Refresh token rotated successfully for user:', userId);
     return newToken;
