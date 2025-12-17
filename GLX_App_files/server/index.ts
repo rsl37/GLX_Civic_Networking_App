@@ -429,6 +429,61 @@ app.post('/api/monitoring/errors', async (req, res): Promise<void> => {
   }
 });
 
+// Page verification endpoint - generates tokens for legitimate auth pages
+app.post('/api/verify-page', async (req, res) => {
+  try {
+    const { pageType, pageContent, checksum } = req.body;
+    const origin = req.get('Origin') || req.get('Referer') || '';
+    const userAgent = req.get('User-Agent') || '';
+
+    // Validate required fields
+    if (!pageType || !pageContent || !checksum) {
+      console.warn('⚠️ Page verification request missing required fields');
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Page type, content, and checksum are required',
+          statusCode: 400,
+        },
+      });
+    }
+
+    // Validate page type
+    if (pageType !== 'login' && pageType !== 'register') {
+      console.warn(`⚠️ Invalid page type: ${pageType}`);
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid page type',
+          statusCode: 400,
+        },
+      });
+    }
+
+    // Generate verification token
+    const verificationToken = generatePageVerificationToken(origin, pageType, userAgent);
+
+    console.log(`✅ Generated verification token for ${pageType} page from ${origin}`);
+
+    res.json({
+      success: true,
+      data: {
+        verificationToken,
+        expiresIn: PAGE_VERIFICATION_CONFIG.tokenExpiry,
+      },
+    });
+  } catch (error) {
+    console.error('❌ Page verification error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Page verification failed',
+        statusCode: 500,
+      },
+    });
+  }
+});
+
 // Stablecoin API routes
 app.use('/api/stablecoin', stablecoinRoutes);
 
