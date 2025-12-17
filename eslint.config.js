@@ -89,6 +89,7 @@ export default [
       'api/',
       'mcp-servers/',
       'priority-matrix-app/',
+      '.devcontainer/',
     ],
   },
 ];
