@@ -315,6 +315,8 @@ class SmartDocumentationUpdater {
                 const fileExists = await this.checkFileExists(fullDocPath);
                 
                 if (!fileExists) {
+                  // Note: We still process non-existent files by marking them with action: 'create'
+                  // This allows the system to track documentation that needs to be created
                   this.logger.debug(`Documentation file missing: ${docPath}`);
                 }
                 
