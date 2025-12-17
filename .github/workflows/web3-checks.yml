@@ -211,19 +211,20 @@ jobs:
       - name: Run Web3 Unit Tests (if available)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          set +e  # Temporarily disable exit on error to handle gracefully
           echo "🧪 Running Web3 unit tests..."
+          # Find test files, suppress grep failure if no matches found
           WEB3_TESTS=$(find . -name "*web3*.test.*" -o -name "*blockchain*.test.*" \
-            -o -name "*crypto*.test.*" | grep -v node_modules)
-          set -e  # Re-enable exit on error
+            -o -name "*crypto*.test.*" | grep -v node_modules || true)
           
           if [ -n "$WEB3_TESTS" ]; then
             echo "✅ Web3 test files found:"
             echo "$WEB3_TESTS"
-            set +e  # Allow test commands to fail without stopping the workflow immediately
+            # Run tests and capture exit code
             if grep -q '"test:web3"' package.json; then
+              set +e
               npm run test:web3
               TEST_EXIT=$?
+              set -e
               if [ $TEST_EXIT -eq 0 ]; then
                 echo "✅ Web3 tests passed"
               else
@@ -231,8 +232,10 @@ jobs:
                 exit $TEST_EXIT
               fi
             else
+              set +e
               npm test -- --grep "web3|blockchain|crypto"
               TEST_EXIT=$?
+              set -e
               if [ $TEST_EXIT -eq 0 ]; then
                 echo "✅ Tests passed"
               else
@@ -240,7 +243,6 @@ jobs:
                 exit $TEST_EXIT
               fi
             fi
-            set -e
           else
             echo "ℹ️ No dedicated Web3 test files found - skipping unit tests"
             echo "This is expected if Web3 functionality is tested elsewhere"
