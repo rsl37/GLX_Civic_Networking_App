@@ -338,14 +338,22 @@ relatedDocs: ${formatValue(metadata.relatedDocs || [])}
         }
       }
       
-      // Then check all links in parallel using Promise.all
+      // Then check all links in parallel using Promise.all with batching
+      // to avoid overwhelming the file system with too many concurrent operations
       if (linksToCheck.length > 0) {
-        const linkCheckResults = await Promise.all(
-          linksToCheck.map(async ({ original, full }) => ({
-            original,
-            exists: await this.checkFileExists(full)
-          }))
-        );
+        const BATCH_SIZE = 50; // Process links in batches of 50
+        const linkCheckResults = [];
+        
+        for (let i = 0; i < linksToCheck.length; i += BATCH_SIZE) {
+          const batch = linksToCheck.slice(i, i + BATCH_SIZE);
+          const batchResults = await Promise.all(
+            batch.map(async ({ original, full }) => ({
+              original,
+              exists: await this.checkFileExists(full)
+            }))
+          );
+          linkCheckResults.push(...batchResults);
+        }
         
         // Add issues for broken links
         for (const { original, exists } of linkCheckResults) {
