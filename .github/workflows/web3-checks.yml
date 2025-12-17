@@ -212,19 +212,39 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           echo "🧪 Running Web3 unit tests..."
-          WEB3_TESTS=$(find . -name "*web3*.test.*" -o -name "*blockchain*.test.*" \
-            -o -name "*crypto*.test.*" | grep -v node_modules)
+          # Find test files, excluding node_modules directory
+          WEB3_TESTS=$(find . -type f \( -name "*web3*.test.*" -o -name "*blockchain*.test.*" \
+            -o -name "*crypto*.test.*" \) -not -path "*/node_modules/*")
+          
           if [ -n "$WEB3_TESTS" ]; then
             echo "✅ Web3 test files found:"
             echo "$WEB3_TESTS"
+            # Run tests and capture exit code
             if grep -q '"test:web3"' package.json; then
-              npm run test:web3 || echo "Web3 tests completed with warnings"
+              set +e
+              npm run test:web3
+              TEST_EXIT=$?
+              set -e
+              if [ $TEST_EXIT -eq 0 ]; then
+                echo "✅ Web3 tests passed"
+              else
+                echo "❌ Web3 tests failed with exit code $TEST_EXIT"
+                exit $TEST_EXIT
+              fi
             else
-              npm test -- --grep "web3|blockchain|crypto" || echo "Tests completed"
+              set +e
+              npm test -- --grep "web3|blockchain|crypto"
+              TEST_EXIT=$?
+              set -e
+              if [ $TEST_EXIT -eq 0 ]; then
+                echo "✅ Tests passed"
+              else
+                echo "❌ Tests failed with exit code $TEST_EXIT"
+                exit $TEST_EXIT
+              fi
             fi
           else
-            echo "⚠️ No dedicated Web3 test files found"
-            npm test || echo "Tests completed"
+            echo "ℹ️ No dedicated Web3 test files found - skipping unit tests. This is expected if Web3 functionality is tested elsewhere."
           fi
 
   web3-integration:
