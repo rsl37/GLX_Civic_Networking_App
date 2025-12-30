@@ -1,16 +1,16 @@
 ---
-title: "GLX: Connect the World - Web3 Civic Networking Platform"
-description: ""
-lastUpdated: "2025-12-09"
-nextReview: "2026-01-09"
+title: "GLX: Portfolio Case Study & GLX Monitor Commercial Platform"
+description: "Distributed blockchain systems proof-of-concept and enterprise monitoring solution"
+lastUpdated: "2025-12-30"
+nextReview: "2026-01-30"
 contentType: "overview"
 maintainer: "rsl37"
 version: "1.0.0"
-tags: []
-relatedDocs: []
+tags: ["portfolio", "case-study", "glx-monitor", "enterprise", "commercial"]
+relatedDocs: ["ABOUT_GLX.md", "PORTFOLIO_CASE_STUDY.md", "GLX_MONITOR.md"]
 ---
 
-# GLX: Portfolio Case Study & Systems Monitoring Platform
+# GLX: Portfolio Case Study & GLX Monitor
 
 [![CI/CD Pipeline](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/main.yml)
 [![Security Checks](https://github.com/rsl37/GLX_Civic_Networking_App/workflows/Security%20Scan/badge.svg)](https://github.com/rsl37/GLX_Civic_Networking_App/actions/workflows/security-streamlined.yml)
@@ -356,7 +356,9 @@ This repository uses secure PAT_TOKEN authentication for enhanced workflow capab
 ## 📖 Documentation
 
 ### Core Documentation
+- [GLX Monitor Strategy](GLX_MONITOR.md) - The commercial pivot from GLX to GLX Monitor
 - [About GLX](ABOUT_GLX.md) - Project overview and mission
+- [Portfolio Case Study](PORTFOLIO_CASE_STUDY.md) - Blockchain efficiency and security analysis
 - [Project Structure](PROJECT_STRUCTURE.md) - Detailed directory structure
 - [Production Mode Guide](GLX_App_files/PRODUCTION_MODE_GUIDE.md) - Production deployment setup
 - [Deployment Configuration](DEPLOYMENT.md) - Deployment troubleshooting
@@ -410,7 +412,7 @@ For commercial use that competes with GLX, please contact the project maintainer
 
 ---
 
-*Building stronger communities through technology. Connect the World.* 🌟
+*GLX: Proof-of-concept validates the technology. GLX Monitor: Commercial product generates revenue.* 🚀
 
 ---
 
