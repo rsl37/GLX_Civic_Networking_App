@@ -1,7 +1,7 @@
 {
-  "name": "priority-matrix-app",
-  "version": "1.0.0",
-  "description": "A priority matrix application to help users prioritize tasks effectively.",
+  "name": "glx-monitor",
+  "version": "2.0.0",
+  "description": "GLX Monitor - Enterprise systems network monitoring for supply chain, ATC, and logistics",
   "main": "src/app.ts",
   "scripts": {
     "start": "ts-node src/app.ts",
@@ -20,18 +20,24 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/priority-matrix-app.git"
+    "url": "git+https://github.com/rsl37/GLX_Civic_Networking_App.git"
   },
   "keywords": [
-    "priority",
-    "matrix",
-    "tasks",
-    "productivity"
+    "glx-monitor",
+    "systems-monitoring",
+    "supply-chain",
+    "atc",
+    "air-traffic-control",
+    "logistics",
+    "enterprise",
+    "distributed-systems",
+    "blockchain",
+    "real-time-monitoring"
   ],
-  "author": "Your Name",
-  "license": "MIT",
+  "author": "rsl37",
+  "license": "(PolyForm-Shield-1.0.0 OR PolyForm-Noncommercial-1.0.0)",
   "bugs": {
-    "url": "https://github.com/yourusername/priority-matrix-app/issues"
+    "url": "https://github.com/rsl37/GLX_Civic_Networking_App/issues"
   },
-  "homepage": "https://github.com/yourusername/priority-matrix-app#readme"
+  "homepage": "https://github.com/rsl37/GLX_Civic_Networking_App#readme"
 }
