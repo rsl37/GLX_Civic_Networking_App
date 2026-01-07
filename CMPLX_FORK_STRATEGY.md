@@ -14,11 +14,34 @@ relatedDocs: ["GLX_ARCHITECTURE_CASE_STUDY.md", "README.md", "ABOUT_GLX.md"]
 
 ## Overview
 
-**CMPLX** (Complexly Organized, Flexibly Manageable) is the planned commercial fork of GLX, applying proven distributed blockchain architecture to enterprise monitoring use cases.
+**CMPLX** (Complexity Made Legible and Actionable) is the planned commercial fork of GLX, applying proven distributed blockchain architecture to **make overwhelming complexity immediately legible, quickly accessible, and actionable in real-time** for professionals managing complex operations.
 
 **Status**: Planning Phase (not yet forked)
 
 **Purpose**: This document outlines the strategic rationale, technical approach, and implementation timeline for creating CMPLX as a separate commercial entity while keeping GLX open-source.
+
+### Mission Statement
+
+CMPLX serves as an intermediary transforming illegible operational chaos into actionable clarity for professionals in high-pressure coordination roles. By reducing cognitive load and increasing situational awareness, CMPLX aims to:
+- **Ease immense pressure and stress** experienced by operations professionals
+- **Increase productivity** through better information architecture
+- **Decrease burnout** by making complex systems manageable
+
+### Core Philosophy
+
+**"Those who live together help each other"** - This principle, shared with GLX, drives CMPLX's design. In professional contexts, "living together" means working within the same operational ecosystem. CMPLX enables teams under pressure to coordinate effectively, supporting each other through better infrastructure.
+
+### Specialized Focus Areas
+
+CMPLX specializes exclusively in making complexity legible for:
+- **Supply Chain Operations**: Multi-tier networks, inventory flows, supplier coordination
+- **Operations Management**: Process optimization, resource allocation, performance monitoring
+- **Project Management**: Multi-stakeholder coordination, dependency tracking, risk mitigation
+- **Air Traffic Control**: Flight coordination, airspace management, safety-critical decisions
+- **Administration Management**: Cross-departmental workflows, compliance tracking, resource planning
+- **Logistics Coordination**: Route optimization, fleet management, delivery scheduling
+
+These fields share a common challenge: **overwhelming information complexity that exceeds human cognitive capacity without proper tools**.
 
 ---
 
@@ -675,6 +698,19 @@ Learn more about GLX: [link]
   - User satisfaction: 4+/5
 - [ ] 1+ pilot willing to convert to paid
 - [ ] 5+ improvement requests captured
+
+**Realistic Timeline Assessment**: The 11-22 week pilot timeline assumes pre-existing warm leads and accelerated enterprise sales. More realistic expectations:
+- **Optimistic**: 22 weeks (5.5 months) with strong network and urgent market need
+- **Realistic**: 6-9 months for most founders without prior warm leads
+- **Conservative**: 12-18 months if building cold outreach from scratch
+
+**Key factors affecting timeline**:
+- Warm introductions reduce pilot acquisition time by 50-70%
+- Industry urgency (e.g., supply chain crisis) accelerates by 30-40%
+- Prior domain expertise shortens MVP development by 25-40%
+- Solo founder vs team affects timeline by 40-60%
+
+The 22-week timeline is **aggressive but achievable** with ideal conditions. Plan for 6-9 months realistically.
 
 ### Phase 4: Commercial Launch (Months 6-12)
 - [ ] 2+ paying customers ($1K+ MRR)

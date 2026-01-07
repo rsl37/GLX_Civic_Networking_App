@@ -112,7 +112,21 @@ See [GLX_ARCHITECTURE_CASE_STUDY.md](GLX_ARCHITECTURE_CASE_STUDY.md#personal-mot
 
 ## 🔮 Future: CMPLX Commercial Fork
 
-When ready, CMPLX will apply GLX's proven architecture to enterprise monitoring:
+When ready, **CMPLX** (Complexity Made Legible and Actionable) will apply GLX's proven architecture to **make overwhelming complexity immediately legible, quickly accessible, and actionable in real-time** for professionals managing complex operations:
+
+**Target Roles/Fields**:
+- Supply Chain Operations
+- Operations Management  
+- Project Management
+- Air Traffic Control
+- Administration Management
+- Logistics Coordination
+
+**Mission**: CMPLX serves as an intermediary transforming illegible chaos into actionable clarity, easing immense pressure and stress while increasing productivity and decreasing burnout.
+
+**Core Philosophy** (shared with GLX): **Those who live together help each other** - whether locally or globally. CMPLX applies this to professional coordination, enabling teams under pressure to coordinate effectively.
+
+**Implementation**:
 - **Separate repository** with clear branding
 - **80% GLX architecture reuse** + 20% new enterprise features
 - **Proper commercial licensing** from day one

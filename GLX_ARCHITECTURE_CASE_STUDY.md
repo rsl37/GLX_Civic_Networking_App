@@ -206,6 +206,8 @@ As the project founder grew up, reality diverged from these ideals:
 - **Gray swan**: Predictable if you look for the right signals
 - **GLX philosophy**: Most "unpredictable" crises have visible precursors; coordination systems can detect and prevent them
 
+**Core Philosophy**: **Those who live together help each other** - whether locally (community), regionally, nationally, or globally (worldview of humanity), and at every level in between. This principle drives GLX's design: enabling mutual aid through better coordination infrastructure at every scale.
+
 **Observed Patterns of Preventable Failure**:
 1. **Inefficiency**: Resources wasted due to poor coordination
 2. **Ineffectiveness**: Well-meaning efforts that don't achieve goals
