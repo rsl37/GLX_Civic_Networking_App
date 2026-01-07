@@ -1,10 +1,10 @@
 {
   "name": "glx-civic-networking-app",
-  "version": "0.3.0",
+  "version": "2.0.0",
   "description": "GLX: Open-source civic networking platform with distributed blockchain architecture",
   "private": true,
   "type": "module",
-  "license": "(PolyForm-Shield-1.0.0 OR PolyForm-Noncommercial-1.0.0)",
+  "license": "MIT",
   "scripts": {
     "setup:env": "cd GLX_App_files && scripts/setup-env.sh",
     "setup:env:root": "scripts/setup-env.sh",
