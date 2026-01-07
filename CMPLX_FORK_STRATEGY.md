@@ -703,14 +703,16 @@ Learn more about GLX: [link]
 - **Optimistic**: 22 weeks (5.5 months) with strong network and urgent market need
 - **Realistic**: 6-9 months for most founders without prior warm leads
 - **Conservative**: 12-18 months if building cold outreach from scratch
+- **Hybrid-Conservative** (Recommended): 9-15 months accounting for current market conditions and timing
 
 **Key factors affecting timeline**:
 - Warm introductions reduce pilot acquisition time by 50-70%
 - Industry urgency (e.g., supply chain crisis) accelerates by 30-40%
 - Prior domain expertise shortens MVP development by 25-40%
 - Solo founder vs team affects timeline by 40-60%
+- Market timing and economic conditions add 20-40% to baseline estimates
 
-The 22-week timeline is **aggressive but achievable** with ideal conditions. Plan for 6-9 months realistically.
+**Given current timing constraints, the hybrid-conservative approach (9-15 months) is most realistic**, accounting for real-world factors like economic uncertainty, longer enterprise decision cycles, and the need to build relationships from scratch.
 
 ### Phase 4: Commercial Launch (Months 6-12)
 - [ ] 2+ paying customers ($1K+ MRR)

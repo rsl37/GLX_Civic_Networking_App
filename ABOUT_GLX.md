@@ -33,7 +33,7 @@ GLX provides extensive documentation for developers, researchers, and community 
   - Ethical approach to commercial applications
   - 80/20 architecture reuse strategy
   - Legal, business, and technical considerations
-  - 22-week implementation timeline
+  - 9-15 month hybrid-conservative timeline (recommended)
   - Clear separation between civic (GLX) and commercial (CMPLX)
 
 - **[PORTFOLIO_CASE_STUDY.md](PORTFOLIO_CASE_STUDY.md)** - Portfolio demonstration with metrics
