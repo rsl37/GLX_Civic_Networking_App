@@ -47,7 +47,6 @@ Production-ready tool for community organization, democratic governance, and col
 - Real-time coordination via WebSocket infrastructure
 - Blockchain-based voting and transparent proposals
 - Immutable audit trails for accountability
-- Post-quantum security for long-term protection
 
 ### 2. Educational Resource
 Reference implementation demonstrating:
@@ -185,8 +184,11 @@ GLX is infrastructure for post-Westphalian civic coordination. Use it, extend it
 ---
 
 **GLX: Open-source civic networking for a distributed world**
-- **Air Traffic Control**: Applying distributed architecture for data integrity
-- **Logistics Coordination**: Using real-time monitoring and predictive analytics
+
+**CMPLX Core Use Examples**:
+- **Post-quantum security for long-term protection**: Critical for professional infrastructure requiring decades-long data integrity
+- **Air Traffic Control**: Applying distributed architecture for real-time coordination and data integrity
+- **Logistics Coordination**: Using real-time monitoring and predictive analytics for supply chain optimization
 
 ## 🎯 Mission
 
