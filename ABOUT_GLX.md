@@ -187,7 +187,11 @@ GLX is infrastructure for post-Westphalian civic coordination. Use it, extend it
 
 **CMPLX Core Use Examples**:
 - **Post-quantum security for long-term protection**: Critical for professional infrastructure requiring decades-long data integrity
+
+- **Supply Chain Operations**: Leveraging blockchain for transparency and tracking
+
 - **Air Traffic Control**: Applying distributed architecture for real-time coordination and data integrity
+
 - **Logistics Coordination**: Using real-time monitoring and predictive analytics for supply chain optimization
 
 ## 🎯 Mission
