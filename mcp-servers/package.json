@@ -1,14 +1,14 @@
 {
   "name": "glx-mcp-servers",
-  "version": "1.0.0",
-  "description": "Custom MCP servers for GLX Civic Networking App",
+  "version": "2.0.0",
+  "description": "Secure MCP servers for GLX Systems Network with post-quantum cryptography",
   "main": "index.js",
   "scripts": {
     "start:realtime": "node realtime-server.js",
     "start:civic": "node civic-server.js",
     "start:auth": "node auth-server.js",
     "start:social": "node social-good-server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --coverage"
   },
   "keywords": [
     "mcp",
@@ -17,15 +17,27 @@
     "realtime",
     "sse",
     "authentication",
-    "social-good"
+    "social-good",
+    "post-quantum",
+    "security"
   ],
-  "author": "GLX Civic Networking Team",
+  "author": "GLX Systems Network Team",
   "license": "(PolyForm-Shield-1.0.0 OR PolyForm-Noncommercial-1.0.0)",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.24.3",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "ioredis": "^5.3.2",
+    "winston": "^3.11.0",
+    "express-rate-limit": "^7.1.5",
+    "dotenv": "^16.3.1",
+    "uuid": "^9.0.1",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=18.0.0"
   }
 }
